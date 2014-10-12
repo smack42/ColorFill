@@ -17,6 +17,8 @@
 
 package colorfill;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -28,6 +30,7 @@ public class Board {
 
     private final byte[] cells;
     private final int width;
+    private final ColorArea[] cellsColorAreas;
     private final Set<ColorArea> colorAreas;
 
     /**
@@ -49,6 +52,7 @@ public class Board {
             final char c = str.charAt(i);
             this.cells[i] = Byte.parseByte(String.valueOf(c));
         }
+        this.cellsColorAreas = new ColorArea[len];
         this.colorAreas = this.createColorAreas();
     }
 
@@ -60,12 +64,14 @@ public class Board {
             boolean isAdded = false;
             for (final ColorArea ca : result) {
                 if (ca.addMember(index, color)) {
+                    this.cellsColorAreas[index] = ca;
                     isAdded = true;
                     break; // for()
                 }
             }
             if (false == isAdded) {
                 final ColorArea ca = new ColorArea(color);
+                this.cellsColorAreas[index] = ca;
                 ca.addMember(index, color);
                 result.add(ca);
             }
@@ -148,6 +154,67 @@ public class Board {
     }
 
 
+    /**
+     * starting at startPos, follow the connected neighbors of all color areas
+     * and mark them all with their depth (number of levels from startPos).
+     * 
+     * @param startPos position of the board cell where the color flood starts (0 == top left)
+     * @return maximum depth of all color areas of this board
+     */
+    public int determineColorAreasDepth(final int startPos) {
+        // init
+        for (final ColorArea ca : this.colorAreas) {
+            ca.depth = Integer.MAX_VALUE;
+        }
+        int depth = 0, result = 0;
+        Collection<ColorArea> nextLevel = new ArrayList<ColorArea>();
+        // find the ColorArea that contains cell startPos
+        for (final ColorArea ca : this.colorAreas) {
+            if (ca.members.contains(Integer.valueOf(startPos))) {
+                ca.depth = depth;
+                nextLevel.addAll(ca.neighbors);
+            }
+        }
+        // visit all ColorAreas and mark them with their depth
+        while (false == nextLevel.isEmpty()) {
+            ++depth;
+            final Collection<ColorArea> thisLevel = nextLevel;
+            nextLevel = new ArrayList<ColorArea>();
+            for (final ColorArea ca : thisLevel) {
+                if (ca.depth > depth) {
+                    ca.depth = depth;
+                    nextLevel.addAll(ca.neighbors);
+                    result = depth;
+                }
+            }
+        }
+        return result;
+    }
+
+
+    public String toStringColorDepth() {
+        final StringBuilder sb = new StringBuilder();
+        int maxDepth = 0;
+        for (int i = 0;  i < this.cellsColorAreas.length;  ++i) {
+            final ColorArea ca = this.cellsColorAreas[i];
+            sb.append(ca.color).append('_').append(ca.depth);
+            if (10 > ca.depth) {
+                sb.append(' ');
+            }
+            if (0 == (i + 1) % width) {
+                sb.append('\n');
+            } else {
+                sb.append(' ');
+            }
+            if (maxDepth < ca.depth) {
+                maxDepth = ca.depth;
+            }
+        }
+        sb.append("maxDepth=").append(maxDepth);
+        return sb.toString();
+    }
+
+
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
      */
@@ -172,6 +239,7 @@ public class Board {
         private final int color;
         private final Set<Integer> members = new TreeSet<Integer>(); // sorted set - used by compareTo!
         private final Set<ColorArea> neighbors = new TreeSet<ColorArea>();
+        private int depth = 0;
 
         private ColorArea(final int color) {
             this.color = color;
