@@ -20,16 +20,22 @@ package colorfill;
 public class Starter {
 
     public static void main(String[] args) {
+        testOne();
+    }
+
+
+    /**
+     * test some basics
+     */
+    private static void testOne() {
         final String b = "1162252133131612635256521232523162563651114141545542546462521536446531565521654652142612462122432145511115534353355111125242362245623255453446513311451665625534126316211645151264236333165263163254";
         final String s = "6345215456513263145";
 
         final Board board = new Board(b);
-        final int maxDepth = board.determineColorAreasDepth(0); // startPos=0
         final String solutionResult = board.checkSolution(s, 0); // startPos=0
 
         System.out.println(board);
-        System.out.println(board.toStringColorDepth());
-        System.out.println("maxDepth=" + maxDepth);
+        System.out.println(board.toStringColorDepth(0)); // startPos=0
         System.out.println(s + "_" + s.length());
         if (solutionResult.isEmpty()) {
             System.out.println("solution check OK");

@@ -32,6 +32,7 @@ public class Board {
     private final int width;
     private final ColorArea[] cellsColorAreas;
     private final Set<ColorArea> colorAreas;
+    private int startPos = -1; // -1 == none
 
     /**
      * construct a new Board from a text representation:
@@ -163,6 +164,7 @@ public class Board {
      */
     public int determineColorAreasDepth(final int startPos) {
         // init
+        this.startPos = startPos;
         for (final ColorArea ca : this.colorAreas) {
             ca.depth = Integer.MAX_VALUE;
         }
@@ -192,7 +194,10 @@ public class Board {
     }
 
 
-    public String toStringColorDepth() {
+    public String toStringColorDepth(final int startPos) {
+        if (this.startPos != startPos) {
+            this.determineColorAreasDepth(startPos);
+        }
         final StringBuilder sb = new StringBuilder();
         int maxDepth = 0;
         for (int i = 0;  i < this.cellsColorAreas.length;  ++i) {
@@ -287,7 +292,13 @@ public class Board {
 
         @Override
         public String toString() {
-            return this.color + "_" + this.members.toString() + "-" + this.neighbors.size();
+            final StringBuilder sb = new StringBuilder();
+            sb.append(this.color).append('_').append(this.members.toString()).append("-(");
+            for (final ColorArea ca : this.neighbors) {
+                sb.append(ca.color);
+            }
+            sb.append(')');
+            return sb.toString();
         }
 
         // sorted by color, number of members, first (smallest) member
