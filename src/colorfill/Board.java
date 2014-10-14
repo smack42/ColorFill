@@ -77,6 +77,19 @@ public class Board {
                 result.add(ca);
             }
         }
+        // merge ColorAreas that are neighbors of the same color
+        for (boolean doMergeAreas = true;  true == doMergeAreas;  ) {
+            final Collection<ColorArea> mergedAreas = new ArrayList<ColorArea>();
+            for (final ColorArea ca1 : result) {
+                for (final ColorArea ca2 : result) {
+                    if (true == ca1.addMembers(ca2)) {
+                        mergedAreas.add(ca2);
+                    }
+                }
+            }
+            result.removeAll(mergedAreas);
+            doMergeAreas = (mergedAreas.size() > 0);
+        }
         // connect all ColorAreas to all of their neighbors
         for (final ColorArea ca1 : result) {
             for (final ColorArea ca2 : result) {
@@ -127,9 +140,11 @@ public class Board {
             for (final ColorArea ca : floodNeighbors) {
                 if (ca.color == floodColor) {
                     newFloodAreas.add(ca);
+                    floodAreas.add(ca);
                 }
             }
-            floodAreas.addAll(newFloodAreas);
+            // remove the newly flooded areas from floodNeighbors
+            floodNeighbors.removeAll(newFloodAreas);
             // add new neighbors to floodNeighbors
             for (final ColorArea ca : newFloodAreas) {
                 for (final ColorArea caN : ca.neighbors) {
@@ -138,8 +153,6 @@ public class Board {
                     }
                 }
             }
-            // remove the newly flooded areas from floodNeighbors
-            floodNeighbors.removeAll(newFloodAreas);
         }
         // solution finished, check if board is completely flooded
         if ((floodAreas.size() != this.colorAreas.size()) ||
@@ -250,23 +263,44 @@ public class Board {
             this.color = color;
         }
 
-        private boolean addMember(final int index, final int color) {
-            if (this.color != color) {
-                return false; // wrong (different) color
-            }
-            final Integer ind = Integer.valueOf(index);
-            if (this.members.isEmpty()) {
-                return this.members.add(ind); // added
-            }
-            // is the new number a neighbor of an existing member?
+        private boolean isNeighborCell(final int index) {
             for (final Integer mem : this.members) {
                 final int member = mem.intValue();
                 if ((((index == member - 1) || (index == member + 1))
                         && (index / Board.this.width == member / Board.this.width)) ||
                     (index == member - Board.this.width) ||
                     (index == member + Board.this.width)) {
-                    return this.members.add(ind); // added
+                    return true;
                 }
+            }
+            return this.members.isEmpty();
+        }
+
+        private boolean isNeighborArea(final ColorArea other) {
+            for (final Integer otherMem : other.members) {
+                if (this.isNeighborCell(otherMem.intValue())) {
+                    return true;
+                }
+            }
+            return other.members.isEmpty();
+        }
+
+        private boolean addMember(final int index, final int color) {
+            if (this.color != color) {
+                return false; // wrong (different) color
+            }
+            if (this.isNeighborCell(index)) {
+                return this.members.add(Integer.valueOf(index)); // added
+            }
+            return false; // not added
+        }
+
+        private boolean addMembers(final ColorArea other) {
+            if (this.color != other.color) {
+                return false; // wrong (different) color
+            }
+            if (this.isNeighborArea(other) && (false == other.members.containsAll(this.members))) {
+                return this.members.addAll(other.members); // added
             }
             return false; // not added
         }
@@ -275,17 +309,8 @@ public class Board {
             if (this.color == other.color) {
                 return false; // wrong (same) color
             }
-            for (final Integer thisMem : this.members) {
-                final int thisMember = thisMem.intValue();
-                for (final Integer otherMem : other.members) {
-                    final int otherMember = otherMem.intValue();
-                    if ((((thisMember == otherMember - 1) || (thisMember == otherMember + 1))
-                            && (thisMember / Board.this.width == otherMember / Board.this.width)) ||
-                        (thisMember == otherMember - Board.this.width) ||
-                        (thisMember == otherMember + Board.this.width)) {
-                        return this.neighbors.add(other); // added
-                    }
-                }
+            if (this.isNeighborArea(other)) {
+                return this.neighbors.add(other); // added
             }
             return false; // not added
         }
