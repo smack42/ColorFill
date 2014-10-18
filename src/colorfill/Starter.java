@@ -17,17 +17,22 @@
 
 package colorfill;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
 public class Starter {
 
-    public static void main(String[] args) {
-        testOne();
+    public static void main(String[] args) throws IOException {
+        testCheckOne();
+        testCheckPc19();
     }
 
 
     /**
      * test some basics
      */
-    private static void testOne() {
+    private static void testCheckOne() {
 //        final String b = "1162252133131612635256521232523162563651114141545542546462521536446531565521654652142612462122432145511115534353355111125242362245623255453446513311451665625534126316211645151264236333165263163254";
 //        final String s = "6345215456513263145";
         final String b = "1464232256454151265361121333134355423464254633453256562522536212626562361214311523421215254461265111331145426131342543161111561256314564465566551321526616635335534461614344546336223551453241656312";
@@ -44,5 +49,41 @@ public class Starter {
         } else {
             System.out.println(solutionResult);
         }
+    }
+
+
+    /**
+     * test class Board using some results of
+     * Programming Challenge 19 - Fill a Grid of Tiles
+     * http://cplus.about.com/od/programmingchallenges/a/challenge19.htm
+     * 
+     * @throws IOException
+     */
+    private static void testCheckPc19() throws IOException {
+        final BufferedReader brTiles = new BufferedReader(new FileReader("pc19/tiles.txt"));
+        final String resultsFileName = "results_1.txt"; // results_1.txt  results_5_1.txt  results_5_2_7.txt  results_6.txt
+        final BufferedReader brResults = new BufferedReader(new FileReader("pc19/" + resultsFileName));
+        int numTotal = 0, numFailed = 0, numFailed25 = 0, numOK = 0;
+        System.out.println(resultsFileName);
+        for (String lineTiles = brTiles.readLine();  lineTiles != null;  lineTiles = brTiles.readLine()) {
+            ++numTotal;
+            final String lineResults = brResults.readLine().replaceAll("\\s", ""); // remove whitespace;
+            final Board board = new Board(lineTiles);
+            final String solutionResult = board.checkSolution(lineResults, 0); // startPos=0
+            if (solutionResult.isEmpty()) {
+                System.out.println(numTotal + " solution check OK");
+                ++numOK;
+            } else {
+                System.out.println(numTotal + " " + solutionResult);
+                ++numFailed;
+                if (25 > lineResults.length()) {
+                    ++numFailed25;
+                }
+            }
+        }
+        System.out.println("check OK:     " + numOK);
+        System.out.println("check failed: " + numFailed + "     at less than 25 moves: " + numFailed25);
+        brTiles.close();
+        brResults.close();
     }
 }
