@@ -24,8 +24,9 @@ import java.io.IOException;
 public class Starter {
 
     public static void main(String[] args) throws IOException {
-        testCheckOne();
-        testCheckPc19();
+//        testCheckOne();
+//        testCheckPc19();
+        testSolverGreedyArea();
     }
 
 
@@ -85,5 +86,27 @@ public class Starter {
         System.out.println("check failed: " + numFailed + "     at less than 25 moves: " + numFailed25);
         brTiles.close();
         brResults.close();
+    }
+
+
+    /**
+     * test a solver implementation
+     */
+    private static void testSolverGreedyArea() {
+//        final String b = "1162252133131612635256521232523162563651114141545542546462521536446531565521654652142612462122432145511115534353355111125242362245623255453446513311451665625534126316211645151264236333165263163254";
+//        final String s = "6345215456513263145"; // 19
+        final String b = "1464232256454151265361121333134355423464254633453256562522536212626562361214311523421215254461265111331145426131342543161111561256314564465566551321526616635335534461614344546336223551453241656312";
+//        final String s = "46465321364162543614523"; // 23
+
+        final int startPos = 0;
+        final Board board = new Board(b);
+        final SolverGreedy solver = new SolverGreedy(board);
+        final int solutionSteps = solver.solve(startPos);
+        final String solutionString = solver.getSolutionString();
+        final String solutionCheckResult = board.checkSolution(solutionString, startPos);
+
+        System.out.println(board);
+        System.out.println(solutionSteps + ": " + solutionString);
+        System.out.println(solutionCheckResult.isEmpty() ? "solution check OK" : solutionCheckResult);
     }
 }

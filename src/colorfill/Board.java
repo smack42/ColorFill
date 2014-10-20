@@ -30,9 +30,11 @@ public class Board {
 
     private final byte[] cells;
     private final int width;
+    private final Collection<Integer> colors;
     private final ColorArea[] cellsColorAreas;
     private final Set<ColorArea> colorAreas;
     private int startPos = -1; // -1 == none
+    private int depth = -1; // -1 == not yet set
 
     /**
      * construct a new Board from a text representation:
@@ -51,14 +53,18 @@ public class Board {
         this.width = (int)Math.sqrt(len);
         for (int i = 0;  i < len;  ++i) {
             final char c = str.charAt(i);
-            this.cells[i] = Byte.parseByte(String.valueOf(c));
+            this.cells[i] = (byte)(Byte.parseByte(String.valueOf(c)) - 1);
         }
         this.cellsColorAreas = new ColorArea[len];
         this.colorAreas = this.createColorAreas();
+        this.colors = new TreeSet<>();
+        for (final byte color : this.cells) {
+            this.colors.add(Integer.valueOf(color));
+        }
     }
 
     private Set<ColorArea> createColorAreas() {
-        final Set<ColorArea> result = new HashSet<ColorArea>();
+        final Set<ColorArea> result = new HashSet<>();
         // build ColorAreas, fill with them with members: adjacent cells of the same color
         for (int index = 0;  index < this.cells.length;  ++index) {
             final int color = this.cells[index];
@@ -79,7 +85,7 @@ public class Board {
         }
         // merge ColorAreas that are neighbors of the same color
         for (boolean doMergeAreas = true;  true == doMergeAreas;  ) {
-            final Collection<ColorArea> mergedAreas = new ArrayList<ColorArea>();
+            final Collection<ColorArea> mergedAreas = new ArrayList<>();
             for (final ColorArea ca1 : result) {
                 for (final ColorArea ca2 : result) {
                     if (true == ca1.addMembers(ca2)) {
@@ -96,7 +102,7 @@ public class Board {
                 ca1.addNeighbor(ca2);
             }
         }
-        return new TreeSet<ColorArea>(result); // sorted set
+        return new TreeSet<>(result); // sorted set
     }
 
 
@@ -115,33 +121,32 @@ public class Board {
         final byte[] solution = new byte[len];
         for (int i = 0;  i < len;  ++i) {
             final char c = str.charAt(i);
-            solution[i] = Byte.parseByte(String.valueOf(c));
+            solution[i] = (byte)(Byte.parseByte(String.valueOf(c)) - 1);
         }
-        final Set<ColorArea> floodAreas = new TreeSet<ColorArea>();
-        final Set<ColorArea> floodNeighbors = new TreeSet<ColorArea>();
+        final Set<ColorArea> floodAreas = new TreeSet<>();
+        final Set<ColorArea> floodNeighbors = new TreeSet<>();
         int floodColor = 0;
         // start with the ColorArea that contains cell startPos
-        for (final ColorArea ca : this.colorAreas) {
-            if (ca.members.contains(Integer.valueOf(startPos))) {
-                floodColor = ca.color;
-                floodAreas.add(ca);
-                floodNeighbors.addAll(ca.neighbors);
-                break; // for()
-            }
-        }
+        final ColorArea startCa = this.getColorArea(startPos);
+        floodColor = startCa.color.intValue();
+        floodAreas.add(startCa);
+        floodNeighbors.addAll(startCa.neighbors);
         // apply all colors from solution
         for (final byte solutionColor : solution) {
             if (floodColor == solutionColor) {
-                return "error in solution: duplicate color " + solutionColor;
+                return "error in solution: duplicate color " + (solutionColor + 1);
             }
             floodColor = solutionColor;
             // add all floodNeighbors of matching color to floodAreas
-            final Set<ColorArea> newFloodAreas = new TreeSet<ColorArea>();
+            final Set<ColorArea> newFloodAreas = new TreeSet<>();
             for (final ColorArea ca : floodNeighbors) {
-                if (ca.color == floodColor) {
+                if (ca.color.intValue() == floodColor) {
                     newFloodAreas.add(ca);
                     floodAreas.add(ca);
                 }
+            }
+            if (newFloodAreas.isEmpty()) {
+                return "error in solution: useless color " + (floodColor + 1);
             }
             // remove the newly flooded areas from floodNeighbors
             floodNeighbors.removeAll(newFloodAreas);
@@ -182,19 +187,16 @@ public class Board {
             ca.depth = Integer.MAX_VALUE;
         }
         int depth = 0, result = 0;
-        Collection<ColorArea> nextLevel = new ArrayList<ColorArea>();
+        Collection<ColorArea> nextLevel = new ArrayList<>();
         // find the ColorArea that contains cell startPos
-        for (final ColorArea ca : this.colorAreas) {
-            if (ca.members.contains(Integer.valueOf(startPos))) {
-                ca.depth = depth;
-                nextLevel.addAll(ca.neighbors);
-            }
-        }
+        final ColorArea startCa = this.getColorArea(startPos);
+        startCa.depth = depth;
+        nextLevel.addAll(startCa.neighbors);
         // visit all ColorAreas and mark them with their depth
         while (false == nextLevel.isEmpty()) {
             ++depth;
             final Collection<ColorArea> thisLevel = nextLevel;
-            nextLevel = new ArrayList<ColorArea>();
+            nextLevel = new ArrayList<>();
             for (final ColorArea ca : thisLevel) {
                 if (ca.depth > depth) {
                     ca.depth = depth;
@@ -203,6 +205,7 @@ public class Board {
                 }
             }
         }
+        this.depth = result;
         return result;
     }
 
@@ -215,7 +218,7 @@ public class Board {
         int maxDepth = 0;
         for (int i = 0;  i < this.cellsColorAreas.length;  ++i) {
             final ColorArea ca = this.cellsColorAreas[i];
-            sb.append(ca.color).append('_').append(ca.depth);
+            sb.append(ca.color.intValue() + 1).append('_').append(ca.depth);
             if (10 > ca.depth) {
                 sb.append(' ');
             }
@@ -240,7 +243,7 @@ public class Board {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         for (int i = 0;  i < this.cells.length;  ++i) {
-            sb.append(this.cells[i]);
+            sb.append(this.cells[i] + 1);
             if (0 == (i + 1) % width) {
                 sb.append('\n');
             }
@@ -250,17 +253,41 @@ public class Board {
     }
 
 
+    public Set<ColorArea> getColorAreas() {
+        return this.colorAreas;
+    }
+
+    public ColorArea getColorArea(int cell) {
+        return this.cellsColorAreas[cell];
+    }
+
+    public int getStartPos() {
+        return this.startPos;
+    }
+
+    public int getDepth(int startPos) {
+        if (this.startPos != startPos) {
+            this.determineColorAreasDepth(startPos);
+        }
+        return this.depth;
+    }
+
+    public Collection<Integer> getColors() {
+        return this.colors;
+    }
+
+
     /**
      * ColorArea represents a connected area of cells that have the same color.
      */
-    private class ColorArea implements Comparable<ColorArea> {
-        private final int color;
-        private final Set<Integer> members = new TreeSet<Integer>(); // sorted set - used by compareTo!
-        private final Set<ColorArea> neighbors = new TreeSet<ColorArea>();
+    public class ColorArea implements Comparable<ColorArea> {
+        private final Integer color;
+        private final Set<Integer> members = new TreeSet<>(); // sorted set - used by compareTo!
+        private final Set<ColorArea> neighbors = new TreeSet<>();
         private int depth = 0;
 
         private ColorArea(final int color) {
-            this.color = color;
+            this.color = Integer.valueOf(color);
         }
 
         private boolean isNeighborCell(final int index) {
@@ -286,7 +313,7 @@ public class Board {
         }
 
         private boolean addMember(final int index, final int color) {
-            if (this.color != color) {
+            if (this.color.intValue() != color) {
                 return false; // wrong (different) color
             }
             if (this.isNeighborCell(index)) {
@@ -318,9 +345,9 @@ public class Board {
         @Override
         public String toString() {
             final StringBuilder sb = new StringBuilder();
-            sb.append(this.color).append('_').append(this.members.toString()).append("-(");
+            sb.append(this.color.intValue() + 1).append('_').append(this.members.toString()).append("-(");
             for (final ColorArea ca : this.neighbors) {
-                sb.append(ca.color);
+                sb.append(ca.color.intValue() + 1);
             }
             sb.append(')');
             return sb.toString();
@@ -329,9 +356,9 @@ public class Board {
         // sorted by color, number of members, first (smallest) member
         @Override
         public int compareTo(final ColorArea other) {
-            if (this.color < other.color) {
+            if (this.color.intValue() < other.color.intValue()) {
                 return -1;
-            } else if (this.color > other.color) {
+            } else if (this.color.intValue() > other.color.intValue()) {
                 return 1;
             } else { // equal color
                 if (this.members.size() < other.members.size()) {
@@ -354,6 +381,18 @@ public class Board {
                     }
                 }
             }
+        }
+
+        public Integer getColor() {
+            return this.color;
+        }
+
+        public Set<Integer> getMembers() {
+            return this.members;
+        }
+
+        public Set<ColorArea> getNeighbors() {
+            return this.neighbors;
         }
     }
 }
