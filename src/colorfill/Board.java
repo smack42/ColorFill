@@ -71,14 +71,12 @@ public class Board {
             boolean isAdded = false;
             for (final ColorArea ca : result) {
                 if (ca.addMember(index, color)) {
-                    this.cellsColorAreas[index] = ca;
                     isAdded = true;
                     break; // for()
                 }
             }
             if (false == isAdded) {
                 final ColorArea ca = new ColorArea(color);
-                this.cellsColorAreas[index] = ca;
                 ca.addMember(index, color);
                 result.add(ca);
             }
@@ -100,6 +98,12 @@ public class Board {
         for (final ColorArea ca1 : result) {
             for (final ColorArea ca2 : result) {
                 ca1.addNeighbor(ca2);
+            }
+        }
+        // set cellsColorAreas
+        for (final ColorArea ca : result) {
+            for (final Integer member : ca.getMembers()) {
+                this.cellsColorAreas[member.intValue()] = ca;
             }
         }
         return new TreeSet<>(result); // sorted set
