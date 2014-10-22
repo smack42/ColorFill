@@ -83,11 +83,15 @@ public class Board {
         }
         // merge ColorAreas that are neighbors of the same color
         for (boolean doMergeAreas = true;  true == doMergeAreas;  ) {
-            final Collection<ColorArea> mergedAreas = new ArrayList<>();
+            final Set<ColorArea> mergedAreas = new HashSet<>();
             for (final ColorArea ca1 : result) {
-                for (final ColorArea ca2 : result) {
-                    if (true == ca1.addMembers(ca2)) {
-                        mergedAreas.add(ca2);
+                if (false == mergedAreas.contains(ca1)) {
+                    for (final ColorArea ca2 : result) {
+                        if (false == mergedAreas.contains(ca2)) {
+                            if (true == ca1.addMembers(ca2)) {
+                                mergedAreas.add(ca2);
+                            }
+                        }
                     }
                 }
             }
