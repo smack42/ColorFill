@@ -15,17 +15,22 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package colorfill;
+package colorfill.ui;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
+import colorfill.model.Board;
+import colorfill.solver.Solver;
+import colorfill.solver.DfsSolver;
+
+
 public class Starter {
 
     public static void main(String[] args) throws IOException {
-//        testCheckOne();
-//        testCheckPc19();
+        testCheckOne();
+        testCheckPc19();
         testSolverPc19();
     }
 
@@ -50,6 +55,7 @@ public class Starter {
         } else {
             System.out.println(solutionResult);
         }
+        System.out.println();
     }
 
 
@@ -72,7 +78,7 @@ public class Starter {
             final Board board = new Board(lineTiles);
             final String solutionResult = board.checkSolution(lineResults, 0); // startPos=0
             if (solutionResult.isEmpty()) {
-                System.out.println(numTotal + " solution check OK");
+//                System.out.println(numTotal + " solution check OK");
                 ++numOK;
             } else {
                 System.out.println(numTotal + " " + solutionResult);
@@ -84,6 +90,7 @@ public class Starter {
         }
         System.out.println("check OK:     " + numOK);
         System.out.println("check failed: " + numFailed + "     at less than 25 moves: " + numFailed25);
+        System.out.println();
         brTiles.close();
         brResults.close();
     }
@@ -103,14 +110,14 @@ public class Starter {
         int countSolutions = 0, countSteps = 0, countSteps25 = 0, countCheckFailed = 0, countCheckOK = 0;
         for (String lineTiles = brTiles.readLine();  lineTiles != null;  lineTiles = brTiles.readLine()) {
             final Board board = new Board(lineTiles);
-            final SolverGreedy solver = new SolverGreedy(board);
-            final int solutionSteps = solver.solve(startPos);
+            final Solver solver = new DfsSolver(board);
+            final int solutionSteps = solver.execute(startPos);
             ++countSolutions;
             countSteps += solutionSteps;
             countSteps25 += (solutionSteps > 25 ? 25 : solutionSteps);
             final String solutionString = solver.getSolutionString();
             final String solutionCheckResult = board.checkSolution(solutionString, startPos);
-            System.out.println(solutionString + "__" + solutionSteps);
+            System.out.println(countSolutions + " " + solutionString + "_______________" + solutionSteps);
             if (solutionCheckResult.isEmpty()) {
                 ++countCheckOK;
             } else {
@@ -121,11 +128,11 @@ public class Starter {
             }
         }
         final long nanoEnd = System.nanoTime();
-        System.out.println("solutions:    " + countSolutions);
         System.out.println("total steps:  " + countSteps + "     with limit 25: " + countSteps25);
         System.out.println("check OK:     " + countCheckOK);
         System.out.println("check failed: " + countCheckFailed);
         System.out.println("wall time:    " + ((nanoEnd - nanoStart + 999999999L) / 1000000000L) + " seconds");
+        System.out.println();
         brTiles.close();
     }
 }
