@@ -84,16 +84,17 @@ public class ColorAreaGroup {
     }
 
     /**
-     * returns true if this object contains no color areas.
-     * @return true if this object contains no color areas
+     * count the number of colors that have at least one color area.
+     * @return number of occupied colors
      */
-    public boolean isEmpty() {
+    public int countColorsNotEmpty() {
+        int result = 0;
         for (final Set<ColorArea> setCa : this.theMap.values()) {
             if (false == setCa.isEmpty()) {
-                return false;
+                ++result;
             }
         }
-        return true;
+        return result;
     }
 
     /**

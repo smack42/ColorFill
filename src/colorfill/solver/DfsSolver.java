@@ -78,15 +78,16 @@ public class DfsSolver extends AbstractSolver {
         final Collection<ColorArea> thisFlooded = neighbors.removeColor(thisColor);
         flooded.addAll(thisFlooded);
         notFlooded.removeAll(thisFlooded);
+        final int colorsNotFlooded = notFlooded.countColorsNotEmpty();
         solution.add(thisColor);
         assert solution.size() - 1 == depth : "solution size(" + solution.size() + ") doesn't match current depth(" + depth + ")";
 
         // finished the search?
-        if (notFlooded.isEmpty()) {
+        if (0 == colorsNotFlooded) {
             this.addSolution(solution);
 
         // do next step
-        } else if (this.solutionSize > depth) {
+        } else if (this.solutionSize > depth + colorsNotFlooded) { // TODO use ">=" instead of ">" to find all shortest solutions; slower!
             // add new neighbors
             for (final ColorArea ca : thisFlooded) {
                 neighbors.addAll(ca.getNeighbors(), flooded);
