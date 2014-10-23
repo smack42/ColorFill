@@ -27,7 +27,7 @@ import colorfill.model.ColorArea;
  * it chooses the colors in two steps:
  * <p>
  * 1) colors that can be completely flooded in the next step.
- * (this is always an optimal move!?)
+ * (these are always optimal moves!?)
  * <p>
  * 2) if 1) gives no result then the colors that contain
  * the maximum number of member cells. (hence the name "greedy")

@@ -189,6 +189,9 @@ public class Board {
      * @return maximum depth of all color areas of this board
      */
     public int determineColorAreasDepth(final int startPos) {
+        if (this.startPos == startPos) {
+            return this.depth;
+        }
         // init
         this.startPos = startPos;
         for (final ColorArea ca : this.colorAreas) {
@@ -219,11 +222,8 @@ public class Board {
 
 
     public String toStringColorDepth(final int startPos) {
-        if (this.startPos != startPos) {
-            this.determineColorAreasDepth(startPos);
-        }
+        final int maxDepth = this.determineColorAreasDepth(startPos);
         final StringBuilder sb = new StringBuilder();
-        int maxDepth = 0;
         for (int i = 0;  i < this.cellsColorAreas.length;  ++i) {
             final ColorArea ca = this.cellsColorAreas[i];
             sb.append(ca.getColor().intValue() + 1).append('_').append(ca.getDepth());
@@ -234,9 +234,6 @@ public class Board {
                 sb.append('\n');
             } else {
                 sb.append(' ');
-            }
-            if (maxDepth < ca.getDepth()) {
-                maxDepth = ca.getDepth();
             }
         }
         sb.append("maxDepth=").append(maxDepth);
@@ -274,10 +271,7 @@ public class Board {
     }
 
     public int getDepth(int startPos) {
-        if (this.startPos != startPos) {
-            this.determineColorAreasDepth(startPos);
-        }
-        return this.depth;
+        return this.determineColorAreasDepth(startPos);
     }
 
     public Collection<Integer> getColors() {

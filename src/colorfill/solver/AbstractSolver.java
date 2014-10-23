@@ -75,11 +75,9 @@ public abstract class AbstractSolver implements Solver {
     }
 
     /**
-     * add this solution to the list of solutions if it's shorter than
+     * add a copy of this solution to the list of solutions if it's shorter than
      * or same length as the current best solution(s).
-     * the first element of this solution is ignored because it's the initial
-     * color at the start position and therefore not a solution step.
-     * in the list of solutions only the best (shortest) solution(s)
+     * in the list of solutions only the best (shortest) solutions
      * will be stored, longer solutions will be removed when a shorter solution
      * is added.
      * 
@@ -87,12 +85,12 @@ public abstract class AbstractSolver implements Solver {
      * @return true if this solution was added
      */
     protected boolean addSolution(final List<Integer> solution) {
-        if (this.solutionSize > solution.size() - 1) {
-            this.solutionSize = solution.size() - 1;
+        if (this.solutionSize > solution.size()) {
+            this.solutionSize = solution.size();
             this.solutions.clear();
         }
-        if (this.solutionSize == solution.size() - 1) {
-            this.solutions.add(new ArrayList<>(solution.subList(1, solution.size())));
+        if (this.solutionSize == solution.size()) {
+            this.solutions.add(new ArrayList<>(solution));
             return true;
         }
         return false;

@@ -17,6 +17,7 @@
 
 package colorfill.model;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -27,7 +28,9 @@ public class ColorArea implements Comparable<ColorArea> {
     private final Integer color;
     private final int boardWidth;
     private final Set<Integer> members = new TreeSet<>(); // sorted set - used by compareTo!
+    private final Set<Integer> membersUnmodifiable = Collections.unmodifiableSet(this.members);
     private final Set<ColorArea> neighbors = new TreeSet<>();
+    private final Set<ColorArea> neighborsUnmodifiable = Collections.unmodifiableSet(this.neighbors);
     private int depth = 0;
 
     protected ColorArea(final int color, final int boardWidth) {
@@ -133,11 +136,11 @@ public class ColorArea implements Comparable<ColorArea> {
     }
 
     public Set<Integer> getMembers() {
-        return this.members;
+        return this.membersUnmodifiable;
     }
 
     public Set<ColorArea> getNeighbors() {
-        return this.neighbors;
+        return this.neighborsUnmodifiable;
     }
 
     public int getDepth() {

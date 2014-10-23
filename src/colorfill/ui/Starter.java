@@ -117,7 +117,7 @@ public class Starter {
             countSteps25 += (solutionSteps > 25 ? 25 : solutionSteps);
             final String solutionString = solver.getSolutionString();
             final String solutionCheckResult = board.checkSolution(solutionString, startPos);
-            System.out.println(countSolutions + " " + solutionString + "_______________" + solutionSteps);
+            System.out.println(countSolutions + " " + solutionString + "_______________" + solutionSteps + (solutionSteps > 25 ? "  !!!!!!!!!!" : ""));
             if (solutionCheckResult.isEmpty()) {
                 ++countCheckOK;
             } else {

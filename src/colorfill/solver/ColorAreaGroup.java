@@ -35,10 +35,10 @@ import colorfill.model.ColorArea;
 public class ColorAreaGroup {
 
     private final Board board;
-    private final Map<Integer, Set<ColorArea>> theMap;
+    private final HashMap<Integer, HashSet<ColorArea>> theMap;
 
     /**
-     * the constructor
+     * the standard constructor
      */
     public ColorAreaGroup(final Board board) {
         this.board = board;
@@ -49,15 +49,15 @@ public class ColorAreaGroup {
     }
 
     /**
-     * basically a shallow clone() method: the color areas (not cloned!) are put into a new container object.
-     * @return the copy object
+     * the copy constructor
      */
-    public ColorAreaGroup copy() {
-        final ColorAreaGroup result = new ColorAreaGroup(this.board);
-        for (final Map.Entry<Integer, Set<ColorArea>> entry : this.theMap.entrySet()) {
-            result.theMap.get(entry.getKey()).addAll(entry.getValue());
+    @SuppressWarnings("unchecked")
+    public ColorAreaGroup(final ColorAreaGroup other) {
+        this.board = other.board;
+        this.theMap = (HashMap<Integer, HashSet<ColorArea>>) other.theMap.clone();
+        for (final Map.Entry<Integer, HashSet<ColorArea>> entry : this.theMap.entrySet()) {
+            entry.setValue((HashSet<ColorArea>) entry.getValue().clone());
         }
-        return result;
     }
 
     /**
@@ -103,7 +103,7 @@ public class ColorAreaGroup {
      */
     public List<Integer> getColorsNotEmpty() {
         final List<Integer> result = new ArrayList<>();
-        for (final Map.Entry<Integer, Set<ColorArea>> entry : this.theMap.entrySet()) {
+        for (final Map.Entry<Integer, HashSet<ColorArea>> entry : this.theMap.entrySet()) {
             if (false == entry.getValue().isEmpty()) {
                 result.add(entry.getKey());
             }
@@ -117,7 +117,7 @@ public class ColorAreaGroup {
      */
     public List<Integer> getColorsDepth(final int depth) {
         final List<Integer> result = new ArrayList<>();
-        for (final Map.Entry<Integer, Set<ColorArea>> entry : this.theMap.entrySet()) {
+        for (final Map.Entry<Integer, HashSet<ColorArea>> entry : this.theMap.entrySet()) {
             for (final ColorArea ca : entry.getValue()) {
                 if (ca.getDepth() == depth) {
                     result.add(entry.getKey());
@@ -135,7 +135,7 @@ public class ColorAreaGroup {
      */
     public List<Integer> getColorsCompleted(final ColorAreaGroup other) {
         final List<Integer> result = new ArrayList<>();
-        for (final Map.Entry<Integer, Set<ColorArea>> entry : this.theMap.entrySet()) {
+        for (final Map.Entry<Integer, HashSet<ColorArea>> entry : this.theMap.entrySet()) {
             final Integer color = entry.getKey();
             final Set<ColorArea> thisSet = entry.getValue();
             final Set<ColorArea> otherSet = other.theMap.get(color);
@@ -153,7 +153,7 @@ public class ColorAreaGroup {
     public List<Integer> getColorsMaxMembers() {
         final List<Integer> result = new ArrayList<>();
         int maxCount = 1; // return empty collection if all colors are empty. not expected!
-        for (final Map.Entry<Integer, Set<ColorArea>> entry : this.theMap.entrySet()) {
+        for (final Map.Entry<Integer, HashSet<ColorArea>> entry : this.theMap.entrySet()) {
             int count = 0;
             for (final ColorArea ca : entry.getValue()) {
                 count += ca.getMembers().size();
