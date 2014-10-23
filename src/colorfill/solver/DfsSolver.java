@@ -45,9 +45,12 @@ public class DfsSolver extends AbstractSolver {
     /* (non-Javadoc)
      * @see colorfill.solver.AbstractSolver#executeInternal(int)
      */
+    // TODO make strategy a runtime parameter
     @Override
     protected void executeInternal(final int startPos) {
-        this.strategy = new GreedyDfsStrategy(); // TODO make strategy a runtime parameter
+        //this.strategy = new GreedyDfsStrategy();
+        this.strategy = new DeepDfsStrategy(this.board, startPos);
+
         final ColorArea startCa = this.board.getColorArea(startPos);
         final Set<ColorArea> flooded = new HashSet<>();
         final ColorAreaGroup notFlooded = new ColorAreaGroup(this.board);
@@ -55,6 +58,7 @@ public class DfsSolver extends AbstractSolver {
         final ColorAreaGroup neighbors = new ColorAreaGroup(this.board);
         neighbors.addAll(Collections.singleton(startCa), flooded);
         final List<Integer> solution = new ArrayList<>();
+
         this.doRecursion(0, startCa.getColor(), solution, flooded, notFlooded, neighbors);
     }
 
@@ -94,13 +98,13 @@ public class DfsSolver extends AbstractSolver {
             }
             // pick the "best" neighbor colors to go on
             final List<Integer> nextColors = this.strategy.selectColors(depth, thisColor, solution, flooded, notFlooded, neighbors);
-            assert nextColors.size() > 0 : "nextColors must not be empty";
             // go to next recursion level
             if (1 == nextColors.size()) {
-                doRecursion(depth + 1, nextColors.get(0),
-                        solution, flooded, notFlooded, neighbors); // no need to clone the data structures
+                // no need to clone the data structures
+                doRecursion(depth + 1, nextColors.get(0), solution, flooded, notFlooded, neighbors);
             } else {
                 for (final Integer nextColor : nextColors) {
+                    // clone the data structures for backtracking
                     doRecursion(depth + 1, nextColor,
                             new ArrayList<Integer>(solution),
                             new HashSet<ColorArea>(flooded),

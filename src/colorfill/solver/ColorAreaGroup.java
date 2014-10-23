@@ -34,8 +34,8 @@ import colorfill.model.ColorArea;
  */
 public class ColorAreaGroup {
 
-    final Board board;
-    final Map<Integer, Set<ColorArea>> theMap;
+    private final Board board;
+    private final Map<Integer, Set<ColorArea>> theMap;
 
     /**
      * the constructor
@@ -98,7 +98,38 @@ public class ColorAreaGroup {
     }
 
     /**
-     * get the colors from that are contained completely in other.
+     * get the colors that have at least one color area.
+     * @return list of occupied colors, not expected to be empty
+     */
+    public List<Integer> getColorsNotEmpty() {
+        final List<Integer> result = new ArrayList<>();
+        for (final Map.Entry<Integer, Set<ColorArea>> entry : this.theMap.entrySet()) {
+            if (false == entry.getValue().isEmpty()) {
+                result.add(entry.getKey());
+            }
+        }
+        return result;
+    }
+
+    /**
+     * get the colors that are situated at the specified depth.
+     * @return list of colors at depth, may be empty
+     */
+    public List<Integer> getColorsDepth(final int depth) {
+        final List<Integer> result = new ArrayList<>();
+        for (final Map.Entry<Integer, Set<ColorArea>> entry : this.theMap.entrySet()) {
+            for (final ColorArea ca : entry.getValue()) {
+                if (ca.getDepth() == depth) {
+                    result.add(entry.getKey());
+                    break; // for (ca)
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * get the colors that are contained completely in other.
      * @param other
      * @return list of completed colors, may be empty
      */
