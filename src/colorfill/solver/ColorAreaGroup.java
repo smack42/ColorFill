@@ -84,6 +84,26 @@ public class ColorAreaGroup {
     }
 
     /**
+     * add all color areas into the specified color.
+     * warning: does not check or update the color areas for consistency.
+     * @param addColorAreas the color areas to be added
+     * @param color the color
+     */
+    public void addAllColor(final Collection<ColorArea> addColorAreas, final Integer color) {
+        this.theMap.get(color).addAll(addColorAreas);
+    }
+
+    /**
+     * remove all color areas from the specified color.
+     * warning: does not check or update the color areas for consistency.
+     * @param removeColorAreas the color areas to be removed
+     * @param color the color
+     */
+    public void removeAllColor(final Collection<ColorArea> removeColorAreas, final Integer color) {
+        this.theMap.get(color).removeAll(removeColorAreas);
+    }
+
+    /**
      * count the number of colors that have at least one color area.
      * @return number of occupied colors
      */
@@ -167,6 +187,15 @@ public class ColorAreaGroup {
             }
         }
         return result;
+    }
+
+    /**
+     * return the areas of this color.
+     * @param color
+     * @return the areas
+     */
+    public Collection<ColorArea> getColor(final Integer color) {
+        return this.theMap.get(color);
     }
 
     /**
