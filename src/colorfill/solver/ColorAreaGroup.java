@@ -190,6 +190,33 @@ public class ColorAreaGroup {
     }
 
     /**
+     * get the colors that have the maximum number of member cells.
+     * the color areas are counted only if their neighbors are not contained in excludeNeighbors.
+     * @param excludeNeighbors exclude color areas if their neighbors are contained here
+     * @return list of colors, not expected to be empty
+     */
+    public List<Integer> getColorsMaxMembers(final Set<ColorArea> excludeNeighbors) {
+        final List<Integer> result = new ArrayList<>();
+        int maxCount = 1; // return empty collection if all colors are empty. not expected!
+        for (final Map.Entry<Integer, HashSet<ColorArea>> entry : this.theMap.entrySet()) {
+            int count = 0;
+            for (final ColorArea ca : entry.getValue()) {
+                if (false == excludeNeighbors.containsAll(ca.getNeighbors())) {
+                    count += ca.getMembers().size();
+                }
+            }
+            if (maxCount < count) {
+                maxCount = count;
+                result.clear();
+            }
+            if (maxCount == count) {
+                result.add(entry.getKey());
+            }
+        }
+        return result;
+    }
+
+    /**
      * return the areas of this color.
      * @param color
      * @return the areas

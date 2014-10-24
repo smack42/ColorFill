@@ -54,8 +54,8 @@ public class DfsSolver extends AbstractSolver {
     // TODO make strategy a runtime parameter
     @Override
     protected void executeInternal(final int startPos) {
-        //this.strategy = new GreedyDfsStrategy();
-        this.strategy = new DeepDfsStrategy(this.board, startPos);
+        this.strategy = new GreedyDfsStrategy();
+        //this.strategy = new DeepDfsStrategy(this.board, startPos);
 
         final ColorArea startCa = this.board.getColorArea(startPos);
         this.allFlooded = new HashSet<>();

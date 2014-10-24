@@ -46,7 +46,7 @@ public class GreedyDfsStrategy implements DfsStrategy {
             final ColorAreaGroup neighbors) {
         List<Integer> result = neighbors.getColorsCompleted(notFlooded);
         if (result.isEmpty()) {
-            result = neighbors.getColorsMaxMembers();
+            result = neighbors.getColorsMaxMembers(flooded);
         }
         return result;
     }
