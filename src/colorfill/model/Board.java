@@ -20,6 +20,7 @@ package colorfill.model;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -29,12 +30,49 @@ import java.util.TreeSet;
 public class Board {
 
     private final byte[] cells;
-    private final int width;
+    private final int width, height;
     private final Collection<Integer> colors;
     private final ColorArea[] cellsColorAreas;
     private final Set<ColorArea> colorAreas;
     private int startPos = -1; // -1 == none
     private int depth = -1; // -1 == not yet set
+
+    /**
+     * construct a new Board using the specified parameters.
+     * the cells are filled with random color valaues.
+     * 
+     * @param width
+     * @param height
+     * @param colors
+     */
+    public Board(final int width, final int height, final int colors) {
+        this.width = width;
+        this.height = height;
+        final int len = width * height;
+        this.colors = new TreeSet<>();
+        for (int color = 0;  color < colors;  ++color) {
+            this.colors.add(Integer.valueOf(color));
+        }
+        this.cells = new byte[len];
+        this.cellsColorAreas = new ColorArea[len];
+        this.colorAreas = new TreeSet<>();
+        this.randomCellColors();
+    }
+
+    /**
+     * fill all board cells with random color values.
+     */
+    public void randomCellColors() {
+        final Random random = new Random();
+        final Integer[] colorArray = this.colors.toArray(new Integer[0]);
+        for (int i = 0;  i < this.cells.length;  ++i) {
+            final Integer color = colorArray[random.nextInt(colorArray.length)];
+            this.cells[i] = color.byteValue();
+        }
+        this.colorAreas.clear();
+        this.colorAreas.addAll(this.createColorAreas());
+        this.startPos = this.depth = -1;
+    }
 
     /**
      * construct a new Board from a text representation:
@@ -51,12 +89,14 @@ public class Board {
         final int len = str.length(); // TODO check if "len" is a square number
         this.cells = new byte[len];
         this.width = (int)Math.sqrt(len);
+        this.height = this.width;
         for (int i = 0;  i < len;  ++i) {
             final char c = str.charAt(i);
             this.cells[i] = (byte)(Byte.parseByte(String.valueOf(c)) - 1);
         }
         this.cellsColorAreas = new ColorArea[len];
-        this.colorAreas = this.createColorAreas();
+        this.colorAreas = new TreeSet<>();
+        this.colorAreas.addAll(this.createColorAreas());
         this.colors = new TreeSet<>();
         for (final byte color : this.cells) {
             this.colors.add(Integer.valueOf(color));
@@ -110,7 +150,7 @@ public class Board {
                 this.cellsColorAreas[member.intValue()] = ca;
             }
         }
-        return new TreeSet<>(result); // sorted set
+        return result;
     }
 
 
@@ -266,6 +306,10 @@ public class Board {
         return this.cellsColorAreas[cell];
     }
 
+    public int getColor(int cell) {
+        return this.cells[cell];
+    }
+
     public int getStartPos() {
         return this.startPos;
     }
@@ -276,5 +320,17 @@ public class Board {
 
     public Collection<Integer> getColors() {
         return this.colors;
+    }
+
+    public int getWidth() {
+        return this.width;
+    }
+
+    public int getHeight() {
+        return this.height;
+    }
+
+    public int getSize() {
+        return this.cells.length;
     }
 }

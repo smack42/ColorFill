@@ -29,9 +29,10 @@ import colorfill.solver.DfsSolver;
 public class Starter {
 
     public static void main(String[] args) throws IOException {
-        testCheckOne();
-        testCheckPc19();
-        testSolverPc19();
+        new MainController("ColorFill __DEV__2014-10-25__");
+//        testCheckOne();
+//        testCheckPc19();
+//        testSolverPc19();
     }
 
 

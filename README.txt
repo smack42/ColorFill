@@ -2,7 +2,7 @@ ColorFill game and solver
 
 yet another Flood-It / Globs clone
 
-soon to come: Java Swing GUI, solver algorithm(s)
+prototype is working: Java Swing GUI, solver algorithms
 
 
 Online game
