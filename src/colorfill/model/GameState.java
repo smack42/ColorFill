@@ -68,20 +68,26 @@ public class GameState {
     }
 
     /**
-     * get the current color of the cell at the specified index.
-     * the color can either be the current flood color (if cell is
+     * get the current colors of all cells.
+     * the colors can either be the current flood color (if cell is
      * already flooded) or the original color of the board cell.
-     * @param index of cell on the board
-     * @return color number
+     * @return array of color numbers
      */
-    public int getColor(final int index) {
-        final Integer cell = Integer.valueOf(index);
-        for (final ColorArea ca : this.stepFlooded.get(this.numSteps)) {
-            if (ca.getMembers().contains(cell)) {
-                return this.stepColor.get(this.numSteps).intValue();
+    public int[] getColors() {
+        final int[] result = new int[this.board.getSize()];
+        final Set<ColorArea> flooded = this.stepFlooded.get(this.numSteps);
+        final int floodColor = this.stepColor.get(this.numSteps).intValue();
+        for (int i = 0;  i < result.length;  ++i) {
+            result[i] = this.board.getColor(i);
+            final Integer cell = Integer.valueOf(i);
+            for (final ColorArea ca : flooded) {
+                if (ca.getMembers().contains(cell)) {
+                    result[i] = floodColor;
+                    break; // for (ca)
+                }
             }
         }
-        return this.board.getColor(index);
+        return result;
     }
 
     public Board getBoard() {

@@ -45,9 +45,7 @@ public class BoardController {
     }
 
     private void repaintBoardPanel() {
-        for (int i = 0;  i < this.gameState.getBoard().getSize();  ++i) {
-            this.boardPanel.setCellColor(i, this.gameState.getColor(i));
-        }
+        this.boardPanel.setCellColors(this.gameState.getColors());
     }
 
     protected JPanel getPanel() {

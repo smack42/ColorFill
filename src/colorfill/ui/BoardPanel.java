@@ -21,8 +21,9 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -34,8 +35,8 @@ public class BoardPanel extends JPanel {
 
     private static final long serialVersionUID = 8760536779314645208L;
 
-    public static final int DEFAULT_UI_BOARD_CELL_WIDTH  = 32;
-    public static final int DEFAULT_UI_BOARD_CELL_HEIGHT = 32;
+    public static final int DEFAULT_UI_BOARD_CELL_WIDTH  = 24;
+    public static final int DEFAULT_UI_BOARD_CELL_HEIGHT = 24;
 
     private static final Color[] COLORS = {
         // Flood-It scheme
@@ -64,107 +65,86 @@ public class BoardPanel extends JPanel {
     };
 
     private final BoardController controller;
-    private BoardCell[] boardCells;
+    private int columns, rows;
+    private int[] cellColors;
 
     /**
      * constructor
      * @param controller
      */
     protected BoardPanel(final BoardController controller) {
-        super();
+        super(true); // isDoubleBuffered
         this.controller = controller;
+        this.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                final int index = calculateCellIndex(e.getPoint());
+                final int color = BoardPanel.this.cellColors[index];
+                BoardPanel.this.controller.userClickedOnCell(e, index, color);
+            }
+        });
+    }
+
+    private int calculateCellIndex(final Point point) {
+        final Dimension size = this.getSize();
+        final int cellWidth = size.width / this.columns;
+        final int cellHeight = size.height / this.rows;
+        final int column = point.x / cellWidth;
+        final int row = point.y / cellHeight;
+        final int result = row * this.columns + column;
+        return result;
     }
 
     /**
      * build the array of board cells and the layout manager.
-     * @param width number of columns on the board
-     * @param height number of rows on the board
+     * @param columns
+     * @param rows
      */
-    protected void init(final int width, final int height) {
+    protected void init(final int columns, final int rows) {
         if (SwingUtilities.isEventDispatchThread()) {
-            initInternal(width, height);
+            initInternal(columns, rows);
         } else {
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                    initInternal(width, height);
+                    initInternal(columns, rows);
                 }
             });
         }
     }
 
-    private void initInternal(final int width, final int height) {
-        this.removeAll();
-        this.setLayout(new GridLayoutSquare(height, width));
-        this.boardCells = new BoardCell[width * height];
-        for (int i = 0;  i < this.boardCells.length;  ++i) {
-            this.boardCells[i] = new BoardCell(i);
-            this.add(this.boardCells[i]);
-        }
+    private void initInternal(final int columns, final int rows) {
+        this.columns = columns;
+        this.rows = rows;
+        this.cellColors = new int[columns * rows];
+        this.setPreferredSize(new Dimension(columns * DEFAULT_UI_BOARD_CELL_WIDTH, rows * DEFAULT_UI_BOARD_CELL_HEIGHT));
     }
 
     /**
-     * change the color of the specified cell (at index).
-     * causes a repaint() of the board cell if the color was
-     * changed to a different value than before.
-     * @param index the cell
-     * @param color the new color value
+     * set the colors of all cells.
+     * @param cellColors the new colors
      */
-    protected void setCellColor(final int index, final int color) {
-        this.boardCells[index].setColor(color);
+    protected void setCellColors(final int[] cellColors) {
+        this.cellColors = cellColors;
+        this.repaint();
     }
 
 
-
-    private class BoardCell extends JPanel implements MouseListener {
-
-        private static final long serialVersionUID = -345620131879646633L;
-
-        private final int index;
-        private int color = 0;
-
-        private BoardCell(final int index) {
-            super(false);
-            this.index = index;
-            this.setPreferredSize(new Dimension(DEFAULT_UI_BOARD_CELL_WIDTH, DEFAULT_UI_BOARD_CELL_HEIGHT));
-            this.setOpaque(true);
-            this.addMouseListener(this);
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            final Graphics2D g2d = (Graphics2D) g.create();
-            final Dimension size = this.getSize();
-            g2d.setColor(COLORS[this.color]);
-            g2d.fillRect(0, 0, size.width, size.height);
-        }
-
-        private void setColor(final int color) {
-            if (this.color != color) {
-                this.color = color;
-                this.repaint();
+    /* (non-Javadoc)
+     * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
+     */
+    @Override
+    protected void paintComponent(Graphics g) {
+        final Graphics2D g2d = (Graphics2D) g.create();
+        final Dimension size = this.getSize();
+        g2d.clearRect(0, 0, size.width, size.height);
+        final int cellWidth = size.width / this.columns;
+        final int cellHeight = size.height / this.rows;
+        for (int index = 0, y = 0, row = 0;  row < this.rows;  y += cellHeight, ++row) {
+            for (int x = 0, column = 0;  column < this.columns;  x += cellWidth, ++column) {
+                final int color = this.cellColors[index++];
+                g2d.setColor(COLORS[color]);
+                g2d.fillRect(x, y, cellWidth, cellHeight);
             }
-        }
-
-        // implements MouseListener
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            BoardPanel.this.controller.userClickedOnCell(e, this.index, this.color);
-        }
-        @Override
-        public void mousePressed(MouseEvent e) {
-            // no-op
-        }
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            // no-op
-        }
-        @Override
-        public void mouseEntered(MouseEvent e) {
-            // no-op
-        }
-        @Override
-        public void mouseExited(MouseEvent e) {
-            // no-op
         }
     }
 }
