@@ -39,8 +39,8 @@ public class BoardPanel extends JPanel {
 
     private static final long serialVersionUID = 8760536779314645208L;
 
-    public static final int DEFAULT_UI_BOARD_CELL_WIDTH  = 24;
-    public static final int DEFAULT_UI_BOARD_CELL_HEIGHT = 24;
+    public static final int DEFAULT_UI_BOARD_CELL_WIDTH  = 32;
+    public static final int DEFAULT_UI_BOARD_CELL_HEIGHT = 32;
 
     private static final Color[] COLORS = {
         // Flood-It scheme
@@ -84,8 +84,10 @@ public class BoardPanel extends JPanel {
             @Override
             public void mousePressed(MouseEvent e) {
                 final int index = calculateCellIndex(e.getPoint());
-                final int color = BoardPanel.this.cellColors[index];
-                BoardPanel.this.controller.userClickedOnCell(e, index, color);
+                if ((index >= 0) && (index < BoardPanel.this.cellColors.length)) {
+                    final int color = BoardPanel.this.cellColors[index];
+                    BoardPanel.this.controller.userClickedOnCell(e, index, color);
+                }
             }
         });
         this.addMouseMotionListener(new MouseMotionAdapter() {
@@ -93,10 +95,12 @@ public class BoardPanel extends JPanel {
             @Override
             public void mouseMoved(MouseEvent e) {
                 final int index = calculateCellIndex(e.getPoint());
-                if (this.currentIndex != index) {
-                    this.currentIndex = index;
-                    final int color = BoardPanel.this.cellColors[index];
-                    BoardPanel.this.controller.userMovedMouseToCell(e, index, color);
+                if ((index >= 0) && (index < BoardPanel.this.cellColors.length)) {
+                    if (this.currentIndex != index) {
+                        this.currentIndex = index;
+                        final int color = BoardPanel.this.cellColors[index];
+                        BoardPanel.this.controller.userMovedMouseToCell(e, index, color);
+                    }
                 }
             }
         });
@@ -157,6 +161,10 @@ public class BoardPanel extends JPanel {
         final Dimension size = this.getSize();
         final int cellWidth = size.width / this.columns;
         final int cellHeight = size.height / this.rows;
+        final int cw4 = cellWidth / 4;
+        final int ch4 = cellHeight / 4;
+        final int cwHighlight = cellWidth - cw4 - cw4;
+        final int chHighlight = cellHeight - ch4 - ch4;
         for (int index = 0, y = 0, row = 0;  row < this.rows;  y += cellHeight, ++row) {
             for (int x = 0, column = 0;  column < this.columns;  x += cellWidth, ++column) {
                 final boolean highlight = this.cellHighlights[index];
@@ -166,7 +174,7 @@ public class BoardPanel extends JPanel {
                 if (highlight) {
                     g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     g2d.setColor(Color.WHITE);
-                    g2d.drawOval(x + 2, y + 2, cellWidth - 1 - 2 - 2, cellHeight - 1 - 2 - 2);
+                    g2d.fillOval(x + cw4, y + ch4, cwHighlight, chHighlight);
                 }
             }
         }

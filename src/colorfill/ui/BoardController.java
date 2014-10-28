@@ -80,10 +80,8 @@ public class BoardController {
      * @param color the cell color
      */
     public void userMovedMouseToCell(MouseEvent e, int index, int color) {
-        System.out.println("userMovedMouseToCell " + index);
         final Collection<Integer> neighborCells;
         if (this.gameState.isFloodNeighborCell(index)) {
-            System.out.println("    neighbor cell, color " + color);
             neighborCells = this.gameState.getFloodNeighborCells(color);
         } else {
             neighborCells = Collections.emptyList();
