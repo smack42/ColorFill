@@ -22,8 +22,12 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.util.Arrays;
+import java.util.Collection;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -66,7 +70,8 @@ public class BoardPanel extends JPanel {
 
     private final BoardController controller;
     private int columns, rows;
-    private int[] cellColors;
+    private int[] cellColors = new int[0];
+    private boolean[] cellHighlights = new boolean[0];
 
     /**
      * constructor
@@ -81,6 +86,18 @@ public class BoardPanel extends JPanel {
                 final int index = calculateCellIndex(e.getPoint());
                 final int color = BoardPanel.this.cellColors[index];
                 BoardPanel.this.controller.userClickedOnCell(e, index, color);
+            }
+        });
+        this.addMouseMotionListener(new MouseMotionAdapter() {
+            int currentIndex = -1;
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                final int index = calculateCellIndex(e.getPoint());
+                if (this.currentIndex != index) {
+                    this.currentIndex = index;
+                    final int color = BoardPanel.this.cellColors[index];
+                    BoardPanel.this.controller.userMovedMouseToCell(e, index, color);
+                }
             }
         });
     }
@@ -116,6 +133,7 @@ public class BoardPanel extends JPanel {
         this.columns = columns;
         this.rows = rows;
         this.cellColors = new int[columns * rows];
+        this.cellHighlights = new boolean[this.cellColors.length];
         this.setPreferredSize(new Dimension(columns * DEFAULT_UI_BOARD_CELL_WIDTH, rows * DEFAULT_UI_BOARD_CELL_HEIGHT));
     }
 
@@ -125,6 +143,7 @@ public class BoardPanel extends JPanel {
      */
     protected void setCellColors(final int[] cellColors) {
         this.cellColors = cellColors;
+        this.cellHighlights = new boolean[this.cellColors.length];
         this.repaint();
     }
 
@@ -136,15 +155,33 @@ public class BoardPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         final Graphics2D g2d = (Graphics2D) g.create();
         final Dimension size = this.getSize();
-        g2d.clearRect(0, 0, size.width, size.height);
         final int cellWidth = size.width / this.columns;
         final int cellHeight = size.height / this.rows;
         for (int index = 0, y = 0, row = 0;  row < this.rows;  y += cellHeight, ++row) {
             for (int x = 0, column = 0;  column < this.columns;  x += cellWidth, ++column) {
+                final boolean highlight = this.cellHighlights[index];
                 final int color = this.cellColors[index++];
                 g2d.setColor(COLORS[color]);
                 g2d.fillRect(x, y, cellWidth, cellHeight);
+                if (highlight) {
+                    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2d.setColor(Color.WHITE);
+                    g2d.drawOval(x + 2, y + 2, cellWidth - 1 - 2 - 2, cellHeight - 1 - 2 - 2);
+                }
             }
         }
+    }
+
+    /**
+     * set the highlight value of all cells - the ones contained in the specified
+     * collection are set to true, all others to false.
+     * @param highlightCells
+     */
+    public void highlightCells(final Collection<Integer> highlightCells) {
+        Arrays.fill(this.cellHighlights, false);
+        for (final Integer cell : highlightCells) {
+            this.cellHighlights[cell.intValue()] = true;
+        }
+        this.repaint();
     }
 }

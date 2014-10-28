@@ -18,6 +18,7 @@
 package colorfill.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -229,6 +230,38 @@ public class GameState {
      */
     public void setNewRandomBoard() {
         this.initBoard();
+    }
+
+    /**
+     * return true if the cell specified by index belongs to a neighbor
+     * color of the flooded area.
+     * @param index of board cell
+     * @return true if cell can be flooded in the next step
+     */
+    public boolean isFloodNeighborCell(int index) {
+        final Integer cell = Integer.valueOf(index);
+        for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
+            if (ca.getMembers().contains(cell)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * return a collection of all cells that have the specified color
+     * and that belong to a neighbor area of the flooded area.
+     * @param color the color
+     * @return collection of board cells
+     */
+    public Collection<Integer> getFloodNeighborCells(final int color) {
+        final ArrayList<Integer> result = new ArrayList<>();
+        for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
+            if (ca.getColor().intValue() == color) {
+                result.addAll(ca.getMembers());
+            }
+        }
+        return result;
     }
 
 }

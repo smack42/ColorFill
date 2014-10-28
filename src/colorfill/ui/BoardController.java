@@ -18,6 +18,8 @@
 package colorfill.ui;
 
 import java.awt.event.MouseEvent;
+import java.util.Collection;
+import java.util.Collections;
 
 import javax.swing.JPanel;
 
@@ -59,7 +61,9 @@ public class BoardController {
      * @param color the cell color
      */
     protected void userClickedOnCell(final MouseEvent e, final int index, final int color) {
-        this.mainController.actionAddStep(color);
+        if (this.gameState.isFloodNeighborCell(index)) {
+            this.mainController.actionAddStep(color);
+        }
     }
 
     /**
@@ -67,5 +71,23 @@ public class BoardController {
      */
     protected void actionUpdateBoardColors() {
         this.repaintBoardPanel();
+    }
+
+    /**
+     * called by BoardPanel when user moves the mouse pointer to a board cell.
+     * @param e MouseEvent
+     * @param index the cell index
+     * @param color the cell color
+     */
+    public void userMovedMouseToCell(MouseEvent e, int index, int color) {
+        System.out.println("userMovedMouseToCell " + index);
+        final Collection<Integer> neighborCells;
+        if (this.gameState.isFloodNeighborCell(index)) {
+            System.out.println("    neighbor cell, color " + color);
+            neighborCells = this.gameState.getFloodNeighborCells(color);
+        } else {
+            neighborCells = Collections.emptyList();
+        }
+        this.boardPanel.highlightCells(neighborCells);
     }
 }
