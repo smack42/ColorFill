@@ -29,10 +29,10 @@ import colorfill.solver.DfsSolver;
 public class Starter {
 
     public static void main(String[] args) throws IOException {
-        new MainController("ColorFill __DEV__2014-10-28__");
+//        new MainController("ColorFill __DEV__2014-10-28__");
 //        testCheckOne();
 //        testCheckPc19();
-//        testSolverPc19();
+        testSolverPc19();
     }
 
 
@@ -127,6 +127,7 @@ public class Starter {
                 System.out.println(solutionCheckResult);
                 ++countCheckFailed;
             }
+//            if (100 == countSolutions) break;
         }
         final long nanoEnd = System.nanoTime();
         System.out.println("total steps:  " + countSteps + "     with limit 25: " + countSteps25);

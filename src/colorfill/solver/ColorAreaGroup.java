@@ -19,6 +19,7 @@ package colorfill.solver;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -136,10 +137,13 @@ public class ColorAreaGroup {
      * @return list of colors at depth, may be empty
      */
     public List<Integer> getColorsDepth(final int depth) {
-        final List<Integer> result = new ArrayList<>();
+        List<Integer> result = Collections.emptyList();
         for (final Map.Entry<Integer, HashSet<ColorArea>> entry : this.theMap.entrySet()) {
             for (final ColorArea ca : entry.getValue()) {
                 if (ca.getDepth() == depth) {
+                    if (false == result instanceof ArrayList) {
+                        result = new ArrayList<>();
+                    }
                     result.add(entry.getKey());
                     break; // for (ca)
                 }
@@ -154,12 +158,15 @@ public class ColorAreaGroup {
      * @return list of completed colors, may be empty
      */
     public List<Integer> getColorsCompleted(final ColorAreaGroup other) {
-        final List<Integer> result = new ArrayList<>();
+        List<Integer> result = Collections.emptyList();
         for (final Map.Entry<Integer, HashSet<ColorArea>> entry : this.theMap.entrySet()) {
             final Integer color = entry.getKey();
             final Set<ColorArea> thisSet = entry.getValue();
             final Set<ColorArea> otherSet = other.theMap.get(color);
             if ((0 < thisSet.size()) && (thisSet.size() == otherSet.size()) && (thisSet.containsAll(otherSet))) {
+                if (false == result instanceof ArrayList) {
+                    result = new ArrayList<>();
+                }
                 result.add(color);
             }
         }
