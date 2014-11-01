@@ -17,12 +17,13 @@
 
 package colorfill.solver;
 
-import java.util.ArrayList;
+import it.unimi.dsi.fastutil.bytes.ByteList;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ReferenceSet;
+import it.unimi.dsi.fastutil.objects.ReferenceSets;
+
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
@@ -36,8 +37,8 @@ public class DfsSolver extends AbstractSolver {
 
     private DfsStrategy strategy;
 
-    private List<Integer> solution;
-    private Set<ColorArea> allFlooded;
+    private byte[] solution;
+    private ReferenceSet<ColorArea> allFlooded;
     private ColorAreaGroup notFlooded;
 
     /**
@@ -59,15 +60,12 @@ public class DfsSolver extends AbstractSolver {
         this.strategy = new DeeperDfsStrategy(this.board, startPos);
 
         final ColorArea startCa = this.board.getColorArea(startPos);
-        this.allFlooded = new HashSet<>();
+        this.allFlooded = new ReferenceOpenHashSet<>();
         this.notFlooded = new ColorAreaGroup(this.board);
         notFlooded.addAll(this.board.getColorAreas(), this.allFlooded);
         final ColorAreaGroup neighbors = new ColorAreaGroup(this.board);
-        neighbors.addAll(Collections.singleton(startCa), this.allFlooded);
-        this.solution = new ArrayList<>(MAX_SEARCH_DEPTH);
-        for (int i = 0;  i < MAX_SEARCH_DEPTH;  ++i) {
-            this.solution.add(Integer.valueOf(0));
-        }
+        neighbors.addAll(ReferenceSets.singleton(startCa), this.allFlooded);
+        this.solution = new byte[MAX_SEARCH_DEPTH];
 
         this.doRecursion(0, startCa.getColor(), neighbors, true);
     }
@@ -79,7 +77,7 @@ public class DfsSolver extends AbstractSolver {
      * @param neighbors
      */
     private void doRecursion(final int depth,
-            final Integer thisColor,
+            final byte thisColor,
             ColorAreaGroup neighbors,
             final boolean saveNeighbors
             ) {
@@ -87,12 +85,12 @@ public class DfsSolver extends AbstractSolver {
         final Collection<ColorArea> thisFlooded = neighbors.getColor(thisColor);
         this.notFlooded.removeAllColor(thisFlooded, thisColor);
         final int colorsNotFlooded = this.notFlooded.countColorsNotEmpty();
-        this.solution.set(depth, thisColor);
+        this.solution[depth] = thisColor;
 
         // finished the search?
         if (0 == colorsNotFlooded) {
             // skip element 0 because it's not a step but just the initial color at startPos
-            this.addSolution(this.solution.subList(1, depth + 1));
+            this.addSolution(Arrays.copyOfRange(this.solution, 1, depth + 1));
 
         // do next step
         } else if (this.solutionSize > depth + colorsNotFlooded) { // TODO use ">=" instead of ">" to find all shortest solutions; slower!
@@ -106,9 +104,9 @@ public class DfsSolver extends AbstractSolver {
                 neighbors.addAll(ca.getNeighbors(), this.allFlooded);
             }
             // pick the "best" neighbor colors to go on
-            final List<Integer> nextColors = this.strategy.selectColors(depth, thisColor, this.solution, this.allFlooded, this.notFlooded, neighbors);
+            final ByteList nextColors = this.strategy.selectColors(depth, thisColor, this.solution, this.allFlooded, this.notFlooded, neighbors);
             // go to next recursion level
-            for (final Integer nextColor : nextColors) {
+            for (final byte nextColor : nextColors) {
                 doRecursion(depth + 1, nextColor, neighbors,
                         (nextColors.size() > 1)); // saveNeighbors
             }

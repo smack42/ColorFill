@@ -142,7 +142,7 @@ public class GameState {
      * @param color
      * @return true if the step was actually added
      */
-    public boolean addStep(int color) {
+    public boolean addStep(final int color) {
         final Integer col = Integer.valueOf(color);
         // check if same color as before or nothing to be flooded
         if (this.stepColor.get(this.numSteps).equals(col)
@@ -159,7 +159,7 @@ public class GameState {
         this.stepColor.add(col);
         final Set<ColorArea> newFlood = new HashSet<>();
         for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
-            if (ca.getColor().equals(col)) {
+            if (ca.getColor() == color) {
                 newFlood.add(ca);
             }
         }
@@ -257,7 +257,7 @@ public class GameState {
     public Collection<Integer> getFloodNeighborCells(final int color) {
         final ArrayList<Integer> result = new ArrayList<>();
         for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
-            if (ca.getColor().intValue() == color) {
+            if (ca.getColor() == color) {
                 result.addAll(ca.getMembers());
             }
         }

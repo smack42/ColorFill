@@ -17,8 +17,9 @@
 
 package colorfill.solver;
 
-import java.util.List;
 import java.util.Set;
+
+import it.unimi.dsi.fastutil.bytes.ByteList;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
@@ -46,17 +47,14 @@ public class DeepDfsStrategy implements DfsStrategy {
         this.maxDepth = board.getDepth(startPos);
     }
 
-    /* (non-Javadoc)
-     * @see colorfill.solver.DfsStrategy#selectColors(int, java.lang.Integer, java.util.List, java.util.Set, colorfill.solver.ColorAreaGroup, colorfill.solver.ColorAreaGroup)
-     */
     @Override
-    public List<Integer> selectColors(final int depth,
-            final Integer thisColor,
-            final List<Integer> solution,
+    public ByteList selectColors(final int depth,
+            final byte thisColor,
+            final byte[] solution,
             final Set<ColorArea> flooded,
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
-        List<Integer> result = neighbors.getColorsCompleted(notFlooded);
+        ByteList result = neighbors.getColorsCompleted(notFlooded);
         if (result.isEmpty()) {
             if (depth < this.maxDepth) {
                 result = neighbors.getColorsDepth(depth + 1);

@@ -17,8 +17,9 @@
 
 package colorfill.solver;
 
-import java.util.List;
 import java.util.Set;
+
+import it.unimi.dsi.fastutil.bytes.ByteList;
 
 import colorfill.model.ColorArea;
 
@@ -38,9 +39,9 @@ public interface DfsStrategy {
      * @param neighbors the neighbor areas of the flooded area
      * @return the colors to be used for the next step
      */
-    public List<Integer> selectColors(int depth,
-            Integer thisColor,
-            List<Integer> solution,
+    public ByteList selectColors(int depth,
+            byte thisColor,
+            byte[] solution,
             Set<ColorArea> flooded,
             ColorAreaGroup notFlooded,
             ColorAreaGroup neighbors);
