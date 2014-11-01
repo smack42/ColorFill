@@ -19,11 +19,11 @@ package colorfill.solver;
 
 import it.unimi.dsi.fastutil.bytes.ByteList;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ReferenceSet;
-import it.unimi.dsi.fastutil.objects.ReferenceSets;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
@@ -38,7 +38,7 @@ public class DfsSolver extends AbstractSolver {
     private DfsStrategy strategy;
 
     private byte[] solution;
-    private ReferenceSet<ColorArea> allFlooded;
+    private Set<ColorArea> allFlooded;
     private ColorAreaGroup notFlooded;
 
     /**
@@ -64,7 +64,7 @@ public class DfsSolver extends AbstractSolver {
         this.notFlooded = new ColorAreaGroup(this.board);
         notFlooded.addAll(this.board.getColorAreas(), this.allFlooded);
         final ColorAreaGroup neighbors = new ColorAreaGroup(this.board);
-        neighbors.addAll(ReferenceSets.singleton(startCa), this.allFlooded);
+        neighbors.addAll(Collections.singleton(startCa), this.allFlooded);
         this.solution = new byte[MAX_SEARCH_DEPTH];
 
         this.doRecursion(0, startCa.getColor(), neighbors, true);

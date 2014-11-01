@@ -153,6 +153,39 @@ public class ColorAreaGroup {
     }
 
     /**
+     * get the colors that are situated at the specified depth or lower,
+     * but only the colors at the maximum depth level.
+     * @return list of colors at depth or lower, not expected to be empty
+     */
+    public ByteList getColorsDepthOrLower(final int depth) {
+        final ByteList result = new ByteArrayList();
+        int depthMax = -1;
+        for (final Set<ColorArea> caSet : this.theMap.values()) {
+            byte color = Byte.MIN_VALUE;
+            int depthColor = -2;
+            for (final ColorArea ca : caSet) {
+                final int d = ca.getDepth();
+                if (d == depth) {
+                    color = ca.getColor();
+                    depthColor = d;
+                    break; // for (ca)
+                } else if ((d > depthColor) && (d < depth)) {
+                    color = ca.getColor();
+                    depthColor = d;
+                }
+            }
+            if (depthMax < depthColor) {
+                depthMax = depthColor;
+                result.clear();
+                result.add(color);
+            } else if (depthMax == depthColor) {
+                result.add(color);
+            }
+        }
+        return result;
+    }
+
+    /**
      * get the colors that are contained completely in other.
      * @param other
      * @return list of completed colors, may be empty
@@ -160,14 +193,16 @@ public class ColorAreaGroup {
     public ByteList getColorsCompleted(final ColorAreaGroup other) {
         ByteList result = ByteLists.EMPTY_LIST;
         for (final Byte2ObjectMap.Entry<ReferenceOpenHashSet<ColorArea>> entry : this.theMap.byte2ObjectEntrySet()) {
-            final byte color = entry.getKey().byteValue();
             final Set<ColorArea> thisSet = entry.getValue();
-            final Set<ColorArea> otherSet = other.theMap.get(color);
-            if ((0 < thisSet.size()) && (thisSet.size() == otherSet.size()) && (thisSet.containsAll(otherSet))) {
-                if (false == result instanceof ByteArrayList) {
-                    result = new ByteArrayList();
+            if (thisSet.size() > 0) {
+                final byte color = entry.getKey().byteValue();
+                final Set<ColorArea> otherSet = other.theMap.get(color);
+                if ((thisSet.size() == otherSet.size()) && (thisSet.containsAll(otherSet))) {
+                    if (false == result instanceof ByteArrayList) {
+                        result = new ByteArrayList();
+                    }
+                    result.add(color);
                 }
-                result.add(color);
             }
         }
         return result;

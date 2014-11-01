@@ -54,14 +54,8 @@ public class DeeperDfsStrategy implements DfsStrategy {
             return result;
         }
 
-        // slow. score(100)=2082  score(1000)=20815   262 seconds
-        for (int i = Math.min(depth + 1, this.maxDepth);  i > 0;  --i) {
-            result = neighbors.getColorsDepth(i);
-            if (result.size() > 0) {
-                return result;
-            }
-        }
-        return result;
+        // slow. score(100)=2082  score(1000)=20815   164 seconds
+        return neighbors.getColorsDepthOrLower(Math.min(depth + 1, this.maxDepth));
 
         // very slow! score(100)=2071  score(1000)=???
 //        if (depth < this.maxDepth) {
