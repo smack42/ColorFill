@@ -25,7 +25,7 @@ import colorfill.model.ColorArea;
 /**
  * a strategy for the depth-first search (DFS) solver.
  */
-public interface DfsStrategy {
+public interface DfsStrategy extends Strategy {
 
     /**
      * select one or more colors (from neighbors) for the next step of the depth-first search.

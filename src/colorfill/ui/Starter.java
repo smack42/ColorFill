@@ -24,12 +24,13 @@ import java.io.IOException;
 import colorfill.model.Board;
 import colorfill.solver.Solver;
 import colorfill.solver.DfsSolver;
+import colorfill.solver.Strategy;
 
 
 public class Starter {
 
     public static void main(String[] args) throws IOException {
-//        new MainController("ColorFill __DEV__2014-10-28__");
+//        new MainController("ColorFill __DEV__2014-11-02__");
 //        testCheckOne();
 //        testCheckPc19();
         testSolverPc19();
@@ -112,6 +113,8 @@ public class Starter {
         for (String lineTiles = brTiles.readLine();  lineTiles != null;  lineTiles = brTiles.readLine()) {
             final Board board = new Board(lineTiles);
             final Solver solver = new DfsSolver(board);
+            final Class<Strategy>[] strategies = solver.getSupportedStrategies();
+            solver.setStrategy(strategies[strategies.length - 1]); // last strategy == slowest / strongest
             final int solutionSteps = solver.execute(startPos);
             ++countSolutions;
             countSteps += solutionSteps;
