@@ -30,10 +30,10 @@ import colorfill.solver.Strategy;
 public class Starter {
 
     public static void main(String[] args) throws IOException {
-//        new MainController("ColorFill __DEV__2014-11-02__");
+        new MainController("ColorFill __DEV__2014-11-02__");
 //        testCheckOne();
 //        testCheckPc19();
-        testSolverPc19();
+//        testSolverPc19();
     }
 
 

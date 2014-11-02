@@ -17,7 +17,9 @@
 
 package colorfill.model;
 
+import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -32,13 +34,40 @@ public class GameState {
 
     public static final int DEFAULT_BOARD_WIDTH  = 14;
     public static final int DEFAULT_BOARD_HEIGHT = 14;
-    public static final int DEFAULT_BOARD_COLORS = 6;
+    public static final int DEFAULT_BOARD_NUM_COLORS = 6;
     public static final int DEFAULT_BOARD_STARTPOS = 0; // 0 == top left corner
+
+    private static final Color[] DEFAULT_UI_COLORS = {
+        // Flood-It scheme
+        new Color(0xDC4A20), // Color.RED
+        new Color(0x7E9D1E), // Color.GREEN
+        new Color(0x605CA8), // Color.BLUE
+        new Color(0xF3F61D), // Color.YELLOW
+        new Color(0x46B1E2), // Color.CYAN
+        new Color(0xED70A1)  // Color.MAGENTA
+
+        // Color Flood (Android) scheme 1 (default)
+//        new Color(0x6261A8),
+//        new Color(0x6AAECC),
+//        new Color(0x5EDD67),
+//        new Color(0xF66A61),
+//        new Color(0xF6BF61),
+//        new Color(0xF0F461)
+
+        // Color Flood (Android) scheme 6
+//        new Color(0xDF5162),
+//        new Color(0x38322F),
+//        new Color(0x247E86),
+//        new Color(0x1BC4C1),
+//        new Color(0xFCF8C9),
+//        new Color(0xD19C2D)
+    };
 
     private int prefWidth;
     private int prefHeight;
-    private int prefColors;
+    private int prefNumColors;
     private int prefStartPos;
+    private Color[] prefUiColors;
 
     private Board board;
     private int startPos;
@@ -50,13 +79,14 @@ public class GameState {
     public GameState() {
         this.prefWidth = DEFAULT_BOARD_WIDTH;
         this.prefHeight = DEFAULT_BOARD_HEIGHT;
-        this.prefColors = DEFAULT_BOARD_COLORS;
+        this.prefNumColors = DEFAULT_BOARD_NUM_COLORS;
         this.prefStartPos = DEFAULT_BOARD_STARTPOS;
+        this.prefUiColors = DEFAULT_UI_COLORS;
         this.initBoard();
     }
 
     private void initBoard() {
-        this.board = new Board(this.prefWidth, this.prefHeight, this.prefColors);
+        this.board = new Board(this.prefWidth, this.prefHeight, this.prefNumColors);
         this.startPos = this.prefStartPos;
         this.board.determineColorAreasDepth(this.startPos);
         this.numSteps = 0;
@@ -112,11 +142,11 @@ public class GameState {
         this.prefHeight = height;
     }
 
-    public int getPrefColors() {
-        return this.prefColors;
+    public int getPrefNumColors() {
+        return this.prefNumColors;
     }
-    public void setPrefColors(int colors) {
-        this.prefColors = colors;
+    public void setPrefNumColors(int colors) {
+        this.prefNumColors = colors;
     }
 
     public int getPrefStartPos() {
@@ -131,6 +161,10 @@ public class GameState {
     }
     public boolean isFinished() {
         return this.stepFloodNext.get(this.numSteps).isEmpty();
+    }
+
+    public Color[] getPrefUiColors() {
+        return Arrays.copyOf(this.prefUiColors, this.prefUiColors.length);
     }
 
     /**
