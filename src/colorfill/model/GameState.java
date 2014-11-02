@@ -25,6 +25,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+
+import colorfill.solver.DfsSolver;
+import colorfill.solver.Solver;
+import colorfill.solver.Strategy;
 
 /**
  * this class represents the current state of the game.
@@ -75,6 +80,7 @@ public class GameState {
     private final List<Integer> stepColor = new ArrayList<>();
     private final List<HashSet<ColorArea>> stepFlooded = new ArrayList<>();
     private final List<HashSet<ColorArea>> stepFloodNext = new ArrayList<>();
+    private final AtomicReference<SolverRun> activeSolverRun = new AtomicReference<>();
 
     public GameState() {
         this.prefWidth = DEFAULT_BOARD_WIDTH;
@@ -96,6 +102,7 @@ public class GameState {
         this.stepFlooded.add(new HashSet<ColorArea>(Collections.singleton(this.board.getColorArea(this.startPos))));
         this.stepFloodNext.clear();
         this.stepFloodNext.add(new HashSet<ColorArea>(this.board.getColorArea(this.startPos).getNeighbors()));
+        new SolverRun(this.activeSolverRun, this.board, this.startPos);
     }
 
     /**
@@ -298,4 +305,47 @@ public class GameState {
         return result;
     }
 
+    private static class SolverRun { // TODO return solution(s) to GameState
+        private SolverRun(final AtomicReference<SolverRun> myExternalReference, final Board board, final int startPos) {
+            myExternalReference.set(this);
+            final Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    final Solver solver = new DfsSolver(board);
+                    final Class<Strategy>[] strategies = solver.getSupportedStrategies();
+                    int strategyNameLength = 0;
+                    for (final Class<Strategy> strategy : strategies) {
+                        if (strategyNameLength < strategy.getSimpleName().length()) {
+                            strategyNameLength = strategy.getSimpleName().length();
+                        }
+                    }
+                    for (final Class<Strategy> strategy : strategies) {
+                        solver.setStrategy(strategy);
+                        final long nanoStart = System.nanoTime();
+                        final int solutionSteps = solver.execute(startPos);
+                        final long nanoEnd = System.nanoTime();
+                        if (SolverRun.this != myExternalReference.get()) {
+                            System.out.println("SolverRun BREAK");
+                            return;
+                        }
+                        System.out.println(
+                                padRight(strategy.getSimpleName(), strategyNameLength + 2)
+                                + padRight("steps(" + solutionSteps + ")", 7 + 2 + 2)
+                                + padRight("ms(" + ((nanoEnd - nanoStart + 999999L) / 1000000L) + ")", 4 + 5 + 1)
+                                + "solution(" + solver.getSolutionString() + ")");
+                    }
+                    System.out.println();
+                }
+            });
+            thread.setPriority(Thread.NORM_PRIORITY);
+            thread.start();
+        }
+    }
+
+    public static String padRight(String s, int n) {
+        return String.format("%1$-" + n + "s", s);
+    }
+    public static String padLeft(String s, int n) {
+        return String.format("%1$" + n + "s", s);
+    }
 }
