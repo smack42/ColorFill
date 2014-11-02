@@ -22,6 +22,9 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import colorfill.model.Board;
+import colorfill.solver.DeepDfsStrategy;
+import colorfill.solver.DeeperDfsStrategy;
+import colorfill.solver.GreedyDfsStrategy;
 import colorfill.solver.Solver;
 import colorfill.solver.DfsSolver;
 import colorfill.solver.Strategy;
@@ -30,10 +33,10 @@ import colorfill.solver.Strategy;
 public class Starter {
 
     public static void main(String[] args) throws IOException {
-        new MainController("ColorFill __DEV__2014-11-02__");
+//        new MainController("ColorFill __DEV__2014-11-02__");
 //        testCheckOne();
 //        testCheckPc19();
-//        testSolverPc19();
+        testSolverPc19();
     }
 
 
@@ -105,39 +108,98 @@ public class Starter {
      * 
      * @throws IOException 
      */
+    @SuppressWarnings("unchecked")
     private static void testSolverPc19() throws IOException {
-        final long nanoStart = System.nanoTime();
+        // which strategies to run
+        final Class<?>[] STRATEGIES = {
+            GreedyDfsStrategy.class,
+            DeepDfsStrategy.class,
+            DeeperDfsStrategy.class
+        };
         final int startPos = 0;
+
+        // some counters
+        int countStepsBest = 0, countSteps25Best = 0;
+        final String[] stSolution = new String[STRATEGIES.length];
+        final int[] stCountSteps = new int[STRATEGIES.length], stCountSteps25 = new int[STRATEGIES.length], stCountBest = new int[STRATEGIES.length];
+        final int[] stCountCheckFailed = new int[STRATEGIES.length], stCountCheckOK = new int[STRATEGIES.length];
+        final long[] stNanoTime = new long[STRATEGIES.length];
+
+        // read lines from the input file
         final BufferedReader brTiles = new BufferedReader(new FileReader("pc19/tiles.txt"));
-        int countSolutions = 0, countSteps = 0, countSteps25 = 0, countCheckFailed = 0, countCheckOK = 0;
+        int count = 0;
         for (String lineTiles = brTiles.readLine();  lineTiles != null;  lineTiles = brTiles.readLine()) {
+            ++count;
             final Board board = new Board(lineTiles);
             final Solver solver = new DfsSolver(board);
-            final Class<Strategy>[] strategies = solver.getSupportedStrategies();
-            solver.setStrategy(strategies[strategies.length - 1]); // last strategy == slowest / strongest
-            final int solutionSteps = solver.execute(startPos);
-            ++countSolutions;
-            countSteps += solutionSteps;
-            countSteps25 += (solutionSteps > 25 ? 25 : solutionSteps);
-            final String solutionString = solver.getSolutionString();
-            final String solutionCheckResult = board.checkSolution(solutionString, startPos);
-            System.out.println(countSolutions + " " + solutionString + "_______________" + solutionSteps + (solutionSteps > 25 ? "  !!!!!!!!!!" : ""));
-            if (solutionCheckResult.isEmpty()) {
-                ++countCheckOK;
-            } else {
-                System.out.println(lineTiles);
-                System.out.println(board);
-                System.out.println(solutionCheckResult);
-                ++countCheckFailed;
+            // run each of the strategies
+            for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
+                solver.setStrategy((Class<Strategy>) STRATEGIES[strategy]);
+                final long nanoStart = System.nanoTime();
+                final int numSteps = solver.execute(startPos);
+                final long nanoEnd = System.nanoTime();
+                stNanoTime[strategy] += nanoEnd - nanoStart;
+                stSolution[strategy] = solver.getSolutionString();
+                stCountSteps[strategy] += numSteps;
+                stCountSteps25[strategy] += (numSteps > 25 ? 25 : numSteps);
+                final String solutionCheckResult = board.checkSolution(solver.getSolutionString(), startPos);
+                if (solutionCheckResult.isEmpty()) {
+                    stCountCheckOK[strategy] += 1;
+                } else {
+                    System.out.println(lineTiles);
+                    System.out.println(board);
+                    System.out.println(STRATEGIES[strategy].getName());
+                    System.out.println(solutionCheckResult);
+                    stCountCheckFailed[strategy] += 1;
+                }
             }
-//            if (100 == countSolutions) break;
+            // which strategy was best for this board?
+            int minSteps = Integer.MAX_VALUE;
+            for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
+                if (minSteps > stSolution[strategy].length()) {
+                    minSteps = stSolution[strategy].length();
+                }
+            }
+            int minStrategy = Integer.MAX_VALUE;
+            for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
+                if (minSteps == stSolution[strategy].length()) {
+                    stCountBest[strategy] += 1;
+                    minStrategy = (strategy < minStrategy ? strategy : minStrategy);
+                }
+            }
+            countStepsBest += minSteps;
+            countSteps25Best += (minSteps > 25 ? 25 : minSteps);
+            // print one line per board
+            System.out.println(
+                    padRight("" + count, 4 + 1) +
+                    padRight(stSolution[minStrategy] + "____________" + minSteps, 30 + 12 + 2 + 2)  +
+                    (minSteps > 25 ? "!!!!!!!  " : "         ") +
+                    minStrategy + "_" + STRATEGIES[minStrategy].getSimpleName());
+            //if (100 == count) break; // for (lineTiles)
         }
-        final long nanoEnd = System.nanoTime();
-        System.out.println("total steps:  " + countSteps + "     with limit 25: " + countSteps25);
-        System.out.println("check OK:     " + countCheckOK);
-        System.out.println("check failed: " + countCheckFailed);
-        System.out.println("wall time:    " + ((nanoEnd - nanoStart + 999999999L) / 1000000000L) + " seconds");
-        System.out.println();
+        // print summary
+        for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
+            System.out.println(
+                    padRight(strategy + "_" + STRATEGIES[strategy].getSimpleName(), 2 + 17 + 2) +
+                    padRight("steps=" + stCountSteps[strategy], 6 + 5 + 2) +
+                    padRight("steps25=" + stCountSteps25[strategy], 8 + 5 + 2) +
+                    padRight("best=" + stCountBest[strategy], 5 + 4 + 2) +
+                    padRight("checkOK=" + stCountCheckOK[strategy], 8 + 4 + 2) +
+                    padRight("checkFAIL=" + stCountCheckFailed[strategy], 10 + 4 + 2) +
+                    padRight("milliSeconds=" + ((stNanoTime[strategy] + 999999L) / 1000000L), 13 + 5 + 2)
+                    );
+        }
+        System.out.println("total steps:   " + countStepsBest);
+        System.out.println("total steps25: " + countSteps25Best + (1000 == count ? "  (Programming Challenge 19 score)" : ""));
         brTiles.close();
+    }
+
+
+
+    public static String padRight(String s, int n) {
+        return String.format("%1$-" + n + "s", s);
+    }
+    public static String padLeft(String s, int n) {
+        return String.format("%1$" + n + "s", s);
     }
 }
