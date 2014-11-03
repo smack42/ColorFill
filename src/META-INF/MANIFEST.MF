@@ -1,0 +1,1 @@
+Main-Class: colorfill.ui.Starter
