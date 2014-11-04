@@ -103,7 +103,7 @@ public class DfsSolver extends AbstractSolver {
      * @see colorfill.solver.AbstractSolver#executeInternal(int)
      */
     @Override
-    protected void executeInternal(final int startPos) {
+    protected void executeInternal(final int startPos) throws InterruptedException {
         this.strategy = this.makeStrategy(startPos);
 
         final ColorArea startCa = this.board.getColorArea(startPos);
@@ -125,12 +125,13 @@ public class DfsSolver extends AbstractSolver {
      * @param depth
      * @param thisColor
      * @param neighbors
+     * @throws InterruptedException
      */
     private void doRecursion(final int depth,
             final Integer thisColor,
             ColorAreaGroup neighbors,
             final boolean saveNeighbors
-            ) {
+            ) throws InterruptedException {
         // do this step
         final Collection<ColorArea> thisFlooded = neighbors.getColor(thisColor);
         this.notFlooded.removeAllColor(thisFlooded, thisColor);
@@ -144,6 +145,7 @@ public class DfsSolver extends AbstractSolver {
 
         // do next step
         } else if (this.solutionSize > depth + colorsNotFlooded) { // TODO use ">=" instead of ">" to find all shortest solutions; slower!
+            if (Thread.interrupted()) { throw new InterruptedException(); }
             this.allFlooded.addAll(thisFlooded);
             if (saveNeighbors) {
                 neighbors = new ColorAreaGroup(neighbors); // clone for backtracking

@@ -305,10 +305,11 @@ public class GameState {
         return result;
     }
 
-    private static class SolverRun { // TODO return solution(s) to GameState
+
+    private static class SolverRun extends Thread { // TODO return solution(s) to GameState
+
         private SolverRun(final AtomicReference<SolverRun> myExternalReference, final Board board, final int startPos) {
-            myExternalReference.set(this);
-            final Thread thread = new Thread(new Runnable() {
+            super(new Runnable() {
                 @Override
                 public void run() {
                     final Solver solver = new DfsSolver(board);
@@ -322,12 +323,14 @@ public class GameState {
                     for (final Class<Strategy> strategy : strategies) {
                         solver.setStrategy(strategy);
                         final long nanoStart = System.nanoTime();
-                        final int solutionSteps = solver.execute(startPos);
-                        final long nanoEnd = System.nanoTime();
-                        if (SolverRun.this != myExternalReference.get()) {
-                            System.out.println("SolverRun BREAK");
-                            return;
+                        int solutionSteps = 0;
+                        try {
+                            solutionSteps = solver.execute(startPos);
+                        } catch (InterruptedException e) {
+                            System.out.println("SolverRun interrupted!");
+                            break; // for (strategy)
                         }
+                        final long nanoEnd = System.nanoTime();
                         System.out.println(
                                 padRight(strategy.getSimpleName(), strategyNameLength + 2)
                                 + padRight("steps(" + solutionSteps + ")", 7 + 2 + 2)
@@ -337,8 +340,13 @@ public class GameState {
                     System.out.println();
                 }
             });
-            thread.setPriority(Thread.NORM_PRIORITY);
-            thread.start();
+
+            final SolverRun other = myExternalReference.getAndSet(this);
+            if ((null != other) && (this != other)) {
+                other.interrupt();
+            }
+            this.setPriority(Thread.NORM_PRIORITY);
+            this.start();
         }
     }
 

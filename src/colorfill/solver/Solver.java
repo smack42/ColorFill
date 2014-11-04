@@ -25,8 +25,9 @@ public interface Solver {
      * 
      * @param startPos position of the board cell where the color flood starts (0 == top left)
      * @return number of steps in the solution
+     * @throws InterruptedException
      */
-    public int execute(final int startPos);
+    public int execute(final int startPos) throws InterruptedException;
 
     /**
      * return the first (best) solution as a String.

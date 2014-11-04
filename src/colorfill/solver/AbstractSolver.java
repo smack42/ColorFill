@@ -44,14 +44,15 @@ public abstract class AbstractSolver implements Solver {
      * should call {@link #addSolution(List)} to collect the solution(s).
      * 
      * @param startPos position of the board cell where the color flood starts (0 == top left)
+     * @throws InterruptedException
      */
-    protected abstract void executeInternal(int startPos);
+    protected abstract void executeInternal(int startPos) throws InterruptedException;
 
     /* (non-Javadoc)
      * @see colorfill.solver.Solver#execute(int)
      */
     @Override
-    public int execute(final int startPos) {
+    public int execute(final int startPos) throws InterruptedException {
         this.solutions.clear();
         this.solutionSize = Integer.MAX_VALUE;
 

@@ -32,11 +32,11 @@ import colorfill.solver.Strategy;
 
 public class Starter {
 
-    public static void main(String[] args) throws IOException {
-//        new MainController("ColorFill __DEV__2014-11-02__");
+    public static void main(String[] args) throws Exception {
+        new MainController("ColorFill __DEV__2014-11-04__");
 //        testCheckOne();
 //        testCheckPc19();
-        testSolverPc19();
+//        testSolverPc19();
     }
 
 
@@ -107,9 +107,10 @@ public class Starter {
      * http://cplus.about.com/od/programmingchallenges/a/challenge19.htm
      * 
      * @throws IOException 
+     * @throws InterruptedException
      */
     @SuppressWarnings("unchecked")
-    private static void testSolverPc19() throws IOException {
+    private static void testSolverPc19() throws IOException, InterruptedException {
         // which strategies to run
         final Class<?>[] STRATEGIES = {
             GreedyDfsStrategy.class,
