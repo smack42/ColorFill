@@ -35,6 +35,14 @@ public class DfsSolver extends AbstractSolver {
 
     private static final int MAX_SEARCH_DEPTH = 500; // arbitrary limit
 
+    @SuppressWarnings("rawtypes")
+    private static final Class[] SUPPORTED_STRATEGIES = {
+        GreedyDfsStrategy.class,
+        DeepDfsStrategy.class,
+        DeeperDfsStrategy.class
+    };
+
+    private Class<? extends DfsStrategy> strategyClass;
     private DfsStrategy strategy;
 
     private byte[] solution;
@@ -50,14 +58,53 @@ public class DfsSolver extends AbstractSolver {
     }
 
     /* (non-Javadoc)
+     * @see colorfill.solver.Solver#setStrategy(java.lang.Class)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public void setStrategy(final Class<Strategy> strategyClass) {
+        if (false == DfsStrategy.class.isAssignableFrom(strategyClass)) {
+            throw new IllegalArgumentException(
+                    "unsupported strategy class " + strategyClass.getName()
+                    + "  " + this.getClass().getSimpleName() + " supports " + DfsStrategy.class.getSimpleName() + " only.");
+        }
+        this.strategyClass = (Class<? extends DfsStrategy>) strategyClass;
+    }
+
+    /* (non-Javadoc)
+     * @see colorfill.solver.Solver#getSupportedStrategies()
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Class<Strategy>[] getSupportedStrategies() {
+        return Arrays.copyOf(SUPPORTED_STRATEGIES, SUPPORTED_STRATEGIES.length);
+    }
+
+    @SuppressWarnings("unchecked")
+    private DfsStrategy makeStrategy(final int startPos) {
+        final DfsStrategy result;
+        if (null == this.strategyClass) {
+            this.strategyClass = SUPPORTED_STRATEGIES[0];
+        }
+        if (GreedyDfsStrategy.class.equals(this.strategyClass)) {
+            result = new GreedyDfsStrategy();
+        } else if (DeepDfsStrategy.class.equals(this.strategyClass)) {
+            result = new DeepDfsStrategy(this.board, startPos);
+        } else if (DeeperDfsStrategy.class.equals(this.strategyClass)) {
+            result = new DeeperDfsStrategy(this.board, startPos);
+        } else {
+            throw new IllegalArgumentException(
+                    "DfsSolver.makeStrategy() - unsupported strategy class " + this.strategyClass.getName());
+        }
+        return result;
+    }
+
+    /* (non-Javadoc)
      * @see colorfill.solver.AbstractSolver#executeInternal(int)
      */
-    // TODO make strategy a runtime parameter
     @Override
     protected void executeInternal(final int startPos) {
-        //this.strategy = new GreedyDfsStrategy();
-        //this.strategy = new DeepDfsStrategy(this.board, startPos);
-        this.strategy = new DeeperDfsStrategy(this.board, startPos);
+        this.strategy = this.makeStrategy(startPos);
 
         final ColorArea startCa = this.board.getColorArea(startPos);
         this.allFlooded = new ReferenceOpenHashSet<>();

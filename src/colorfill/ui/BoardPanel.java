@@ -42,33 +42,8 @@ public class BoardPanel extends JPanel {
     public static final int DEFAULT_UI_BOARD_CELL_WIDTH  = 32;
     public static final int DEFAULT_UI_BOARD_CELL_HEIGHT = 32;
 
-    private static final Color[] COLORS = {
-        // Flood-It scheme
-        new Color(0xDC4A20), // Color.RED
-        new Color(0x7E9D1E), // Color.GREEN
-        new Color(0x605CA8), // Color.BLUE
-        new Color(0xF3F61D), // Color.YELLOW
-        new Color(0x46B1E2), // Color.CYAN
-        new Color(0xED70A1)  // Color.MAGENTA
-
-        // Color Flood (Android) scheme 1 (default)
-//        new Color(0x6261A8),
-//        new Color(0x6AAECC),
-//        new Color(0x5EDD67),
-//        new Color(0xF66A61),
-//        new Color(0xF6BF61),
-//        new Color(0xF0F461)
-
-        // Color Flood (Android) scheme 6
-//        new Color(0xDF5162),
-//        new Color(0x38322F),
-//        new Color(0x247E86),
-//        new Color(0x1BC4C1),
-//        new Color(0xFCF8C9),
-//        new Color(0xD19C2D)
-    };
-
     private final BoardController controller;
+    private Color[] uiColors;
     private int columns, rows;
     private int[] cellColors = new int[0];
     private boolean[] cellHighlights = new boolean[0];
@@ -80,6 +55,7 @@ public class BoardPanel extends JPanel {
     protected BoardPanel(final BoardController controller) {
         super(true); // isDoubleBuffered
         this.controller = controller;
+        this.uiColors = controller.getUiColors();
         this.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -169,7 +145,7 @@ public class BoardPanel extends JPanel {
             for (int x = 0, column = 0;  column < this.columns;  x += cellWidth, ++column) {
                 final boolean highlight = this.cellHighlights[index];
                 final int color = this.cellColors[index++];
-                g2d.setColor(COLORS[color]);
+                g2d.setColor(uiColors[color]);
                 g2d.fillRect(x, y, cellWidth, cellHeight);
                 if (highlight) {
                     g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);

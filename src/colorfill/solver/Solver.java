@@ -34,4 +34,17 @@ public interface Solver {
      * @return the solution
      */
     public String getSolutionString();
+
+    /**
+     * set the strategy to be used by this solver.
+     * @param strategyClass the class of the strategy
+     */
+    public void setStrategy(Class<Strategy> strategyClass);
+
+    /**
+     * get the strategies supported by this solver.
+     * they should be sorted from fastest to slowest.
+     * @return array of strategy classes
+     */
+    public Class<Strategy>[] getSupportedStrategies();
 }

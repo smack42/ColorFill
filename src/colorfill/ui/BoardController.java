@@ -17,6 +17,7 @@
 
 package colorfill.ui;
 
+import java.awt.Color;
 import java.awt.event.MouseEvent;
 import java.util.Collection;
 import java.util.Collections;
@@ -54,6 +55,10 @@ public class BoardController {
         return this.boardPanel;
     }
 
+    protected Color[] getUiColors() {
+        return this.gameState.getPrefUiColors();
+    }
+
     /**
      * called by BoardPanel when user clicks a mouse button on a board cell.
      * @param e MouseEvent
@@ -79,7 +84,7 @@ public class BoardController {
      * @param index the cell index
      * @param color the cell color
      */
-    public void userMovedMouseToCell(MouseEvent e, int index, int color) {
+    protected void userMovedMouseToCell(MouseEvent e, int index, int color) {
         final Collection<Integer> neighborCells;
         if (this.gameState.isFloodNeighborCell(index)) {
             neighborCells = this.gameState.getFloodNeighborCells(color);
