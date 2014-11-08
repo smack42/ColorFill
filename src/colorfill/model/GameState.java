@@ -18,13 +18,8 @@
 package colorfill.model;
 
 import java.awt.Color;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import colorfill.solver.DfsSolver;
@@ -76,10 +71,9 @@ public class GameState {
 
     private Board board;
     private int startPos;
-    private int numSteps;
-    private final List<Integer> stepColor = new ArrayList<>();
-    private final List<HashSet<ColorArea>> stepFlooded = new ArrayList<>();
-    private final List<HashSet<ColorArea>> stepFloodNext = new ArrayList<>();
+
+    private GameProgress progressUser;
+
     private final AtomicReference<SolverRun> activeSolverRun = new AtomicReference<>();
 
     public GameState() {
@@ -95,14 +89,8 @@ public class GameState {
         this.board = new Board(this.prefWidth, this.prefHeight, this.prefNumColors);
         this.startPos = this.prefStartPos;
         this.board.determineColorAreasDepth(this.startPos);
-        this.numSteps = 0;
-        this.stepColor.clear();
-        this.stepColor.add(Integer.valueOf(this.board.getColor(this.startPos)));
-        this.stepFlooded.clear();
-        this.stepFlooded.add(new HashSet<ColorArea>(Collections.singleton(this.board.getColorArea(this.startPos))));
-        this.stepFloodNext.clear();
-        this.stepFloodNext.add(new HashSet<ColorArea>(this.board.getColorArea(this.startPos).getNeighbors()));
-        new SolverRun(this.activeSolverRun, this.board, this.startPos);
+        this.progressUser = new GameProgress(this.board, this.startPos);
+        new SolverRun(this.board, this.startPos);
     }
 
     /**
@@ -112,27 +100,12 @@ public class GameState {
      * @return array of color numbers
      */
     public int[] getColors() {
-        final int[] result = new int[this.board.getSize()];
-        final Set<ColorArea> flooded = this.stepFlooded.get(this.numSteps);
-        final int floodColor = this.stepColor.get(this.numSteps).intValue();
-        for (int i = 0;  i < result.length;  ++i) {
-            result[i] = this.board.getColor(i);
-            final Integer cell = Integer.valueOf(i);
-            for (final ColorArea ca : flooded) {
-                if (ca.getMembers().contains(cell)) {
-                    result[i] = floodColor;
-                    break; // for (ca)
-                }
-            }
-        }
-        return result;
+        // TODO use solver solutions
+        return this.progressUser.getColors();
     }
 
     public Board getBoard() {
         return this.board;
-    }
-    public void setBoard(Board board) {
-        this.board = board;
     }
 
     public int getPrefWidth() {
@@ -164,10 +137,13 @@ public class GameState {
     }
 
     public int getNumSteps() {
-        return this.numSteps;
+        // TODO use solver solutions
+        return this.progressUser.getNumSteps();
     }
+
     public boolean isFinished() {
-        return this.stepFloodNext.get(this.numSteps).isEmpty();
+        // TODO use solver solutions
+        return this.progressUser.isFinished();
     }
 
     public Color[] getPrefUiColors() {
@@ -184,46 +160,8 @@ public class GameState {
      * @return true if the step was actually added
      */
     public boolean addStep(int color) {
-        final Integer col = Integer.valueOf(color);
-        // check if same color as before or nothing to be flooded
-        if (this.stepColor.get(this.numSteps).equals(col)
-                || this.stepFloodNext.get(this.numSteps).isEmpty()) {
-            return false;
-        }
-        // current lists are too long (because of undo) - remove the future moves
-        if (this.stepColor.size() > this.numSteps + 1) {
-            this.stepColor.subList(this.numSteps + 1, this.stepColor.size()).clear();
-            this.stepFlooded.subList(this.numSteps + 1, this.stepFlooded.size()).clear();
-            this.stepFloodNext.subList(this.numSteps + 1, this.stepFloodNext.size()).clear();
-        }
-        // add stepColor
-        this.stepColor.add(col);
-        final Set<ColorArea> newFlood = new HashSet<>();
-        for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
-            if (ca.getColor().equals(col)) {
-                newFlood.add(ca);
-            }
-        }
-        // add stepFlooded
-        @SuppressWarnings("unchecked")
-        final HashSet<ColorArea> flooded = (HashSet<ColorArea>) this.stepFlooded.get(this.numSteps).clone();
-        flooded.addAll(newFlood);
-        this.stepFlooded.add(flooded);
-        // add stepFloodNext
-        @SuppressWarnings("unchecked")
-        final HashSet<ColorArea> floodNext = (HashSet<ColorArea>) this.stepFloodNext.get(this.numSteps).clone();
-        floodNext.removeAll(newFlood);
-        for (final ColorArea ca : newFlood) {
-            for (final ColorArea caN : ca.getNeighbors()) {
-                if (false == flooded.contains(caN)) {
-                    floodNext.add(caN);
-                }
-            }
-        }
-        this.stepFloodNext.add(floodNext);
-        // next step
-        ++ this.numSteps;
-        return true;
+        // TODO use solver solutions
+        return this.progressUser.addStep(color);
     }
 
     /**
@@ -231,7 +169,8 @@ public class GameState {
      * @return true if undo is possible
      */
     public boolean canUndoStep() {
-        return this.numSteps > 0;
+        // TODO use solver solutions
+        return this.progressUser.canUndoStep();
     }
 
     /**
@@ -239,11 +178,8 @@ public class GameState {
      * @return true if step undo was successful
      */
     public boolean undoStep() {
-        if (this.canUndoStep()) {
-            -- this.numSteps;
-            return true;
-        }
-        return false;
+        // TODO use solver solutions
+        return this.progressUser.undoStep();
     }
 
     /**
@@ -251,7 +187,8 @@ public class GameState {
      * @return true if redo is possible
      */
     public boolean canRedoStep() {
-        return this.numSteps < this.stepColor.size() - 1;
+        // TODO use solver solutions
+        return this.progressUser.canRedoStep();
     }
 
     /**
@@ -259,11 +196,8 @@ public class GameState {
      * @return true if step redo was successful
      */
     public boolean redoStep() {
-        if (this.canRedoStep()) {
-            ++ this.numSteps;
-            return true;
-        }
-        return false;
+        // TODO use solver solutions
+        return this.progressUser.redoStep();
     }
 
     /**
@@ -280,13 +214,8 @@ public class GameState {
      * @return true if cell can be flooded in the next step
      */
     public boolean isFloodNeighborCell(int index) {
-        final Integer cell = Integer.valueOf(index);
-        for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
-            if (ca.getMembers().contains(cell)) {
-                return true;
-            }
-        }
-        return false;
+        // TODO use solver solutions
+        return this.progressUser.isFloodNeighborCell(index);
     }
 
     /**
@@ -296,28 +225,21 @@ public class GameState {
      * @return collection of board cells
      */
     public Collection<Integer> getFloodNeighborCells(final int color) {
-        final ArrayList<Integer> result = new ArrayList<>();
-        for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
-            if (ca.getColor().intValue() == color) {
-                result.addAll(ca.getMembers());
-            }
-        }
-        return result;
+        // TODO use solver solutions
+        return this.progressUser.getFloodNeighborCells(color);
     }
 
 
 
-    private static class SolverRun extends Thread { // TODO return solution(s) to GameState
-        private final AtomicReference<SolverRun> myExternalReference;
+    private class SolverRun extends Thread { // TODO return solution(s) to GameState
         private final Board board;
         private final int startPos;
 
-        private SolverRun(final AtomicReference<SolverRun> myExternalReference, final Board board, final int startPos) {
+        private SolverRun(final Board board, final int startPos) {
             super();
-            this.myExternalReference = myExternalReference;
             this.board = board;
             this.startPos = startPos;
-            final SolverRun other = myExternalReference.getAndSet(this);
+            final SolverRun other = GameState.this.activeSolverRun.getAndSet(this);
             if ((null != other) && (this != other)) {
                 other.interrupt();
             }
@@ -353,9 +275,11 @@ public class GameState {
                         + "solution(" + solver.getSolution() + ")");
             }
             System.out.println();
-            this.myExternalReference.compareAndSet(this, null);
+            GameState.this.activeSolverRun.compareAndSet(this, null);
         }
     }
+
+
 
     public static String padRight(String s, int n) {
         return String.format("%1$-" + n + "s", s);
