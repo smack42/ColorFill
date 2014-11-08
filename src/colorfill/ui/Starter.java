@@ -25,6 +25,7 @@ import colorfill.model.Board;
 import colorfill.solver.DeepDfsStrategy;
 import colorfill.solver.DeeperDfsStrategy;
 import colorfill.solver.GreedyDfsStrategy;
+import colorfill.solver.Solution;
 import colorfill.solver.Solver;
 import colorfill.solver.DfsSolver;
 import colorfill.solver.Strategy;
@@ -33,7 +34,7 @@ import colorfill.solver.Strategy;
 public class Starter {
 
     public static void main(String[] args) throws Exception {
-        new MainController("ColorFill __DEV__2014-11-04__");
+        new MainController("ColorFill __DEV__2014-11-08__");
 //        testCheckOne();
 //        testCheckPc19();
 //        testSolverPc19();
@@ -121,7 +122,7 @@ public class Starter {
 
         // some counters
         int countStepsBest = 0, countSteps25Best = 0;
-        final String[] stSolution = new String[STRATEGIES.length];
+        final Solution[] stSolution = new Solution[STRATEGIES.length];
         final int[] stCountSteps = new int[STRATEGIES.length], stCountSteps25 = new int[STRATEGIES.length], stCountBest = new int[STRATEGIES.length];
         final int[] stCountCheckFailed = new int[STRATEGIES.length], stCountCheckOK = new int[STRATEGIES.length];
         final long[] stNanoTime = new long[STRATEGIES.length];
@@ -140,10 +141,10 @@ public class Starter {
                 final int numSteps = solver.execute(startPos);
                 final long nanoEnd = System.nanoTime();
                 stNanoTime[strategy] += nanoEnd - nanoStart;
-                stSolution[strategy] = solver.getSolutionString();
+                stSolution[strategy] = solver.getSolution();
                 stCountSteps[strategy] += numSteps;
                 stCountSteps25[strategy] += (numSteps > 25 ? 25 : numSteps);
-                final String solutionCheckResult = board.checkSolution(solver.getSolutionString(), startPos);
+                final String solutionCheckResult = board.checkSolution(solver.getSolution().toString(), startPos);
                 if (solutionCheckResult.isEmpty()) {
                     stCountCheckOK[strategy] += 1;
                 } else {
@@ -157,13 +158,13 @@ public class Starter {
             // which strategy was best for this board?
             int minSteps = Integer.MAX_VALUE;
             for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
-                if (minSteps > stSolution[strategy].length()) {
-                    minSteps = stSolution[strategy].length();
+                if (minSteps > stSolution[strategy].getNumSteps()) {
+                    minSteps = stSolution[strategy].getNumSteps();
                 }
             }
             int minStrategy = Integer.MAX_VALUE;
             for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
-                if (minSteps == stSolution[strategy].length()) {
+                if (minSteps == stSolution[strategy].getNumSteps()) {
                     stCountBest[strategy] += 1;
                     minStrategy = (strategy < minStrategy ? strategy : minStrategy);
                 }
@@ -175,7 +176,7 @@ public class Starter {
                     padRight("" + count, 4 + 1) +
                     padRight(stSolution[minStrategy] + "____________" + minSteps, 30 + 12 + 2 + 2)  +
                     (minSteps > 25 ? "!!!!!!!  " : "         ") +
-                    minStrategy + "_" + STRATEGIES[minStrategy].getSimpleName());
+                    minStrategy + "_" + stSolution[minStrategy].getSolverName());
             //if (100 == count) break; // for (lineTiles)
         }
         // print summary

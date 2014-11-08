@@ -17,7 +17,6 @@
 
 package colorfill.solver;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,7 +44,7 @@ public class DfsSolver extends AbstractSolver {
     private Class<? extends DfsStrategy> strategyClass;
     private DfsStrategy strategy;
 
-    private List<Integer> solution;
+    private byte[] solution;
     private Set<ColorArea> allFlooded;
     private ColorAreaGroup notFlooded;
 
@@ -100,6 +99,14 @@ public class DfsSolver extends AbstractSolver {
     }
 
     /* (non-Javadoc)
+     * @see colorfill.solver.Solver#getSolverName()
+     */
+    @Override
+    public String getSolverName() {
+        return this.strategy.getClass().getSimpleName();
+    }
+
+    /* (non-Javadoc)
      * @see colorfill.solver.AbstractSolver#executeInternal(int)
      */
     @Override
@@ -112,10 +119,7 @@ public class DfsSolver extends AbstractSolver {
         notFlooded.addAll(this.board.getColorAreas(), this.allFlooded);
         final ColorAreaGroup neighbors = new ColorAreaGroup(this.board);
         neighbors.addAll(Collections.singleton(startCa), this.allFlooded);
-        this.solution = new ArrayList<>(MAX_SEARCH_DEPTH);
-        for (int i = 0;  i < MAX_SEARCH_DEPTH;  ++i) {
-            this.solution.add(Integer.valueOf(0));
-        }
+        this.solution = new byte[MAX_SEARCH_DEPTH];
 
         this.doRecursion(0, startCa.getColor(), neighbors, true);
     }
@@ -136,12 +140,12 @@ public class DfsSolver extends AbstractSolver {
         final Collection<ColorArea> thisFlooded = neighbors.getColor(thisColor);
         this.notFlooded.removeAllColor(thisFlooded, thisColor);
         final int colorsNotFlooded = this.notFlooded.countColorsNotEmpty();
-        this.solution.set(depth, thisColor);
+        this.solution[depth] = thisColor.byteValue();
 
         // finished the search?
         if (0 == colorsNotFlooded) {
             // skip element 0 because it's not a step but just the initial color at startPos
-            this.addSolution(this.solution.subList(1, depth + 1));
+            this.addSolution(Arrays.copyOfRange(this.solution, 1, depth + 1));
 
         // do next step
         } else if (this.solutionSize > depth + colorsNotFlooded) { // TODO use ">=" instead of ">" to find all shortest solutions; slower!

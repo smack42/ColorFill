@@ -306,47 +306,54 @@ public class GameState {
     }
 
 
+
     private static class SolverRun extends Thread { // TODO return solution(s) to GameState
+        private final AtomicReference<SolverRun> myExternalReference;
+        private final Board board;
+        private final int startPos;
 
         private SolverRun(final AtomicReference<SolverRun> myExternalReference, final Board board, final int startPos) {
-            super(new Runnable() {
-                @Override
-                public void run() {
-                    final Solver solver = new DfsSolver(board);
-                    final Class<Strategy>[] strategies = solver.getSupportedStrategies();
-                    int strategyNameLength = 0;
-                    for (final Class<Strategy> strategy : strategies) {
-                        if (strategyNameLength < strategy.getSimpleName().length()) {
-                            strategyNameLength = strategy.getSimpleName().length();
-                        }
-                    }
-                    for (final Class<Strategy> strategy : strategies) {
-                        solver.setStrategy(strategy);
-                        final long nanoStart = System.nanoTime();
-                        int solutionSteps = 0;
-                        try {
-                            solutionSteps = solver.execute(startPos);
-                        } catch (InterruptedException e) {
-                            System.out.println("SolverRun interrupted!");
-                            break; // for (strategy)
-                        }
-                        final long nanoEnd = System.nanoTime();
-                        System.out.println(
-                                padRight(strategy.getSimpleName(), strategyNameLength + 2)
-                                + padRight("steps(" + solutionSteps + ")", 7 + 2 + 2)
-                                + padRight("ms(" + ((nanoEnd - nanoStart + 999999L) / 1000000L) + ")", 4 + 5 + 1)
-                                + "solution(" + solver.getSolutionString() + ")");
-                    }
-                    System.out.println();
-                }
-            });
-
+            super();
+            this.myExternalReference = myExternalReference;
+            this.board = board;
+            this.startPos = startPos;
             final SolverRun other = myExternalReference.getAndSet(this);
             if ((null != other) && (this != other)) {
                 other.interrupt();
             }
             this.setPriority(Thread.NORM_PRIORITY);
             this.start();
+        }
+
+        @Override
+        public void run() {
+            final Solver solver = new DfsSolver(this.board);
+            final Class<Strategy>[] strategies = solver.getSupportedStrategies();
+            int strategyNameLength = 0;
+            for (final Class<Strategy> strategy : strategies) {
+                if (strategyNameLength < strategy.getSimpleName().length()) {
+                    strategyNameLength = strategy.getSimpleName().length();
+                }
+            }
+            for (final Class<Strategy> strategy : strategies) {
+                solver.setStrategy(strategy);
+                final long nanoStart = System.nanoTime();
+                int solutionSteps = 0;
+                try {
+                    solutionSteps = solver.execute(this.startPos);
+                } catch (InterruptedException e) {
+                    System.out.println("***** SolverRun interrupted *****");
+                    break; // for (strategy)
+                }
+                final long nanoEnd = System.nanoTime();
+                System.out.println(
+                        padRight(strategy.getSimpleName(), strategyNameLength + 2)
+                        + padRight("steps(" + solutionSteps + ")", 7 + 2 + 2)
+                        + padRight("ms(" + ((nanoEnd - nanoStart + 999999L) / 1000000L) + ")", 4 + 5 + 1)
+                        + "solution(" + solver.getSolution() + ")");
+            }
+            System.out.println();
+            this.myExternalReference.compareAndSet(this, null);
         }
     }
 

@@ -40,7 +40,7 @@ public interface DfsStrategy extends Strategy {
      */
     public List<Integer> selectColors(int depth,
             Integer thisColor,
-            List<Integer> solution,
+            byte[] solution,
             Set<ColorArea> flooded,
             ColorAreaGroup notFlooded,
             ColorAreaGroup neighbors);

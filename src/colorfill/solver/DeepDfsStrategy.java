@@ -52,7 +52,7 @@ public class DeepDfsStrategy implements DfsStrategy {
     @Override
     public List<Integer> selectColors(final int depth,
             final Integer thisColor,
-            final List<Integer> solution,
+            final byte[] solution,
             final Set<ColorArea> flooded,
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {

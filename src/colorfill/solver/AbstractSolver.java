@@ -28,7 +28,7 @@ import colorfill.model.Board;
 public abstract class AbstractSolver implements Solver {
 
     protected final Board board;
-    protected final List<List<Integer>> solutions = new ArrayList<>();
+    protected final List<Solution> solutions = new ArrayList<>();
     protected int solutionSize = 0;
 
     /**
@@ -62,17 +62,15 @@ public abstract class AbstractSolver implements Solver {
     }
 
     /* (non-Javadoc)
-     * @see colorfill.solver.Solver#getSolutionString()
+     * @see colorfill.solver.Solver#getSolution()
      */
     @Override
-    public String getSolutionString() {
-        final StringBuilder result = new StringBuilder();
+    public Solution getSolution() {
         if (this.solutions.size() > 0) {
-            for (final Integer color : this.solutions.get(0)) {
-                result.append(color.intValue() + 1);
-            }
+            return this.solutions.get(0);
+        } else {
+            return Solution.EMPTY_SOLUTION;
         }
-        return result.toString();
     }
 
     /**
@@ -85,13 +83,13 @@ public abstract class AbstractSolver implements Solver {
      * @param solution to be added
      * @return true if this solution was added
      */
-    protected boolean addSolution(final List<Integer> solution) {
-        if (this.solutionSize > solution.size()) {
-            this.solutionSize = solution.size();
+    protected boolean addSolution(final byte[] solution) {
+        if (this.solutionSize > solution.length) {
+            this.solutionSize = solution.length;
             this.solutions.clear();
         }
-        if (this.solutionSize == solution.size()) {
-            this.solutions.add(new ArrayList<>(solution));
+        if (this.solutionSize == solution.length) {
+            this.solutions.add(new Solution(solution, this.getSolverName()));
             return true;
         }
         return false;
