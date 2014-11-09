@@ -18,8 +18,12 @@
 package colorfill.model;
 
 import java.awt.Color;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import colorfill.solver.DfsSolver;
@@ -74,7 +78,10 @@ public class GameState {
 
     private GameProgress progressUser;
 
+    private boolean isAutoRunSolver;
     private final AtomicReference<SolverRun> activeSolverRun = new AtomicReference<>();
+    private final List<GameProgress> progressSolutions = new ArrayList<GameProgress>();
+    public static final String PROPERTY_PROGRESS_SOLUTIONS = "progressSolutions";
 
     public GameState() {
         this.prefWidth = DEFAULT_BOARD_WIDTH;
@@ -82,6 +89,7 @@ public class GameState {
         this.prefNumColors = DEFAULT_BOARD_NUM_COLORS;
         this.prefStartPos = DEFAULT_BOARD_STARTPOS;
         this.prefUiColors = DEFAULT_UI_COLORS;
+        this.setAutoRunSolver(false);
         this.initBoard();
     }
 
@@ -90,7 +98,17 @@ public class GameState {
         this.startPos = this.prefStartPos;
         this.board.determineColorAreasDepth(this.startPos);
         this.progressUser = new GameProgress(this.board, this.startPos);
-        new SolverRun(this.board, this.startPos);
+        if (this.isAutoRunSolver) {
+            new SolverRun(this.board, this.startPos);
+        }
+    }
+
+    public void setAutoRunSolver(final boolean isAutoRunSolver) {
+        final boolean oldValue = this.isAutoRunSolver;
+        this.isAutoRunSolver = isAutoRunSolver;
+        if ((false == oldValue) && (true == isAutoRunSolver)) {
+            new SolverRun(this.board, this.startPos);
+        }
     }
 
     /**
@@ -136,9 +154,9 @@ public class GameState {
         this.prefStartPos = startPos;
     }
 
-    public int getNumSteps() {
+    public int getCurrentStep() {
         // TODO use solver solutions
-        return this.progressUser.getNumSteps();
+        return this.progressUser.getCurrentStep();
     }
 
     public boolean isFinished() {
@@ -231,7 +249,7 @@ public class GameState {
 
 
 
-    private class SolverRun extends Thread { // TODO return solution(s) to GameState
+    private class SolverRun extends Thread {
         private final Board board;
         private final int startPos;
 
@@ -243,40 +261,69 @@ public class GameState {
             if ((null != other) && (this != other)) {
                 other.interrupt();
             }
-            this.setPriority(Thread.NORM_PRIORITY);
             this.start();
         }
 
         @Override
         public void run() {
+            GameState.this.clearProgressSolutions();
             final Solver solver = new DfsSolver(this.board);
             final Class<Strategy>[] strategies = solver.getSupportedStrategies();
-            int strategyNameLength = 0;
-            for (final Class<Strategy> strategy : strategies) {
-                if (strategyNameLength < strategy.getSimpleName().length()) {
-                    strategyNameLength = strategy.getSimpleName().length();
-                }
-            }
             for (final Class<Strategy> strategy : strategies) {
                 solver.setStrategy(strategy);
                 final long nanoStart = System.nanoTime();
-                int solutionSteps = 0;
                 try {
-                    solutionSteps = solver.execute(this.startPos);
+                    solver.execute(this.startPos);
                 } catch (InterruptedException e) {
                     System.out.println("***** SolverRun interrupted *****");
                     break; // for (strategy)
                 }
                 final long nanoEnd = System.nanoTime();
+                GameState.this.addProgressSolution(new GameProgress(this.board, this.startPos, solver.getSolution()));
                 System.out.println(
-                        padRight(strategy.getSimpleName(), strategyNameLength + 2)
-                        + padRight("steps(" + solutionSteps + ")", 7 + 2 + 2)
+                        padRight(strategy.getSimpleName(), 17 + 2) // 17==max. length of strategy names
+                        + padRight("steps(" + solver.getSolution().getNumSteps() + ")", 7 + 2 + 2)
                         + padRight("ms(" + ((nanoEnd - nanoStart + 999999L) / 1000000L) + ")", 4 + 5 + 1)
                         + "solution(" + solver.getSolution() + ")");
             }
             System.out.println();
             GameState.this.activeSolverRun.compareAndSet(this, null);
         }
+    }
+
+
+
+    private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
+    public void addPropertyChangeListener(final PropertyChangeListener listener) {
+        this.propertyChangeSupport.addPropertyChangeListener(listener);
+    }
+    public void removePropertyChangeListener(final PropertyChangeListener listener) {
+        this.propertyChangeSupport.removePropertyChangeListener(listener);
+    }
+    private void firePropertyChange(final String propertyName, final Object oldValue, final Object newValue) {
+        this.propertyChangeSupport.firePropertyChange(propertyName, oldValue, newValue);
+    }
+
+
+
+    private static final GameProgress[] EMPTY_ARRAY_GAME_PROGRESS = new GameProgress[0];
+    private void clearProgressSolutions() {
+        final Object oldValue, newValue;
+        synchronized (this.progressSolutions) {
+            oldValue = this.progressSolutions.toArray(EMPTY_ARRAY_GAME_PROGRESS);
+            this.progressSolutions.clear();
+            newValue = this.progressSolutions.toArray(EMPTY_ARRAY_GAME_PROGRESS);
+        }
+        this.firePropertyChange(PROPERTY_PROGRESS_SOLUTIONS, oldValue, newValue);
+    }
+    private void addProgressSolution(final GameProgress progress) {
+        final Object oldValue, newValue;
+        synchronized (this.progressSolutions) {
+            oldValue = this.progressSolutions.toArray(EMPTY_ARRAY_GAME_PROGRESS);
+            this.progressSolutions.add(progress);
+            newValue = this.progressSolutions.toArray(EMPTY_ARRAY_GAME_PROGRESS);
+        }
+        this.firePropertyChange(PROPERTY_PROGRESS_SOLUTIONS, oldValue, newValue);
     }
 
 

@@ -88,7 +88,7 @@ public class GameProgress {
      * @return true if the step was actually added
      */
     public boolean addStep(int color) {
-        if (true == this.isModifiable) {
+        if (false == this.isModifiable) {
             throw new IllegalStateException("addStep error: this GameProgress \"" + this.name + "\" is not modifiable");
         }
         final Integer col = Integer.valueOf(color);
@@ -228,11 +228,34 @@ public class GameProgress {
         return result;
     }
 
-    public int getNumSteps() {
+    /**
+     * return the current step number in this game progress.
+     * @return current step
+     */
+    public int getCurrentStep() {
         return this.numSteps;
     }
 
+    /**
+     * return the total number of steps in this game progress.
+     * @return total number of steps
+     */
+    public int getTotalSteps() {
+        return this.stepColor.size() - 1;
+    }
+
+    /**
+     * return true if the game is finished.
+     * @return true if there are no steps left to do
+     */
     public boolean isFinished() {
         return this.stepFloodNext.get(this.numSteps).isEmpty();
+    }
+
+
+
+    @Override
+    public String toString() {
+        return this.name + " " + this.getCurrentStep() + "/" + this.getTotalSteps();
     }
 }

@@ -17,8 +17,12 @@
 
 package colorfill.ui;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+
 import javax.swing.SwingUtilities;
 
+import colorfill.model.GameProgress;
 import colorfill.model.GameState;
 
 /**
@@ -38,7 +42,6 @@ public class MainController {
      * @param windowTitle title text of the application window
      */
     public MainController(final String windowTitle) {
-        this.gameState = new GameState();
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 createAndShowGUI(windowTitle);
@@ -47,10 +50,13 @@ public class MainController {
     }
 
     private void createAndShowGUI(final String windowTitle) {
+        this.gameState = new GameState();
+        this.gameState.addPropertyChangeListener(new GameStatePropertyChangeListener());
         this.boardController = new BoardController(this, this.gameState);
         this.controlController = new ControlController(this, this.gameState);
         this.mainView = new MainWindow(windowTitle, this.boardController.getPanel(), this.controlController.getPanel());
         this.mainView.update();
+        this.gameState.setAutoRunSolver(true);
     }
 
     /**
@@ -94,5 +100,25 @@ public class MainController {
         this.gameState.setNewRandomBoard();
         this.boardController.actionUpdateBoardColors();
         this.controlController.actionUpdateBoardColors();
+    }
+
+    /**
+     * this class handles the Property Change Events coming from GameState
+     * when the solver(s) running in a worker thread present their solutions.
+     */
+    private class GameStatePropertyChangeListener implements PropertyChangeListener {
+        @Override
+        public void propertyChange(final PropertyChangeEvent evt) {
+            if (GameState.PROPERTY_PROGRESS_SOLUTIONS.equals(evt.getPropertyName())) {
+//                final GameProgress[] oldValue = (GameProgress[]) evt.getOldValue();
+                final GameProgress[] newValue = (GameProgress[]) evt.getNewValue();
+                if (0 == newValue.length) {
+                    MainController.this.controlController.actionClearSolverResults();
+                } else {
+//                    System.out.println("propertyChange add " + (newValue.length - oldValue.length));
+                    MainController.this.controlController.actionAddSolverResult(newValue[newValue.length - 1]);
+                }
+            }
+        }
     }
 }

@@ -19,6 +19,7 @@ package colorfill.ui;
 
 import javax.swing.JPanel;
 
+import colorfill.model.GameProgress;
 import colorfill.model.GameState;
 
 /**
@@ -45,7 +46,7 @@ public class ControlController {
      * controls should be updated using values from the model.
      */
     protected void actionUpdateBoardColors() {
-        this.controlPanel.setLabelMove(this.gameState.getNumSteps(), this.gameState.isFinished());
+        this.controlPanel.setLabelMove(this.gameState.getCurrentStep(), this.gameState.isFinished());
         this.controlPanel.setButtons(this.gameState.canUndoStep(), this.gameState.canRedoStep());
     }
 
@@ -68,5 +69,22 @@ public class ControlController {
      */
     protected void userButtonRedo() {
         this.mainController.actionRedoStep();
+    }
+
+    /**
+     * remove all solver results from control panel.
+     */
+    protected void actionClearSolverResults() {
+        // TODO actionClearSolverResults
+        System.out.println("ControlController.actionClearSolverResults");
+    }
+
+    /**
+     * add this solver result to control panel.
+     * @param gameProgress solver result
+     */
+    protected void actionAddSolverResult(final GameProgress gameProgress) {
+        // TODO actionAddSolverResult
+        System.out.println("ControlController.actionAddSolverResult " + gameProgress);
     }
 }
