@@ -256,6 +256,6 @@ public class GameProgress {
 
     @Override
     public String toString() {
-        return this.name + " " + this.getCurrentStep() + "/" + this.getTotalSteps();
+        return this.name + " " + this.getTotalSteps();
     }
 }

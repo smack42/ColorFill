@@ -21,6 +21,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 import colorfill.model.GameProgress;
 import colorfill.model.GameState;
@@ -50,6 +51,11 @@ public class MainController {
     }
 
     private void createAndShowGUI(final String windowTitle) {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         this.gameState = new GameState();
         this.gameState.addPropertyChangeListener(new GameStatePropertyChangeListener());
         this.boardController = new BoardController(this, this.gameState);

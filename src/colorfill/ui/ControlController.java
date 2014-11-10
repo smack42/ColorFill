@@ -75,8 +75,8 @@ public class ControlController {
      * remove all solver results from control panel.
      */
     protected void actionClearSolverResults() {
-        // TODO actionClearSolverResults
-        System.out.println("ControlController.actionClearSolverResults");
+//        System.out.println("ControlController.actionClearSolverResults");
+        this.controlPanel.clearSolverResults();
     }
 
     /**
@@ -84,7 +84,7 @@ public class ControlController {
      * @param gameProgress solver result
      */
     protected void actionAddSolverResult(final GameProgress gameProgress) {
-        // TODO actionAddSolverResult
-        System.out.println("ControlController.actionAddSolverResult " + gameProgress);
+//        System.out.println("ControlController.actionAddSolverResult " + gameProgress);
+        this.controlPanel.addSolverResult(gameProgress.toString());
     }
 }

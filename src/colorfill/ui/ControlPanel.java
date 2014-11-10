@@ -20,6 +20,7 @@ package colorfill.ui;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -42,6 +43,11 @@ public class ControlPanel extends JPanel {
     private final JButton buttonUndo = new JButton();
     private final JButton buttonRedo = new JButton();
 
+    private final JPanel solverPanel = new JPanel();
+    private final DesignGridLayout solverLayout = new DesignGridLayout(solverPanel);
+    private final JLabel[] solverLabels = { new JLabel(), new JLabel(), new JLabel() }; // TODO define max. number of solver solutions visible
+    private int numSolverLabels = 0;
+
     /**
      * constructor
      * @param controller
@@ -49,16 +55,29 @@ public class ControlPanel extends JPanel {
     protected ControlPanel(final ControlController controller) {
         super();
         this.controller = controller;
-        final DesignGridLayout layout = new DesignGridLayout(this);
-        layout.emptyRow();
-        layout.row().grid().add(this.makeButtonNew());
-        layout.emptyRow();
-        layout.row().grid().add(new JSeparator());
-        layout.row().grid().add(this.makeLabelMove());
-        layout.row().grid().add(new JSeparator());
-        layout.emptyRow();
-        layout.row().grid().add(this.makeButtonUndo()).add(this.makeButtonRedo());
-        layout.emptyRow();
+
+        final JPanel userPanel = new JPanel();
+        final DesignGridLayout userLayout = new DesignGridLayout(userPanel);
+        userLayout.emptyRow();
+        userLayout.row().grid().add(this.makeButtonNew());
+        userLayout.emptyRow();
+        userLayout.row().grid().add(new JSeparator());
+        userLayout.row().grid().add(this.makeLabelMove());
+        userLayout.row().grid().add(new JSeparator());
+        userLayout.emptyRow();
+        userLayout.row().grid().add(this.makeButtonUndo()).add(this.makeButtonRedo());
+        userLayout.emptyRow();
+
+        this.solverLayout.row().grid().add(new JLabel("solver results                     ")); // TODO L10N
+        this.solverLayout.emptyRow();
+        for (final JLabel jl : this.solverLabels) {
+            this.solverLayout.row().grid().add(jl);
+        }
+        this.clearSolverResults();
+
+        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        this.add(userPanel);
+        this.add(this.solverPanel);
     }
 
     private JButton makeButtonNew() {
@@ -111,13 +130,11 @@ public class ControlPanel extends JPanel {
     protected void setLabelMove(final int numSteps, final boolean isFinished) {
         if (SwingUtilities.isEventDispatchThread()) {
             setLabelMoveInternal(numSteps, isFinished);
-        } else {
-            SwingUtilities.invokeLater(new Runnable() {
-                public void run() {
-                    setLabelMoveInternal(numSteps, isFinished);
-                }
-            });
-        }
+        } else SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                setLabelMoveInternal(numSteps, isFinished);
+            }
+        });
     }
     private void setLabelMoveInternal(final int numSteps, final boolean isFinished) {
         this.labelMove.setText("step: " + numSteps + (isFinished ? " - finished!" : "")); // TODO L10N
@@ -131,16 +148,54 @@ public class ControlPanel extends JPanel {
     protected void setButtons(final boolean canUndoStep, final boolean canRedoStep) {
         if (SwingUtilities.isEventDispatchThread()) {
             setButtonsInternal(canUndoStep, canRedoStep);
-        } else {
-            SwingUtilities.invokeLater(new Runnable() {
-                public void run() {
-                    setButtonsInternal(canUndoStep, canRedoStep);
-                }
-            });
-        }
+        } else SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                setButtonsInternal(canUndoStep, canRedoStep);
+            }
+        });
     }
     private void setButtonsInternal(final boolean canUndoStep, final boolean canRedoStep) {
         this.buttonUndo.setEnabled(canUndoStep);
         this.buttonRedo.setEnabled(canRedoStep);
+    }
+
+    /**
+     * remove all solver results from control panel.
+     */
+    protected void clearSolverResults() {
+        if (SwingUtilities.isEventDispatchThread()) {
+            clearSolverResultsInternal();
+        } else SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                clearSolverResultsInternal();
+            }
+        });
+    }
+    private void clearSolverResultsInternal() {
+        for (final JLabel jl : this.solverLabels) {
+            jl.setVisible(false); //setText("");
+        }
+        this.numSolverLabels = 0;
+    }
+
+    /**
+     * add this solver result to control panel.
+     * @param str
+     */
+    protected void addSolverResult(final String str) {
+        if (SwingUtilities.isEventDispatchThread()) {
+            addSolverResultInternal(str);
+        } else SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                addSolverResultInternal(str);
+            }
+        });
+    }
+    private void addSolverResultInternal(final String str) {
+        if (this.numSolverLabels < this.solverLabels.length) {
+            final JLabel jl = this.solverLabels[this.numSolverLabels++];
+            jl.setText(str);
+            jl.setVisible(true);
+        }
     }
 }
