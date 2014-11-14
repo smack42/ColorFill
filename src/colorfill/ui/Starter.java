@@ -34,7 +34,7 @@ import colorfill.solver.Strategy;
 public class Starter {
 
     public static void main(String[] args) throws Exception {
-        new MainController("ColorFill __DEV__2014-11-10__");
+        new MainController("ColorFill __DEV__2014-11-14__");
 //        testCheckOne();
 //        testCheckPc19();
 //        testSolverPc19();

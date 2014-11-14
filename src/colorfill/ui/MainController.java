@@ -53,6 +53,7 @@ public class MainController {
     private void createAndShowGUI(final String windowTitle) {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            //UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -65,6 +66,17 @@ public class MainController {
         this.gameState.setAutoRunSolver(true);
     }
 
+    private void internalUpdateBoardColors() {
+        this.boardController.actionUpdateBoardColors();
+        this.controlController.actionUpdateBoardColors();
+        if (false == this.gameState.isUserProgress()) {
+            final Integer nextColor = this.gameState.getNextColor();
+            if (null != nextColor) {
+                this.boardController.actionHightlightFloodNeighborCells(nextColor.intValue());
+            }
+        }
+    }
+
     /**
      * add a color step to gamestate.
      * @param color
@@ -72,8 +84,7 @@ public class MainController {
     protected void actionAddStep(final int color) {
         final boolean isAdded = this.gameState.addStep(color);
         if (isAdded) {
-            this.boardController.actionUpdateBoardColors();
-            this.controlController.actionUpdateBoardColors();
+            this.internalUpdateBoardColors();
         }
     }
 
@@ -83,8 +94,7 @@ public class MainController {
     protected void actionUndoStep() {
         final boolean isDone = this.gameState.undoStep();
         if (isDone) {
-            this.boardController.actionUpdateBoardColors();
-            this.controlController.actionUpdateBoardColors();
+            this.internalUpdateBoardColors();
         }
     }
 
@@ -94,8 +104,7 @@ public class MainController {
     protected void actionRedoStep() {
         final boolean isDone = this.gameState.redoStep();
         if (isDone) {
-            this.boardController.actionUpdateBoardColors();
-            this.controlController.actionUpdateBoardColors();
+            this.internalUpdateBoardColors();
         }
     }
 
@@ -104,8 +113,18 @@ public class MainController {
      */
     protected void actionNewBoard() {
         this.gameState.setNewRandomBoard();
-        this.boardController.actionUpdateBoardColors();
-        this.controlController.actionUpdateBoardColors();
+        this.internalUpdateBoardColors();
+    }
+
+    /**
+     * select a game progress in gamestate.
+     * @param numProgress number of the selected solution (0 == user solution, other = solver solutions)
+     */
+    protected void actionSelectGameProgress(final int numProgress) {
+        final boolean isDone = this.gameState.selectGameProgress(numProgress);
+        if (isDone) {
+            this.internalUpdateBoardColors();
+        }
     }
 
     /**

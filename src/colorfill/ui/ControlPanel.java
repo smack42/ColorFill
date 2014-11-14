@@ -18,12 +18,14 @@
 package colorfill.ui;
 
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.SwingUtilities;
 
@@ -39,14 +41,20 @@ public class ControlPanel extends JPanel {
     private final ControlController controller;
 
     private final JButton buttonNew = new JButton();
-    private final JLabel labelMove = new JLabel();
+    private final JRadioButton userRButton = new JRadioButton();
+    private final JLabel userMove = new JLabel();
     private final JButton buttonUndo = new JButton();
     private final JButton buttonRedo = new JButton();
 
-    private final JPanel solverPanel = new JPanel();
-    private final DesignGridLayout solverLayout = new DesignGridLayout(solverPanel);
-    private final JLabel[] solverLabels = { new JLabel(), new JLabel(), new JLabel() }; // TODO define max. number of solver solutions visible
-    private int numSolverLabels = 0;
+    private static final int MAX_NUMBER_SOLVER_SOLUTIONS = 3; // TODO dynamically handle max. number of solver solutions visible
+    private final JPanel[]              solverPanels        = new JPanel[MAX_NUMBER_SOLVER_SOLUTIONS];
+    private final DesignGridLayout[]    solverLayouts       = new DesignGridLayout[MAX_NUMBER_SOLVER_SOLUTIONS];
+    private final JRadioButton[]        solverRButtons      = new JRadioButton[MAX_NUMBER_SOLVER_SOLUTIONS];
+    private final JLabel[]              solverMoves         = new JLabel[MAX_NUMBER_SOLVER_SOLUTIONS];
+    private final JButton[]             solverPrevButtons   = new JButton[MAX_NUMBER_SOLVER_SOLUTIONS];
+    private final JButton[]             solverNextButtons   = new JButton[MAX_NUMBER_SOLVER_SOLUTIONS];
+    private int numVisibleSolverSolutions = 0;
+    private volatile int selectedSolution = 0; // 0 == user solution, other = solver solutions
 
     /**
      * constructor
@@ -56,35 +64,62 @@ public class ControlPanel extends JPanel {
         super();
         this.controller = controller;
 
+        final ButtonGroup bgroup = new ButtonGroup();
+
         final JPanel userPanel = new JPanel();
         final DesignGridLayout userLayout = new DesignGridLayout(userPanel);
-        userLayout.emptyRow();
         userLayout.row().grid().add(this.makeButtonNew());
         userLayout.emptyRow();
-        userLayout.row().grid().add(new JSeparator());
-        userLayout.row().grid().add(this.makeLabelMove());
-        userLayout.row().grid().add(new JSeparator());
+        userLayout.row().grid().add(this.makeRButtonUser(bgroup));
+        userLayout.row().grid().add(this.makeButtonUndo()).add(this.makeLabelMove()).add(this.makeButtonRedo());
         userLayout.emptyRow();
-        userLayout.row().grid().add(this.makeButtonUndo()).add(this.makeButtonRedo());
-        userLayout.emptyRow();
+        userLayout.row().grid().add(new JSeparator());
+        userLayout.row().grid().add(new JLabel("solver results")).add(new JLabel("-------------------------")); // TODO L10N
 
-        this.solverLayout.row().grid().add(new JLabel("solver results                     ")); // TODO L10N
-        this.solverLayout.emptyRow();
-        for (final JLabel jl : this.solverLabels) {
-            this.solverLayout.row().grid().add(jl);
+        for (int i = 0;  i < MAX_NUMBER_SOLVER_SOLUTIONS;  ++i) {
+            this.solverPanels[i] = new JPanel();
+            this.solverPanels[i].setVisible(false);
+            this.solverLayouts[i] = new DesignGridLayout(this.solverPanels[i]);
+            this.solverRButtons[i] = new JRadioButton();
+            bgroup.add(this.solverRButtons[i]);
+            final int numProgress = i + 1;
+            this.solverRButtons[i].addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    ControlPanel.this.selectedSolution = numProgress;
+                    ControlPanel.this.setVisibleUserOrSolver();
+                    ControlPanel.this.controller.userButtonSolution(numProgress);
+                }
+            });
+            this.solverMoves[i] = new JLabel();
+            this.solverMoves[i].setVisible(false);
+            this.solverPrevButtons[i] = new JButton("\u2190"); // \u2190 == leftwardsArrow "<"
+            this.solverPrevButtons[i].setVisible(false);
+            this.solverPrevButtons[i].addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    ControlPanel.this.controller.userButtonUndo();
+                }
+            });
+            this.solverNextButtons[i] = new JButton("\u2192"); // \u2192 == rightwardsArrow ">"
+            this.solverNextButtons[i].setVisible(false);
+            this.solverNextButtons[i].addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    ControlPanel.this.controller.userButtonRedo();
+                }
+            });
+            this.solverLayouts[i].row().grid().add(this.solverRButtons[i]);
+            this.solverLayouts[i].row().grid().add(this.solverPrevButtons[i]).add(this.solverMoves[i]).add(this.solverNextButtons[i]);
         }
-        this.clearSolverResults();
 
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         this.add(userPanel);
-        this.add(this.solverPanel);
+        for (final JPanel solverPanel : this.solverPanels) {
+            this.add(solverPanel);
+        }
     }
 
     private JButton makeButtonNew() {
         this.buttonNew.setText("new"); // TODO L10N
-        this.buttonNew.addActionListener(new AbstractAction() {
-            private static final long serialVersionUID = -8005560409660217756L;
-            @Override
+        this.buttonNew.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ControlPanel.this.controller.userButtonNew();
             }
@@ -92,16 +127,28 @@ public class ControlPanel extends JPanel {
         return this.buttonNew;
     }
 
+    private JRadioButton makeRButtonUser(final ButtonGroup bgroup) {
+        this.userRButton.setText("your moves"); // TODO L10N
+        this.userRButton.setSelected(true);
+        bgroup.add(this.userRButton);
+        this.userRButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ControlPanel.this.selectedSolution = 0;
+                ControlPanel.this.setVisibleUserOrSolver();
+                ControlPanel.this.controller.userButtonSolution(0);
+            }
+        });
+        return this.userRButton;
+    }
+
     private JLabel makeLabelMove() {
         this.setLabelMove(0, false);
-        return this.labelMove;
+        return this.userMove;
     }
 
     private JButton makeButtonUndo() {
         this.buttonUndo.setText("undo"); // TODO L10N
-        this.buttonUndo.addActionListener(new AbstractAction() {
-            private static final long serialVersionUID = 387954604158984313L;
-            @Override
+        this.buttonUndo.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ControlPanel.this.controller.userButtonUndo();
             }
@@ -112,15 +159,24 @@ public class ControlPanel extends JPanel {
 
     private JButton makeButtonRedo() {
         this.buttonRedo.setText("redo"); // TODO L10N
-        this.buttonRedo.addActionListener(new AbstractAction() {
-            private static final long serialVersionUID = -6622821528552016995L;
-            @Override
+        this.buttonRedo.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ControlPanel.this.controller.userButtonRedo();
             }
         });
         this.buttonRedo.setEnabled(false);
         return this.buttonRedo;
+    }
+
+    private void setVisibleUserOrSolver() {
+        final int sel = this.selectedSolution;
+        this.buttonUndo.setVisible(0 == sel);
+        this.buttonRedo.setVisible(0 == sel);
+        for (int i = 1;  i <= this.numVisibleSolverSolutions;  ++i) {
+            this.solverPrevButtons[i - 1].setVisible(i == sel);
+            this.solverNextButtons[i - 1].setVisible(i == sel);
+            this.solverMoves[i - 1].setVisible(i == sel);
+        }
     }
 
     /**
@@ -137,7 +193,12 @@ public class ControlPanel extends JPanel {
         });
     }
     private void setLabelMoveInternal(final int numSteps, final boolean isFinished) {
-        this.labelMove.setText("step: " + numSteps + (isFinished ? " - finished!" : "")); // TODO L10N
+        final String str = numSteps + (isFinished ? " !!!" : ""); // TODO L10N
+        if (0 == this.selectedSolution) {
+            this.userMove.setText(str);
+        } else {
+            this.solverMoves[this.selectedSolution - 1].setText(str);
+        }
     }
 
     /**
@@ -155,8 +216,13 @@ public class ControlPanel extends JPanel {
         });
     }
     private void setButtonsInternal(final boolean canUndoStep, final boolean canRedoStep) {
-        this.buttonUndo.setEnabled(canUndoStep);
-        this.buttonRedo.setEnabled(canRedoStep);
+        if (0 == this.selectedSolution) {
+            this.buttonUndo.setEnabled(canUndoStep);
+            this.buttonRedo.setEnabled(canRedoStep);
+        } else {
+            this.solverPrevButtons[this.selectedSolution - 1].setEnabled(canUndoStep);
+            this.solverNextButtons[this.selectedSolution - 1].setEnabled(canRedoStep);
+        }
     }
 
     /**
@@ -172,10 +238,14 @@ public class ControlPanel extends JPanel {
         });
     }
     private void clearSolverResultsInternal() {
-        for (final JLabel jl : this.solverLabels) {
-            jl.setVisible(false); //setText("");
+        for (int i = 0;  i < MAX_NUMBER_SOLVER_SOLUTIONS;  ++i) {
+            this.solverPrevButtons[i].setVisible(false);
+            this.solverNextButtons[i].setVisible(false);
+            this.solverMoves[i].setVisible(false);
+            this.solverPanels[i].setVisible(false);
         }
-        this.numSolverLabels = 0;
+        this.numVisibleSolverSolutions = 0;
+        this.userRButton.doClick();
     }
 
     /**
@@ -192,10 +262,11 @@ public class ControlPanel extends JPanel {
         });
     }
     private void addSolverResultInternal(final String str) {
-        if (this.numSolverLabels < this.solverLabels.length) {
-            final JLabel jl = this.solverLabels[this.numSolverLabels++];
-            jl.setText(str);
-            jl.setVisible(true);
+        if (this.numVisibleSolverSolutions < this.solverRButtons.length) {
+            final int i = this.numVisibleSolverSolutions++;
+            this.solverRButtons[i].setText(str);
+            this.solverPanels[i].setVisible(true);
+            this.solverMoves[i].setText("0");
         }
     }
 }

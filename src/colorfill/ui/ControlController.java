@@ -72,6 +72,14 @@ public class ControlController {
     }
 
     /**
+     * called by ControlPanel when user clicks on one of the solution RadioButtons.
+     * @param numSolution number of the selected solution (0 == user solution, other = solver solutions)
+     */
+    protected void userButtonSolution(final int numSolution) {
+        this.mainController.actionSelectGameProgress(numSolution);
+    }
+
+    /**
      * remove all solver results from control panel.
      */
     protected void actionClearSolverResults() {

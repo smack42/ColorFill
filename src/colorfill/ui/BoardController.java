@@ -66,7 +66,7 @@ public class BoardController {
      * @param color the cell color
      */
     protected void userClickedOnCell(final MouseEvent e, final int index, final int color) {
-        if (this.gameState.isFloodNeighborCell(index)) {
+        if (this.gameState.isUserProgress() && this.gameState.isFloodNeighborCell(index)) {
             this.mainController.actionAddStep(color);
         }
     }
@@ -85,12 +85,23 @@ public class BoardController {
      * @param color the cell color
      */
     protected void userMovedMouseToCell(MouseEvent e, int index, int color) {
-        final Collection<Integer> neighborCells;
-        if (this.gameState.isFloodNeighborCell(index)) {
-            neighborCells = this.gameState.getFloodNeighborCells(color);
-        } else {
-            neighborCells = Collections.emptyList();
+        if (this.gameState.isUserProgress()) {
+            final Collection<Integer> neighborCells;
+            if (this.gameState.isFloodNeighborCell(index)) {
+                neighborCells = this.gameState.getFloodNeighborCells(color);
+            } else {
+                neighborCells = Collections.emptyList();
+            }
+            this.boardPanel.highlightCells(neighborCells);
         }
+    }
+
+    /**
+     * highlight the flodd neighbor cells of the specified color.
+     * @param color
+     */
+    protected void actionHightlightFloodNeighborCells(final int color) {
+        final Collection<Integer> neighborCells = this.gameState.getFloodNeighborCells(color);
         this.boardPanel.highlightCells(neighborCells);
     }
 }

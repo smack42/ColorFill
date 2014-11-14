@@ -29,7 +29,7 @@ import colorfill.solver.Solution;
 public class GameProgress {
 
     private final String name;
-    private final boolean isModifiable;
+    private boolean isModifiable;
 
     private final Board board;
     private final int startPos;
@@ -59,13 +59,15 @@ public class GameProgress {
      */
     protected GameProgress(final Board board, final int startPos, final Solution solution) {
         this.name = solution.getSolverName();
-        this.isModifiable = false;
         this.board = board;
         this.startPos = startPos;
         this.initSteps();
+        this.isModifiable = true;
         for (final byte color : solution.getSteps()) {
-            this.stepColor.add(Integer.valueOf(color));
+            this.addStep(color);
         }
+        this.isModifiable = false;
+        this.numSteps = 0;
     }
 
     private void initSteps() {
@@ -252,6 +254,17 @@ public class GameProgress {
         return this.stepFloodNext.get(this.numSteps).isEmpty();
     }
 
+    /**
+     * get the next (upcoming) color from this game progress.
+     * @return next color value or null if there is no next color
+     */
+    public Integer getNextColor() {
+        if (this.canRedoStep()) {
+            return this.stepColor.get(this.numSteps + 1);
+        } else {
+            return null;
+        }
+    }
 
 
     @Override

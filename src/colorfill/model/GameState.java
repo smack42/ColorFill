@@ -76,7 +76,8 @@ public class GameState {
     private Board board;
     private int startPos;
 
-    private GameProgress progressUser;
+    private volatile GameProgress progressUser;
+    private volatile GameProgress progressSelected;
 
     private boolean isAutoRunSolver;
     private final AtomicReference<SolverRun> activeSolverRun = new AtomicReference<>();
@@ -98,6 +99,7 @@ public class GameState {
         this.startPos = this.prefStartPos;
         this.board.determineColorAreasDepth(this.startPos);
         this.progressUser = new GameProgress(this.board, this.startPos);
+        this.progressSelected = this.progressUser;
         if (this.isAutoRunSolver) {
             new SolverRun(this.board, this.startPos);
         }
@@ -118,8 +120,7 @@ public class GameState {
      * @return array of color numbers
      */
     public int[] getColors() {
-        // TODO use solver solutions
-        return this.progressUser.getColors();
+        return this.progressSelected.getColors();
     }
 
     public Board getBoard() {
@@ -155,13 +156,11 @@ public class GameState {
     }
 
     public int getCurrentStep() {
-        // TODO use solver solutions
-        return this.progressUser.getCurrentStep();
+        return this.progressSelected.getCurrentStep();
     }
 
     public boolean isFinished() {
-        // TODO use solver solutions
-        return this.progressUser.isFinished();
+        return this.progressSelected.isFinished();
     }
 
     public Color[] getPrefUiColors() {
@@ -178,8 +177,7 @@ public class GameState {
      * @return true if the step was actually added
      */
     public boolean addStep(int color) {
-        // TODO use solver solutions
-        return this.progressUser.addStep(color);
+        return this.progressSelected.addStep(color);
     }
 
     /**
@@ -187,8 +185,7 @@ public class GameState {
      * @return true if undo is possible
      */
     public boolean canUndoStep() {
-        // TODO use solver solutions
-        return this.progressUser.canUndoStep();
+        return this.progressSelected.canUndoStep();
     }
 
     /**
@@ -196,8 +193,7 @@ public class GameState {
      * @return true if step undo was successful
      */
     public boolean undoStep() {
-        // TODO use solver solutions
-        return this.progressUser.undoStep();
+        return this.progressSelected.undoStep();
     }
 
     /**
@@ -205,8 +201,7 @@ public class GameState {
      * @return true if redo is possible
      */
     public boolean canRedoStep() {
-        // TODO use solver solutions
-        return this.progressUser.canRedoStep();
+        return this.progressSelected.canRedoStep();
     }
 
     /**
@@ -214,8 +209,7 @@ public class GameState {
      * @return true if step redo was successful
      */
     public boolean redoStep() {
-        // TODO use solver solutions
-        return this.progressUser.redoStep();
+        return this.progressSelected.redoStep();
     }
 
     /**
@@ -232,8 +226,7 @@ public class GameState {
      * @return true if cell can be flooded in the next step
      */
     public boolean isFloodNeighborCell(int index) {
-        // TODO use solver solutions
-        return this.progressUser.isFloodNeighborCell(index);
+        return this.progressSelected.isFloodNeighborCell(index);
     }
 
     /**
@@ -243,11 +236,45 @@ public class GameState {
      * @return collection of board cells
      */
     public Collection<Integer> getFloodNeighborCells(final int color) {
-        // TODO use solver solutions
-        return this.progressUser.getFloodNeighborCells(color);
+        return this.progressSelected.getFloodNeighborCells(color);
     }
 
+    /**
+     * select a game progress.
+     * @param numProgress number of the selected solution (0 == user solution, other = solver solutions)
+     * @return true is game progress was selected
+     */
+    public boolean selectGameProgress(final int numProgress) {
+        boolean isDone = true;
+        if (0 == numProgress) {
+            this.progressSelected = this.progressUser;
+        } else {
+            synchronized (this.progressSolutions) {
+                if ((1 <= numProgress) && (this.progressSolutions.size() >= numProgress)) {
+                    this.progressSelected = this.progressSolutions.get(numProgress - 1);
+                } else {
+                    isDone = false;
+                }
+            }
+        }
+        return isDone;
+    }
 
+    /**
+     * is the currently selected game progress the one owned by the user?
+     * @return true if user progress is selected
+     */
+    public boolean isUserProgress() {
+        return this.progressSelected == this.progressUser; // use "==" here instead of "equals()"
+    }
+
+    /**
+     * get the next (upcoming) color from the current game progress.
+     * @return next color value or null if there is no next color
+     */
+    public Integer getNextColor() {
+        return this.progressSelected.getNextColor();
+    }
 
     private class SolverRun extends Thread {
         private final Board board;
