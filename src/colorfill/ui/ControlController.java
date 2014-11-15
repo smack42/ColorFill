@@ -34,7 +34,7 @@ public class ControlController {
     protected ControlController(final MainController mainController, final GameState gameState) {
         this.mainController = mainController;
         this.gameState = gameState;
-        this.controlPanel = new ControlPanel(this);
+        this.controlPanel = new ControlPanel(this, this.gameState.getPrefUiColors());
     }
 
     protected JPanel getPanel() {
@@ -48,6 +48,7 @@ public class ControlController {
     protected void actionUpdateBoardColors() {
         this.controlPanel.setLabelMove(this.gameState.getCurrentStep(), this.gameState.isFinished());
         this.controlPanel.setButtons(this.gameState.canUndoStep(), this.gameState.canRedoStep());
+        this.controlPanel.setButtonColors(this.gameState.getPrefUiColors());
     }
 
     /**
@@ -77,6 +78,16 @@ public class ControlController {
      */
     protected void userButtonSolution(final int numSolution) {
         this.mainController.actionSelectGameProgress(numSolution);
+    }
+
+    /**
+     * called by ControlPanel when user clicks on a color button.
+     * @param color number
+     */
+    protected void userButtonColor(final int color) {
+        if (this.gameState.isUserProgress()) {
+            this.mainController.actionAddStep(color);
+        }
     }
 
     /**

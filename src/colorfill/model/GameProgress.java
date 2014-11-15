@@ -99,6 +99,16 @@ public class GameProgress {
                 || this.stepFloodNext.get(this.numSteps).isEmpty()) {
             return false;
         }
+        // determine new flooded area
+        final Set<ColorArea> newFlood = new HashSet<>();
+        for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
+            if (ca.getColor().equals(col)) {
+                newFlood.add(ca);
+            }
+        }
+        if (newFlood.isEmpty()) {
+            return false; // this color is not a flood neighbor
+        }
         // current lists are too long (because of undo) - remove the future moves
         if (this.stepColor.size() > this.numSteps + 1) {
             this.stepColor.subList(this.numSteps + 1, this.stepColor.size()).clear();
@@ -107,12 +117,6 @@ public class GameProgress {
         }
         // add stepColor
         this.stepColor.add(col);
-        final Set<ColorArea> newFlood = new HashSet<>();
-        for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
-            if (ca.getColor().equals(col)) {
-                newFlood.add(ca);
-            }
-        }
         // add stepFlooded
         @SuppressWarnings("unchecked")
         final HashSet<ColorArea> flooded = (HashSet<ColorArea>) this.stepFlooded.get(this.numSteps).clone();
