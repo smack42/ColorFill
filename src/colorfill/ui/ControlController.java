@@ -27,9 +27,9 @@ import colorfill.model.GameState;
  */
 public class ControlController {
 
-    private MainController mainController;
-    private GameState gameState;
-    private ControlPanel controlPanel;
+    private final MainController mainController;
+    private final GameState gameState;
+    private final ControlPanel controlPanel;
 
     protected ControlController(final MainController mainController, final GameState gameState) {
         this.mainController = mainController;
@@ -56,6 +56,13 @@ public class ControlController {
      */
     protected void userButtonNew() {
         this.mainController.actionNewBoard();
+    }
+
+    /**
+     * called by ControlPanel when user clicks on button "Settings"
+     */
+    protected void userButtonPrefs() {
+        this.mainController.actionPreferences();
     }
 
     /**

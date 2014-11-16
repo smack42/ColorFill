@@ -69,15 +69,17 @@ public class GamePreferences {
     public int getWidth() {
         return this.width;
     }
-    public void setWidth(int width) {
+    public boolean setWidth(int width) {
         this.width = width;
+        return true; // TODO setWidth validation
     }
 
     public int getHeight() {
         return this.height;
     }
-    public void setHeight(int height) {
+    public boolean setHeight(int height) {
         this.height = height;
+        return true; // TODO setHeight validation
     }
 
     public int getNumColors() {

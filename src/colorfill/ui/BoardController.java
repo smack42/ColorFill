@@ -31,9 +31,9 @@ import colorfill.model.GameState;
  */
 public class BoardController {
 
-    private MainController mainController;
-    private GameState gameState;
-    private BoardPanel boardPanel;
+    private final MainController mainController;
+    private final GameState gameState;
+    private final BoardPanel boardPanel;
 
     protected BoardController(final MainController mainController, final GameState gameState) {
         this.mainController = mainController;
@@ -42,7 +42,7 @@ public class BoardController {
         this.initBoardPanel();
     }
 
-    private void initBoardPanel() {
+    protected void initBoardPanel() {
         this.boardPanel.init(this.gameState.getBoard().getWidth(), this.gameState.getBoard().getHeight());
         this.repaintBoardPanel();
     }

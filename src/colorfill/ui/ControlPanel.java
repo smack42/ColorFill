@@ -51,6 +51,7 @@ public class ControlPanel extends JPanel {
     private final ControlController controller;
 
     private final JButton buttonNew = new JButton();
+    private final JButton buttonPrefs = new JButton();
     private final JRadioButton userRButton = new JRadioButton();
     private final JLabel userMove = new JLabel();
     private final JButton buttonUndo = new JButton();
@@ -104,7 +105,7 @@ public class ControlPanel extends JPanel {
 
         final JPanel userPanel = new JPanel();
         final DesignGridLayout userLayout = new DesignGridLayout(userPanel);
-        userLayout.row().left().add(this.makeButtonNew());
+        userLayout.row().left().add(this.makeButtonNew()).add(this.makeButtonPrefs());
         userLayout.emptyRow();
         userLayout.row().grid().add(new JSeparator());
         userLayout.row().grid().add(this.makeRButtonUser(bgroup)).add(this.makeLabelMove());
@@ -132,6 +133,16 @@ public class ControlPanel extends JPanel {
             }
         });
         return this.buttonNew;
+    }
+
+    private JButton makeButtonPrefs() {
+        this.buttonPrefs.setText(L10N.getString("ctrl.btn.Preferences.txt"));
+        this.buttonPrefs.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ControlPanel.this.controller.userButtonPrefs();
+            }
+        });
+        return this.buttonPrefs;
     }
 
     private JRadioButton makeRButtonUser(final ButtonGroup bgroup) {

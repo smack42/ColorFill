@@ -47,15 +47,8 @@ public class MainWindow extends JFrame {
      * resize (pack) the main window
      */
     protected void update() {
-        if (SwingUtilities.isEventDispatchThread()) {
-            updateInternal();
-        } else {
-            SwingUtilities.invokeLater(new Runnable() {
-                public void run() {
-                    updateInternal();
-                }
-            });
-        }
+        if (SwingUtilities.isEventDispatchThread()) {                          updateInternal(); }
+        else { SwingUtilities.invokeLater(new Runnable() { public void run() { updateInternal(); } }); }
     }
     private void updateInternal() {
         this.pack();
