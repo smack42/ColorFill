@@ -20,6 +20,7 @@ package colorfill.ui;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ResourceBundle;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -44,6 +45,8 @@ import net.java.dev.designgridlayout.ISpannableGridRow;
 public class ControlPanel extends JPanel {
 
     private static final long serialVersionUID = 6465422835992852821L;
+
+    private static final ResourceBundle L10N = ResourceBundle.getBundle("colorfill-ui");  //L10N = Localization
 
     private final ControlController controller;
 
@@ -101,7 +104,7 @@ public class ControlPanel extends JPanel {
 
         final JPanel userPanel = new JPanel();
         final DesignGridLayout userLayout = new DesignGridLayout(userPanel);
-        userLayout.row().grid().add(this.makeButtonNew(), 2).empty(MAX_NUMBER_COLOR_BUTTONS - 2);
+        userLayout.row().left().add(this.makeButtonNew());
         userLayout.emptyRow();
         userLayout.row().grid().add(new JSeparator());
         userLayout.row().grid().add(this.makeRButtonUser(bgroup)).add(this.makeLabelMove());
@@ -109,10 +112,10 @@ public class ControlPanel extends JPanel {
         for (final JButton button : this.makeButtonColors(colors)) {
             rowButtonColors.add(button);
         }
-        userLayout.row().grid().add(this.makeButtonUndo(), 2).add(this.makeButtonRedo(), 2).empty(MAX_NUMBER_COLOR_BUTTONS - 2 - 2);
+        userLayout.row().left().add(this.makeButtonUndo()).add(this.makeButtonRedo());
         userLayout.emptyRow();
         userLayout.row().grid().add(new JSeparator());
-        userLayout.row().grid().add(new JLabel("solver results")); // TODO L10N
+        userLayout.row().grid().add(new JLabel(L10N.getString("ctrl.lbl.SolverResults.txt")));
 
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         this.add(userPanel);
@@ -122,7 +125,7 @@ public class ControlPanel extends JPanel {
     }
 
     private JButton makeButtonNew() {
-        this.buttonNew.setText("new"); // TODO L10N
+        this.buttonNew.setText(L10N.getString("ctrl.btn.New.txt"));
         this.buttonNew.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ControlPanel.this.controller.userButtonNew();
@@ -132,7 +135,7 @@ public class ControlPanel extends JPanel {
     }
 
     private JRadioButton makeRButtonUser(final ButtonGroup bgroup) {
-        this.userRButton.setText("your game"); // TODO L10N
+        this.userRButton.setText(L10N.getString("ctrl.btn.YourGame.txt"));
         this.userRButton.setSelected(true);
         bgroup.add(this.userRButton);
         this.userRButton.addActionListener(new ActionListener() {
@@ -175,7 +178,7 @@ public class ControlPanel extends JPanel {
     }
 
     private JButton makeButtonUndo() {
-        this.buttonUndo.setText("undo -"); // TODO L10N
+        this.buttonUndo.setText(L10N.getString("ctrl.btn.UndoStep.txt"));
         this.buttonUndo.addActionListener(this.actionUndoStep);
         this.buttonUndo.setEnabled(false);
         final String actionName = "ACTION_UNDO_STEP";
@@ -186,7 +189,7 @@ public class ControlPanel extends JPanel {
     }
 
     private JButton makeButtonRedo() {
-        this.buttonRedo.setText("redo +"); // TODO L10N
+        this.buttonRedo.setText(L10N.getString("ctrl.btn.RedoStep.txt"));
         this.buttonRedo.addActionListener(this.actionRedoStep);
         this.buttonRedo.setEnabled(false);
         final String actionName = "ACTION_REDO_STEP";
@@ -250,7 +253,7 @@ public class ControlPanel extends JPanel {
         else SwingUtilities.invokeLater(new Runnable() { public void run() { setLabelMoveInternal(numSteps, isFinished); } });
     }
     private void setLabelMoveInternal(final int numSteps, final boolean isFinished) {
-        final String str = numSteps + (isFinished ? " !!!" : ""); // TODO L10N
+        final String str = numSteps + (isFinished ? " " + L10N.getString("ctrl.lbl.SolutionFinished.txt") : "");
         if (0 == this.selectedSolution) {
             this.userMove.setText(str);
         } else {
