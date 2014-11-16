@@ -17,6 +17,8 @@
 
 package colorfill.ui;
 
+import java.awt.Color;
+
 import colorfill.model.GameState;
 
 public class PreferencesController {
@@ -54,5 +56,15 @@ public class PreferencesController {
     }
     protected boolean setHeight(final int height) {
         return this.gameState.getPreferences().setHeight(height);
+    }
+
+    protected Color[][] getAllUiColors() {
+        return this.gameState.getPreferences().getAllUiColors();
+    }
+    protected int getUiColorsNumber() {
+        return this.gameState.getPreferences().getUiColorsNumber();
+    }
+    protected void setUiColorsNumber(final int num) {
+        this.gameState.getPreferences().setUiColorsNumber(num);
     }
 }

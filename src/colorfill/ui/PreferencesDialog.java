@@ -17,20 +17,24 @@
 
 package colorfill.ui;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ResourceBundle;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 
 import net.java.dev.designgridlayout.DesignGridLayout;
+import net.java.dev.designgridlayout.ISpannableGridRow;
 import net.java.dev.designgridlayout.Tag;
 
 public class PreferencesDialog extends JDialog {
@@ -45,6 +49,7 @@ public class PreferencesDialog extends JDialog {
     private final JSpinner jspinHeight = new JSpinner();
     private final JButton buttonOk = new JButton();
     private final JButton buttonCancel = new JButton();
+    private final JRadioButton[] rbuttonsColors;
 
     /**
      * constructor
@@ -58,8 +63,16 @@ public class PreferencesDialog extends JDialog {
 
         final JPanel panel = new JPanel();
         final DesignGridLayout layout = new DesignGridLayout(panel);
-        layout.row().grid(new JLabel(L10N.getString("pref.lbl.Width.txt"))).add(this.makeJspinWidth());
-        layout.row().grid(new JLabel(L10N.getString("pref.lbl.Height.txt"))).add(this.makeJspinHeight());
+        layout.row().grid(new JLabel(L10N.getString("pref.lbl.Width.txt"))).addMulti(this.makeJspinWidth());
+        layout.row().grid(new JLabel(L10N.getString("pref.lbl.Height.txt"))).addMulti(this.makeJspinHeight());
+        layout.emptyRow();
+        layout.row().grid().add(new JSeparator());
+        layout.emptyRow();
+
+        final Color[][] allUiColors = this.controller.getAllUiColors();
+        this.rbuttonsColors = new JRadioButton[allUiColors.length];
+        this.makeColorButtons(layout, allUiColors);
+
         layout.emptyRow();
         layout.row().grid().add(new JSeparator());
         layout.emptyRow();
@@ -80,6 +93,31 @@ public class PreferencesDialog extends JDialog {
     private JSpinner makeJspinHeight() {
         this.jspinHeight.setModel(new SpinnerNumberModel(this.controller.getHeight(), 2, 1000, 1)); // TODO preferences min/max "height"
         return this.jspinHeight;
+    }
+
+    private void makeColorButtons(final DesignGridLayout layout, final Color[][] allUiColors) {
+        final ButtonGroup bgroup = new ButtonGroup();
+        int i = 0;
+        for (final Color[] colorScheme : allUiColors) {
+            final int colorSchemeNumber = i++;
+            final ActionListener actionListener = new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    PreferencesDialog.this.rbuttonsColors[colorSchemeNumber].setSelected(true);
+                    PreferencesDialog.this.controller.setUiColorsNumber(colorSchemeNumber);
+                }
+            };
+            final JLabel label = new JLabel(L10N.getString("pref.lbl.ColorScheme.txt"));
+            this.rbuttonsColors[colorSchemeNumber] = new JRadioButton("" + (colorSchemeNumber + 1));
+            bgroup.add(this.rbuttonsColors[colorSchemeNumber]);
+            this.rbuttonsColors[colorSchemeNumber].addActionListener(actionListener);
+            final ISpannableGridRow row = layout.row().grid(label).add(this.rbuttonsColors[colorSchemeNumber]);
+            for (int color = 0;  color < colorScheme.length;  ++color) {
+                final JButton button = new JButton("" + (color + 1));
+                button.addActionListener(actionListener);
+                button.setBackground(colorScheme[color]);
+                row.add(button);
+            }
+        }
     }
 
     private JButton makeButtonOk() {
@@ -113,6 +151,7 @@ public class PreferencesDialog extends JDialog {
         else SwingUtilities.invokeLater(new Runnable() { public void run() { showDialogInternal(); } });
     }
     private void showDialogInternal() {
+        this.rbuttonsColors[this.controller.getUiColorsNumber()].setSelected(true);
         this.jspinWidth.setValue(Integer.valueOf(this.controller.getWidth()));
         this.jspinHeight.setValue(Integer.valueOf(this.controller.getHeight()));
         this.setVisible(true);

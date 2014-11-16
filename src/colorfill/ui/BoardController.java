@@ -43,7 +43,7 @@ public class BoardController {
     }
 
     protected void initBoardPanel() {
-        this.boardPanel.init(this.gameState.getBoard().getWidth(), this.gameState.getBoard().getHeight());
+        this.boardPanel.init(this.gameState.getBoard().getWidth(), this.gameState.getBoard().getHeight(), this.gameState.getPreferences().getUiColors());
         this.repaintBoardPanel();
     }
 

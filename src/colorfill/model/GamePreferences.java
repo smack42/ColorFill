@@ -56,14 +56,14 @@ public class GamePreferences {
     private int height;
     private int numColors;
     private int startPos;
-    private Color[] uiColors;
+    private int uiColors;
 
     public GamePreferences() {
         this.width = DEFAULT_BOARD_WIDTH;
         this.height = DEFAULT_BOARD_HEIGHT;
         this.numColors = DEFAULT_BOARD_NUM_COLORS;
         this.startPos = DEFAULT_BOARD_STARTPOS;
-        this.uiColors = DEFAULT_UI_COLORS[0];
+        this.uiColors = 0;
     }
 
     public int getWidth() {
@@ -96,15 +96,18 @@ public class GamePreferences {
         this.startPos = startPos;
     }
 
-    public Color[][] getAllUiColorSchemes() {
+    public Color[][] getAllUiColors() {
         return DEFAULT_UI_COLORS;
     }
     public Color[] getUiColors() {
+        return DEFAULT_UI_COLORS[this.uiColors];
+    }
+    public int getUiColorsNumber() {
         return this.uiColors;
     }
-    public void selectUiColors(int num) {
+    public void setUiColorsNumber(final int num) {
         if ((num >= 0) && (num < DEFAULT_UI_COLORS.length)) {
-            this.uiColors = DEFAULT_UI_COLORS[num];
+            this.uiColors = num;
         }
     }
 }
