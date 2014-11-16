@@ -70,7 +70,7 @@ public class MainController {
         this.boardController.actionUpdateBoardColors();
         this.controlController.actionUpdateBoardColors();
         if (false == this.gameState.isUserProgress()) {
-            final Integer nextColor = this.gameState.getNextColor();
+            final Integer nextColor = this.gameState.getSelectedProgress().getNextColor();
             if (null != nextColor) {
                 this.boardController.actionHightlightFloodNeighborCells(nextColor.intValue());
             }
@@ -82,7 +82,7 @@ public class MainController {
      * @param color
      */
     protected void actionAddStep(final int color) {
-        final boolean isAdded = this.gameState.addStep(color);
+        final boolean isAdded = this.gameState.getSelectedProgress().addStep(color);
         if (isAdded) {
             this.internalUpdateBoardColors();
         }
@@ -92,7 +92,7 @@ public class MainController {
      * undo a color step in gamestate.
      */
     protected void actionUndoStep() {
-        final boolean isDone = this.gameState.undoStep();
+        final boolean isDone = this.gameState.getSelectedProgress().undoStep();
         if (isDone) {
             this.internalUpdateBoardColors();
         }
@@ -102,7 +102,7 @@ public class MainController {
      * redo a color step in gamestate.
      */
     protected void actionRedoStep() {
-        final boolean isDone = this.gameState.redoStep();
+        final boolean isDone = this.gameState.getSelectedProgress().redoStep();
         if (isDone) {
             this.internalUpdateBoardColors();
         }

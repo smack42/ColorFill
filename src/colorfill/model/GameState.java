@@ -17,12 +17,9 @@
 
 package colorfill.model;
 
-import java.awt.Color;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -36,46 +33,10 @@ import colorfill.solver.Strategy;
  */
 public class GameState {
 
-    public static final int DEFAULT_BOARD_WIDTH  = 14;
-    public static final int DEFAULT_BOARD_HEIGHT = 14;
-    public static final int DEFAULT_BOARD_NUM_COLORS = 6;
-    public static final int DEFAULT_BOARD_STARTPOS = 0; // 0 == top left corner
-
-    private static final Color[] DEFAULT_UI_COLORS = {
-        // Flood-It scheme
-        new Color(0xDC4A20), // Color.RED
-        new Color(0x7E9D1E), // Color.GREEN
-        new Color(0x605CA8), // Color.BLUE
-        new Color(0xF3F61D), // Color.YELLOW
-        new Color(0x46B1E2), // Color.CYAN
-        new Color(0xED70A1)  // Color.MAGENTA
-
-        // Color Flood (Android) scheme 1 (default)
-//        new Color(0x6261A8),
-//        new Color(0x6AAECC),
-//        new Color(0x5EDD67),
-//        new Color(0xF66A61),
-//        new Color(0xF6BF61),
-//        new Color(0xF0F461)
-
-        // Color Flood (Android) scheme 6
-//        new Color(0xDF5162),
-//        new Color(0x38322F),
-//        new Color(0x247E86),
-//        new Color(0x1BC4C1),
-//        new Color(0xFCF8C9),
-//        new Color(0xD19C2D)
-    };
-
-    private int prefWidth;
-    private int prefHeight;
-    private int prefNumColors;
-    private int prefStartPos;
-    private Color[] prefUiColors;
-
     private Board board;
     private int startPos;
 
+    private final GamePreferences pref;
     private volatile GameProgress progressUser;
     private volatile GameProgress progressSelected;
 
@@ -85,18 +46,14 @@ public class GameState {
     public static final String PROPERTY_PROGRESS_SOLUTIONS = "progressSolutions";
 
     public GameState() {
-        this.prefWidth = DEFAULT_BOARD_WIDTH;
-        this.prefHeight = DEFAULT_BOARD_HEIGHT;
-        this.prefNumColors = DEFAULT_BOARD_NUM_COLORS;
-        this.prefStartPos = DEFAULT_BOARD_STARTPOS;
-        this.prefUiColors = DEFAULT_UI_COLORS;
+        this.pref = new GamePreferences();
         this.setAutoRunSolver(false);
         this.initBoard();
     }
 
     private void initBoard() {
-        this.board = new Board(this.prefWidth, this.prefHeight, this.prefNumColors);
-        this.startPos = this.prefStartPos;
+        this.board = new Board(this.pref.getWidth(), this.pref.getHeight(), this.pref.getNumColors());
+        this.startPos = this.pref.getStartPos();
         this.board.determineColorAreasDepth(this.startPos);
         this.progressUser = new GameProgress(this.board, this.startPos);
         this.progressSelected = this.progressUser;
@@ -113,103 +70,16 @@ public class GameState {
         }
     }
 
-    /**
-     * get the current colors of all cells.
-     * the colors can either be the current flood color (if cell is
-     * already flooded) or the original color of the board cell.
-     * @return array of color numbers
-     */
-    public int[] getColors() {
-        return this.progressSelected.getColors();
+    public GameProgress getSelectedProgress() {
+        return this.progressSelected;
     }
 
     public Board getBoard() {
         return this.board;
     }
 
-    public int getPrefWidth() {
-        return this.prefWidth;
-    }
-    public void setPrefWidth(int width) {
-        this.prefWidth = width;
-    }
-
-    public int getPrefHeight() {
-        return this.prefHeight;
-    }
-    public void setPrefHeight(int height) {
-        this.prefHeight = height;
-    }
-
-    public int getPrefNumColors() {
-        return this.prefNumColors;
-    }
-    public void setPrefNumColors(int colors) {
-        this.prefNumColors = colors;
-    }
-
-    public int getPrefStartPos() {
-        return this.prefStartPos;
-    }
-    public void setPrefStartPos(int startPos) {
-        this.prefStartPos = startPos;
-    }
-
-    public int getCurrentStep() {
-        return this.progressSelected.getCurrentStep();
-    }
-
-    public boolean isFinished() {
-        return this.progressSelected.isFinished();
-    }
-
-    public Color[] getPrefUiColors() {
-        return Arrays.copyOf(this.prefUiColors, this.prefUiColors.length);
-    }
-
-    /**
-     * try to append a new step to the progress of the game.
-     * this may fail if the specified color is the current
-     * flood color (no color change) or if no unflooded cells
-     * are left on the board (puzzle finished).
-     * 
-     * @param color
-     * @return true if the step was actually added
-     */
-    public boolean addStep(int color) {
-        return this.progressSelected.addStep(color);
-    }
-
-    /**
-     * check if undo is possible
-     * @return true if undo is possible
-     */
-    public boolean canUndoStep() {
-        return this.progressSelected.canUndoStep();
-    }
-
-    /**
-     * undo a color step.
-     * @return true if step undo was successful
-     */
-    public boolean undoStep() {
-        return this.progressSelected.undoStep();
-    }
-
-    /**
-     * check if redo is possible
-     * @return true if redo is possible
-     */
-    public boolean canRedoStep() {
-        return this.progressSelected.canRedoStep();
-    }
-
-    /**
-     * redo a color step.
-     * @return true if step redo was successful
-     */
-    public boolean redoStep() {
-        return this.progressSelected.redoStep();
+    public GamePreferences getPreferences() {
+        return this.pref;
     }
 
     /**
@@ -217,26 +87,6 @@ public class GameState {
      */
     public void setNewRandomBoard() {
         this.initBoard();
-    }
-
-    /**
-     * return true if the cell specified by index belongs to a neighbor
-     * color of the flooded area.
-     * @param index of board cell
-     * @return true if cell can be flooded in the next step
-     */
-    public boolean isFloodNeighborCell(int index) {
-        return this.progressSelected.isFloodNeighborCell(index);
-    }
-
-    /**
-     * return a collection of all cells that have the specified color
-     * and that belong to a neighbor area of the flooded area.
-     * @param color the color
-     * @return collection of board cells
-     */
-    public Collection<Integer> getFloodNeighborCells(final int color) {
-        return this.progressSelected.getFloodNeighborCells(color);
     }
 
     /**
@@ -266,14 +116,6 @@ public class GameState {
      */
     public boolean isUserProgress() {
         return this.progressSelected == this.progressUser; // use "==" here instead of "equals()"
-    }
-
-    /**
-     * get the next (upcoming) color from the current game progress.
-     * @return next color value or null if there is no next color
-     */
-    public Integer getNextColor() {
-        return this.progressSelected.getNextColor();
     }
 
     private class SolverRun extends Thread {
