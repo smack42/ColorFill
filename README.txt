@@ -1,9 +1,43 @@
+ColorFill game and solver - yet another Flood-It / Globs clone
+
+Version   0.1 (2014-11-16)
+Homepage  https://github.com/smack42/ColorFill
+
+
+
+usage
+
+Java SE Runtime Environment (JRE version 7 or newer) is required to run
+this program. You can download Java here:
+http://www.oracle.com/technetwork/java/javase/downloads/index.html
+
+To run the program just doubleclick "colorfill.jar".
+
+
+
+
+license
+
 ColorFill game and solver
+Copyright (C) 2014 Michael Henke
 
-yet another Flood-It / Globs clone
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-prototype is working: Java Swing GUI, solver algorithms
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+
+some links
 
 Online game
     http://floodit.appspot.com/
