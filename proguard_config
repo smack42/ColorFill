@@ -6,8 +6,8 @@
 
 -target 1.7
 
-# don't go higher than 5 otherwise the application will crash in some designgridlayout class !!!
--optimizationpasses 5
+# don't go higher than 1 otherwise the application will crash in some designgridlayout class !!!
+-optimizationpasses 1
 
 -allowaccessmodification
 
