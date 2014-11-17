@@ -7,7 +7,7 @@ Homepage  https://github.com/smack42/ColorFill
 
 usage
 
-Java SE Runtime Environment (JRE version 7 or newer) is required to run
+Java SE Runtime Environment (JRE version 6 or newer) is required to run
 this program. You can download Java here:
 http://www.oracle.com/technetwork/java/javase/downloads/index.html
 

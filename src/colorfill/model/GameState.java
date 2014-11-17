@@ -41,7 +41,7 @@ public class GameState {
     private volatile GameProgress progressSelected;
 
     private boolean isAutoRunSolver;
-    private final AtomicReference<SolverRun> activeSolverRun = new AtomicReference<>();
+    private final AtomicReference<SolverRun> activeSolverRun = new AtomicReference<SolverRun>();
     private final List<GameProgress> progressSolutions = new ArrayList<GameProgress>();
     public static final String PROPERTY_PROGRESS_SOLUTIONS = "progressSolutions";
 

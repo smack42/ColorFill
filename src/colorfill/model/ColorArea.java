@@ -27,9 +27,9 @@ import java.util.TreeSet;
 public class ColorArea implements Comparable<ColorArea> {
     private final Integer color;
     private final int boardWidth;
-    private final Set<Integer> members = new TreeSet<>(); // sorted set - used by compareTo!
+    private final Set<Integer> members = new TreeSet<Integer>(); // sorted set - used by compareTo!
     private final Set<Integer> membersUnmodifiable = Collections.unmodifiableSet(this.members);
-    private final Set<ColorArea> neighbors = new TreeSet<>();
+    private final Set<ColorArea> neighbors = new TreeSet<ColorArea>();
     private final Set<ColorArea> neighborsUnmodifiable = Collections.unmodifiableSet(this.neighbors);
     private int depth = 0;
 

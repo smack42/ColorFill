@@ -35,9 +35,9 @@ public class GameProgress {
     private final int startPos;
 
     private int numSteps;
-    private final List<Integer> stepColor = new ArrayList<>();
-    private final List<HashSet<ColorArea>> stepFlooded = new ArrayList<>();
-    private final List<HashSet<ColorArea>> stepFloodNext = new ArrayList<>();
+    private final List<Integer> stepColor = new ArrayList<Integer>();
+    private final List<HashSet<ColorArea>> stepFlooded = new ArrayList<HashSet<ColorArea>>();
+    private final List<HashSet<ColorArea>> stepFloodNext = new ArrayList<HashSet<ColorArea>>();
 
     /**
      * construct a "user progress" object.
@@ -100,7 +100,7 @@ public class GameProgress {
             return false;
         }
         // determine new flooded area
-        final Set<ColorArea> newFlood = new HashSet<>();
+        final Set<ColorArea> newFlood = new HashSet<ColorArea>();
         for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
             if (ca.getColor().equals(col)) {
                 newFlood.add(ca);
@@ -225,7 +225,7 @@ public class GameProgress {
      * @return collection of board cells
      */
     public Collection<Integer> getFloodNeighborCells(final int color) {
-        final ArrayList<Integer> result = new ArrayList<>();
+        final ArrayList<Integer> result = new ArrayList<Integer>();
         for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
             if (ca.getColor().intValue() == color) {
                 result.addAll(ca.getMembers());

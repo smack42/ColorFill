@@ -28,7 +28,7 @@ import colorfill.model.Board;
 public abstract class AbstractSolver implements Solver {
 
     protected final Board board;
-    protected final List<Solution> solutions = new ArrayList<>();
+    protected final List<Solution> solutions = new ArrayList<Solution>();
     protected int solutionSize = 0;
 
     /**

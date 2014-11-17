@@ -114,7 +114,7 @@ public class DfsSolver extends AbstractSolver {
         this.strategy = this.makeStrategy(startPos);
 
         final ColorArea startCa = this.board.getColorArea(startPos);
-        this.allFlooded = new HashSet<>();
+        this.allFlooded = new HashSet<ColorArea>();
         this.notFlooded = new ColorAreaGroup(this.board);
         notFlooded.addAll(this.board.getColorAreas(), this.allFlooded);
         final ColorAreaGroup neighbors = new ColorAreaGroup(this.board);

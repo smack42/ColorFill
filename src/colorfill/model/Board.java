@@ -49,13 +49,13 @@ public class Board {
         this.width = width;
         this.height = height;
         final int len = width * height;
-        this.colors = new TreeSet<>();
+        this.colors = new TreeSet<Integer>();
         for (int color = 0;  color < colors;  ++color) {
             this.colors.add(Integer.valueOf(color));
         }
         this.cells = new byte[len];
         this.cellsColorAreas = new ColorArea[len];
-        this.colorAreas = new TreeSet<>();
+        this.colorAreas = new TreeSet<ColorArea>();
         this.randomCellColors();
     }
 
@@ -95,16 +95,16 @@ public class Board {
             this.cells[i] = (byte)(Byte.parseByte(String.valueOf(c)) - 1);
         }
         this.cellsColorAreas = new ColorArea[len];
-        this.colorAreas = new TreeSet<>();
+        this.colorAreas = new TreeSet<ColorArea>();
         this.colorAreas.addAll(this.createColorAreas());
-        this.colors = new TreeSet<>();
+        this.colors = new TreeSet<Integer>();
         for (final byte color : this.cells) {
             this.colors.add(Integer.valueOf(color));
         }
     }
 
     private Set<ColorArea> createColorAreas() {
-        final Set<ColorArea> result = new HashSet<>();
+        final Set<ColorArea> result = new HashSet<ColorArea>();
         // build ColorAreas, fill with them with members: adjacent cells of the same color
         for (int index = 0;  index < this.cells.length;  ++index) {
             final int color = this.cells[index];
@@ -123,7 +123,7 @@ public class Board {
         }
         // merge ColorAreas that are neighbors of the same color
         for (boolean doMergeAreas = true;  true == doMergeAreas;  ) {
-            final Set<ColorArea> mergedAreas = new HashSet<>();
+            final Set<ColorArea> mergedAreas = new HashSet<ColorArea>();
             for (final ColorArea ca1 : result) {
                 if (false == mergedAreas.contains(ca1)) {
                     for (final ColorArea ca2 : result) {
@@ -171,8 +171,8 @@ public class Board {
             final char c = str.charAt(i);
             solution[i] = (byte)(Byte.parseByte(String.valueOf(c)) - 1);
         }
-        final Set<ColorArea> floodAreas = new TreeSet<>();
-        final Set<ColorArea> floodNeighbors = new TreeSet<>();
+        final Set<ColorArea> floodAreas = new TreeSet<ColorArea>();
+        final Set<ColorArea> floodNeighbors = new TreeSet<ColorArea>();
         int floodColor = 0;
         // start with the ColorArea that contains cell startPos
         final ColorArea startCa = this.getColorArea(startPos);
@@ -186,7 +186,7 @@ public class Board {
             }
             floodColor = solutionColor;
             // add all floodNeighbors of matching color to floodAreas
-            final Set<ColorArea> newFloodAreas = new TreeSet<>();
+            final Set<ColorArea> newFloodAreas = new TreeSet<ColorArea>();
             for (final ColorArea ca : floodNeighbors) {
                 if (ca.getColor().intValue() == floodColor) {
                     newFloodAreas.add(ca);
@@ -238,7 +238,7 @@ public class Board {
             ca.setDepth(Integer.MAX_VALUE);
         }
         int depth = 0, result = 0;
-        Collection<ColorArea> nextLevel = new ArrayList<>();
+        Collection<ColorArea> nextLevel = new ArrayList<ColorArea>();
         // find the ColorArea that contains cell startPos
         final ColorArea startCa = this.getColorArea(startPos);
         startCa.setDepth(depth);
@@ -247,7 +247,7 @@ public class Board {
         while (false == nextLevel.isEmpty()) {
             ++depth;
             final Collection<ColorArea> thisLevel = nextLevel;
-            nextLevel = new ArrayList<>();
+            nextLevel = new ArrayList<ColorArea>();
             for (final ColorArea ca : thisLevel) {
                 if (ca.getDepth() > depth) {
                     ca.setDepth(depth);

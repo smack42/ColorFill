@@ -43,7 +43,7 @@ public class ColorAreaGroup {
      */
     public ColorAreaGroup(final Board board) {
         this.board = board;
-        this.theMap = new HashMap<>();
+        this.theMap = new HashMap<Integer, HashSet<ColorArea>>();
         for (final Integer color : this.board.getColors()) {
             this.theMap.put(color, new HashSet<ColorArea>());
         }
@@ -123,7 +123,7 @@ public class ColorAreaGroup {
      * @return list of occupied colors, not expected to be empty
      */
     public List<Integer> getColorsNotEmpty() {
-        final List<Integer> result = new ArrayList<>();
+        final List<Integer> result = new ArrayList<Integer>();
         for (final Map.Entry<Integer, HashSet<ColorArea>> entry : this.theMap.entrySet()) {
             if (false == entry.getValue().isEmpty()) {
                 result.add(entry.getKey());
@@ -142,7 +142,7 @@ public class ColorAreaGroup {
             for (final ColorArea ca : entry.getValue()) {
                 if (ca.getDepth() == depth) {
                     if (false == result instanceof ArrayList) {
-                        result = new ArrayList<>();
+                        result = new ArrayList<Integer>();
                     }
                     result.add(entry.getKey());
                     break; // for (ca)
@@ -165,7 +165,7 @@ public class ColorAreaGroup {
             final Set<ColorArea> otherSet = other.theMap.get(color);
             if ((0 < thisSet.size()) && (thisSet.size() == otherSet.size()) && (thisSet.containsAll(otherSet))) {
                 if (false == result instanceof ArrayList) {
-                    result = new ArrayList<>();
+                    result = new ArrayList<Integer>();
                 }
                 result.add(color);
             }
@@ -178,7 +178,7 @@ public class ColorAreaGroup {
      * @return list of colors, not expected to be empty
      */
     public List<Integer> getColorsMaxMembers() {
-        final List<Integer> result = new ArrayList<>();
+        final List<Integer> result = new ArrayList<Integer>();
         int maxCount = 1; // return empty collection if all colors are empty. not expected!
         for (final Map.Entry<Integer, HashSet<ColorArea>> entry : this.theMap.entrySet()) {
             int count = 0;
@@ -203,7 +203,7 @@ public class ColorAreaGroup {
      * @return list of colors, not expected to be empty
      */
     public List<Integer> getColorsMaxMembers(final Set<ColorArea> excludeNeighbors) {
-        final List<Integer> result = new ArrayList<>();
+        final List<Integer> result = new ArrayList<Integer>();
         int maxCount = 1; // return empty collection if all colors are empty. not expected!
         for (final Map.Entry<Integer, HashSet<ColorArea>> entry : this.theMap.entrySet()) {
             int count = 0;
