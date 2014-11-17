@@ -103,7 +103,6 @@ public class PreferencesDialog extends JDialog {
             final ActionListener actionListener = new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     PreferencesDialog.this.rbuttonsColors[colorSchemeNumber].setSelected(true);
-                    PreferencesDialog.this.controller.setUiColorsNumber(colorSchemeNumber);
                 }
             };
             final JLabel label = new JLabel(L10N.getString("pref.lbl.ColorScheme.txt"));
@@ -126,6 +125,13 @@ public class PreferencesDialog extends JDialog {
             public void actionPerformed(ActionEvent e) {
                 PreferencesDialog.this.controller.setWidth(((Number)PreferencesDialog.this.jspinWidth.getValue()).intValue());
                 PreferencesDialog.this.controller.setHeight(((Number)PreferencesDialog.this.jspinHeight.getValue()).intValue());
+                int colorSchemeNumber = 0;
+                for (int i = 0;  i < PreferencesDialog.this.rbuttonsColors.length;  ++i) {
+                    if (PreferencesDialog.this.rbuttonsColors[i].isSelected()) {
+                        colorSchemeNumber = i;
+                    }
+                }
+                PreferencesDialog.this.controller.setUiColorsNumber(colorSchemeNumber);
                 PreferencesDialog.this.controller.userPrefsOK();
                 PreferencesDialog.this.setVisible(false);
             }
