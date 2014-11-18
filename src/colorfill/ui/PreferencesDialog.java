@@ -20,16 +20,19 @@ package colorfill.ui;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.util.ResourceBundle;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.JSpinner;
+import javax.swing.KeyStroke;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 
@@ -44,6 +47,7 @@ public class PreferencesDialog extends JDialog {
     private static final ResourceBundle L10N = ResourceBundle.getBundle("colorfill-ui");  //L10N = Localization
 
     private final PreferencesController controller;
+    private final MainWindow mainWindow;
 
     private final JSpinner jspinWidth = new JSpinner();
     private final JSpinner jspinHeight = new JSpinner();
@@ -59,6 +63,7 @@ public class PreferencesDialog extends JDialog {
     protected PreferencesDialog(final PreferencesController controller, final MainWindow mainWindow) {
         super(mainWindow, true); // modal
         this.controller = controller;
+        this.mainWindow = mainWindow;
         this.setTitle(L10N.getString("pref.Title.txt"));
 
         final JPanel panel = new JPanel();
@@ -79,10 +84,6 @@ public class PreferencesDialog extends JDialog {
         layout.row().bar().add(this.makeButtonOk(), Tag.OK).add(this.makeButtonCancel(), Tag.CANCEL);
 
         this.add(panel);
-        SwingUtilities.getRootPane(this.buttonOk).setDefaultButton(this.buttonOk);
-        this.pack();
-        this.setLocationRelativeTo(mainWindow);
-        this.setVisible(false);
     }
 
     private JSpinner makeJspinWidth() {
@@ -136,16 +137,21 @@ public class PreferencesDialog extends JDialog {
                 PreferencesDialog.this.setVisible(false);
             }
         });
+        this.getRootPane().setDefaultButton(this.buttonOk);
         return this.buttonOk;
     }
 
     private JButton makeButtonCancel() {
         this.buttonCancel.setText(L10N.getString("pref.btn.Cancel.txt"));
-        this.buttonCancel.addActionListener(new ActionListener() {
+        final ActionListener actionListener = new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 PreferencesDialog.this.setVisible(false);
             }
-        });
+        };
+        this.buttonCancel.addActionListener(actionListener);
+        this.getRootPane().registerKeyboardAction(actionListener,
+                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                JComponent.WHEN_IN_FOCUSED_WINDOW);
         return this.buttonCancel;
     }
 
@@ -160,6 +166,8 @@ public class PreferencesDialog extends JDialog {
         this.rbuttonsColors[this.controller.getUiColorsNumber()].setSelected(true);
         this.jspinWidth.setValue(Integer.valueOf(this.controller.getWidth()));
         this.jspinHeight.setValue(Integer.valueOf(this.controller.getHeight()));
+        this.pack();
+        this.setLocationRelativeTo(this.mainWindow);
         this.setVisible(true);
     }
 }
