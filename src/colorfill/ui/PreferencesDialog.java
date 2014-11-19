@@ -124,16 +124,16 @@ public class PreferencesDialog extends JDialog {
         this.buttonOk.setText(L10N.getString("pref.btn.OK.txt"));
         this.buttonOk.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                PreferencesDialog.this.controller.setWidth(((Number)PreferencesDialog.this.jspinWidth.getValue()).intValue());
-                PreferencesDialog.this.controller.setHeight(((Number)PreferencesDialog.this.jspinHeight.getValue()).intValue());
                 int colorSchemeNumber = 0;
                 for (int i = 0;  i < PreferencesDialog.this.rbuttonsColors.length;  ++i) {
                     if (PreferencesDialog.this.rbuttonsColors[i].isSelected()) {
                         colorSchemeNumber = i;
                     }
                 }
-                PreferencesDialog.this.controller.setUiColorsNumber(colorSchemeNumber);
-                PreferencesDialog.this.controller.userPrefsOK();
+                PreferencesDialog.this.controller.userPrefsOK(
+                        ((Number)PreferencesDialog.this.jspinWidth.getValue()).intValue(),
+                        ((Number)PreferencesDialog.this.jspinHeight.getValue()).intValue(),
+                        colorSchemeNumber);
                 PreferencesDialog.this.setVisible(false);
             }
         });

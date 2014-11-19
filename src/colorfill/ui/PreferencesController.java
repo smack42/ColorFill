@@ -40,31 +40,23 @@ public class PreferencesController {
     /**
      * called by PreferencesDialog when user pressed the "OK" button.
      */
-    protected void userPrefsOK() {
-        this.mainController.actionUpdatedPrefs();
+    protected void userPrefsOK(final int width, final int height, final int uiColorsNumber) {
+        boolean isNewBoardSize = this.gameState.getPreferences().setWidth(width);
+        isNewBoardSize |= this.gameState.getPreferences().setHeight(height);
+        this.gameState.getPreferences().setUiColorsNumber(uiColorsNumber);
+        this.mainController.actionUpdatedPrefs(isNewBoardSize);
     }
 
     protected int getWidth() {
         return this.gameState.getPreferences().getWidth();
     }
-    protected boolean setWidth(final int width) {
-        return this.gameState.getPreferences().setWidth(width);
-    }
-
     protected int getHeight() {
         return this.gameState.getPreferences().getHeight();
     }
-    protected boolean setHeight(final int height) {
-        return this.gameState.getPreferences().setHeight(height);
-    }
-
     protected Color[][] getAllUiColors() {
         return this.gameState.getPreferences().getAllUiColors();
     }
     protected int getUiColorsNumber() {
         return this.gameState.getPreferences().getUiColorsNumber();
-    }
-    protected void setUiColorsNumber(final int num) {
-        this.gameState.getPreferences().setUiColorsNumber(num);
     }
 }
