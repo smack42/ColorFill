@@ -52,7 +52,7 @@ public class GameState {
     private final List<GameProgress> progressSolutions = new ArrayList<GameProgress>();
     public static final String PROPERTY_PROGRESS_SOLUTIONS = "progressSolutions";
 
-    private final int NUMBER_OF_SOLVER_THREADS = 4;
+    private static final int NUMBER_OF_SOLVER_THREADS = 4;
 
 
     public GameState() {

@@ -71,7 +71,7 @@ public class ColorArea implements Comparable<ColorArea> {
     }
 
     boolean addMembers(final ColorArea other) {
-        if (this.color != other.color) {
+        if (this.color.intValue() != other.color.intValue()) {
             return false; // wrong (different) color
         }
         if (this.isNeighborArea(other) && (false == other.members.containsAll(this.members))) {
@@ -81,7 +81,7 @@ public class ColorArea implements Comparable<ColorArea> {
     }
 
     boolean addNeighbor(final ColorArea other) {
-        if (this.color == other.color) {
+        if (this.color.intValue() == other.color.intValue()) {
             return false; // wrong (same) color
         }
         if (this.isNeighborArea(other)) {
