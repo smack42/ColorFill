@@ -21,9 +21,16 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 
 import colorfill.solver.DfsSolver;
+import colorfill.solver.Solution;
 import colorfill.solver.Solver;
 import colorfill.solver.Strategy;
 
@@ -44,6 +51,9 @@ public class GameState {
     private final AtomicReference<SolverRun> activeSolverRun = new AtomicReference<SolverRun>();
     private final List<GameProgress> progressSolutions = new ArrayList<GameProgress>();
     public static final String PROPERTY_PROGRESS_SOLUTIONS = "progressSolutions";
+
+    private final int NUMBER_OF_SOLVER_THREADS = 4;
+
 
     public GameState() {
         this.pref = new GamePreferences();
@@ -136,25 +146,42 @@ public class GameState {
         @Override
         public void run() {
             GameState.this.clearProgressSolutions();
-            final Solver solver = new DfsSolver(this.board);
-            final Class<Strategy>[] strategies = solver.getSupportedStrategies();
+            final ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_SOLVER_THREADS);
+            final List<Future<Solution>> futureSolutions = new ArrayList<Future<Solution>>();
+            final Class<Strategy>[] strategies = new DfsSolver(this.board).getSupportedStrategies();
             for (final Class<Strategy> strategy : strategies) {
+                final Solver solver = new DfsSolver(this.board);
                 solver.setStrategy(strategy);
-                final long nanoStart = System.nanoTime();
+                futureSolutions.add(executor.submit(new Callable<Solution>() {
+                    public Solution call() throws Exception {
+                        solver.execute(SolverRun.this.startPos);
+                        return solver.getSolution();
+                    }
+                }));
+            }
+            for (final Future<Solution> futureSolution : futureSolutions) {
+                Solution solution = null;
                 try {
-                    solver.execute(this.startPos);
+                    solution = futureSolution.get();
                 } catch (InterruptedException e) {
                     System.out.println("***** SolverRun interrupted *****");
-                    break; // for (strategy)
+                    executor.shutdownNow(); // interrupt the solver threads
+                } catch (ExecutionException e) {
+                    if (false == e.getCause() instanceof InterruptedException) {
+                        e.printStackTrace();
+                    }
+                } catch (CancellationException e) {
+                    // do nothing
                 }
-                final long nanoEnd = System.nanoTime();
-                GameState.this.addProgressSolution(new GameProgress(this.board, this.startPos, solver.getSolution()));
-                System.out.println(
-                        padRight(strategy.getSimpleName(), 17 + 2) // 17==max. length of strategy names
-                        + padRight("steps(" + solver.getSolution().getNumSteps() + ")", 7 + 2 + 2)
-                        + padRight("ms(" + ((nanoEnd - nanoStart + 999999L) / 1000000L) + ")", 4 + 5 + 1)
-                        + "solution(" + solver.getSolution() + ")");
+                if (null != solution) {
+                    GameState.this.addProgressSolution(new GameProgress(this.board, this.startPos, solution));
+                    System.out.println(
+                            padRight(solution.getSolverName(), 17 + 2) // 17==max. length of strategy names
+                            + padRight("steps(" + solution.getNumSteps() + ")", 7 + 2 + 2)
+                            + "solution(" + solution + ")");
+                }
             }
+            executor.shutdown();
             System.out.println();
             GameState.this.activeSolverRun.compareAndSet(this, null);
         }
