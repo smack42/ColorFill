@@ -57,12 +57,13 @@ public class Board {
         this.cellsColorAreas = new ColorArea[len];
         this.colorAreas = new TreeSet<ColorArea>();
         this.randomCellColors();
+        this.startPos = this.depth = -1;
     }
 
     /**
      * fill all board cells with random color values.
      */
-    public void randomCellColors() {
+    private void randomCellColors() {
         final Random random = new Random();
         final Integer[] colorArray = this.colors.toArray(new Integer[0]);
         for (int i = 0;  i < this.cells.length;  ++i) {
@@ -71,7 +72,6 @@ public class Board {
         }
         this.colorAreas.clear();
         this.colorAreas.addAll(this.createColorAreas());
-        this.startPos = this.depth = -1;
     }
 
     /**
@@ -101,6 +101,17 @@ public class Board {
         for (final byte color : this.cells) {
             this.colors.add(Integer.valueOf(color));
         }
+        this.startPos = this.depth = -1;
+    }
+
+    /**
+     * construct a new Board from a text representation and set the start position.
+     * @param str
+     * @param startPos
+     */
+    public Board(final String str, final int startPos) {
+        this(str);
+        this.determineColorAreasDepth(startPos);
     }
 
     private Set<ColorArea> createColorAreas() {
@@ -228,7 +239,7 @@ public class Board {
      * @param startPos position of the board cell where the color flood starts (0 == top left)
      * @return maximum depth of all color areas of this board
      */
-    public int determineColorAreasDepth(final int startPos) {
+    public synchronized int determineColorAreasDepth(final int startPos) {
         if (this.startPos == startPos) {
             return this.depth;
         }
@@ -310,7 +321,7 @@ public class Board {
         return this.cells[cell];
     }
 
-    public int getStartPos() {
+    public synchronized int getStartPos() {
         return this.startPos;
     }
 
