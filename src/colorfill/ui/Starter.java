@@ -19,22 +19,34 @@ package colorfill.ui;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import colorfill.model.Board;
 import colorfill.solver.DeepDfsStrategy;
 import colorfill.solver.DeeperDfsStrategy;
+import colorfill.solver.DfsSolver;
 import colorfill.solver.GreedyDfsStrategy;
 import colorfill.solver.Solution;
 import colorfill.solver.Solver;
-import colorfill.solver.DfsSolver;
 import colorfill.solver.Strategy;
 
 
 public class Starter {
 
     public static void main(String[] args) throws Exception {
-        new MainController("ColorFill 0.1.3 __DEVELOPMENT__ (2014-11-19)");
+        if (0 == args.length) {
+            new MainController("ColorFill 0.1.3 __DEVELOPMENT__ (2014-11-22)");
+        } else {
+            runSolverPc19(args[0]);
+        }
 //        testCheckOne();
 //        testCheckPc19();
 //        testSolverPc19();
@@ -194,6 +206,69 @@ public class Starter {
         System.out.println("total steps:   " + countStepsBest);
         System.out.println("total steps25: " + countSteps25Best + (1000 == count ? "  (Programming Challenge 19 score)" : ""));
         brTiles.close();
+    }
+
+
+
+    private static void runSolverPc19(final String inputFileName) throws Exception {
+        final int startPos = 0;
+        final String outputFileName = "results.txt";
+        System.out.println("ColorFill by Michael Henke, running Programming Challenge 19");
+        System.out.println("reading  input file: " + inputFileName);
+        System.out.println("writing output file: " + outputFileName);
+
+        final BufferedReader brTiles = new BufferedReader(new FileReader(inputFileName));
+        final PrintWriter pwResults = new PrintWriter(new FileWriter(outputFileName));
+
+        final ExecutorService executor = Executors.newCachedThreadPool(); // newFixedThreadPool(3)
+        int countLines = 0, countSolutionMoves = 0;
+
+        // pre-load 1st board
+        Board board = null;
+        String lineTiles = brTiles.readLine();
+        if (null != lineTiles) { board = new Board(lineTiles, startPos); }
+
+        while (null != lineTiles) {
+            ++countLines;
+            // run the solvers for the current board
+            final List<Future<Solution>> futureSolutions = new ArrayList<Future<Solution>>();
+            for (final Class<Strategy> strategy : new DfsSolver(board).getSupportedStrategies()) {
+                final Solver solver = new DfsSolver(board);
+                solver.setStrategy(strategy);
+                futureSolutions.add(executor.submit(new Callable<Solution>() {
+                    public Solution call() throws Exception {
+                        solver.execute(0); // startPos = 0
+                        return solver.getSolution();
+                    }
+                }));
+            }
+            // pre-load next board, use the time while the solvers are busy
+            lineTiles = brTiles.readLine();
+            if (null != lineTiles) { board = new Board(lineTiles, startPos); }
+            // wait for the solvers to complete and take the best solution
+            Solution bestSolution = null;
+            for (final Future<Solution> futureSolution : futureSolutions) {
+                final Solution solution = futureSolution.get();
+                if ((null == bestSolution) || (bestSolution.getNumSteps() > solution.getNumSteps())) {
+                    bestSolution = solution;
+                }
+            }
+            // print result and progress indicator
+            pwResults.println(bestSolution.toString());
+            countSolutionMoves += bestSolution.getNumSteps();
+            if (0 == countLines % 10) {
+                System.out.print("\b\b\b\b" + countLines); // stay on the same line - not good for Eclipse console
+                //System.out.println(countLines);
+                System.out.flush();
+            }
+        }
+
+        System.out.println();
+        System.out.println("total moves = " + countSolutionMoves);
+        pwResults.println("Total Moves = " + countSolutionMoves);
+        pwResults.close();
+        brTiles.close();
+        executor.shutdown();
     }
 
 
