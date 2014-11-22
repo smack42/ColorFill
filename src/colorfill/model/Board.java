@@ -60,14 +60,15 @@ public class Board {
         }
         this.cells = new byte[len];
         this.cellsColorAreas = new ColorArea[len];
-        this.colorAreas = new ObjectAVLTreeSet<>();
+        this.colorAreas = new ObjectAVLTreeSet<ColorArea>();
         this.randomCellColors();
+        this.startPos = this.depth = -1;
     }
 
     /**
      * fill all board cells with random color values.
      */
-    public void randomCellColors() {
+    private void randomCellColors() {
         final Random random = new Random();
         final byte[] colorArray = this.colors.toByteArray();
         for (int i = 0;  i < this.cells.length;  ++i) {
@@ -76,7 +77,6 @@ public class Board {
         }
         this.colorAreas.clear();
         this.colorAreas.addAll(this.createColorAreas());
-        this.startPos = this.depth = -1;
     }
 
     /**
@@ -100,16 +100,27 @@ public class Board {
             this.cells[i] = (byte)(Byte.parseByte(String.valueOf(c)) - 1);
         }
         this.cellsColorAreas = new ColorArea[len];
-        this.colorAreas = new ObjectAVLTreeSet<>();
+        this.colorAreas = new ObjectAVLTreeSet<ColorArea>();
         this.colorAreas.addAll(this.createColorAreas());
         this.colors = new ByteAVLTreeSet();
         for (final byte color : this.cells) {
             this.colors.add(color);
         }
+        this.startPos = this.depth = -1;
+    }
+
+    /**
+     * construct a new Board from a text representation and set the start position.
+     * @param str
+     * @param startPos
+     */
+    public Board(final String str, final int startPos) {
+        this(str);
+        this.determineColorAreasDepth(startPos);
     }
 
     private Set<ColorArea> createColorAreas() {
-        final Set<ColorArea> result = new ObjectOpenHashSet<>();
+        final Set<ColorArea> result = new ObjectOpenHashSet<ColorArea>();
         // build ColorAreas, fill with them with members: adjacent cells of the same color
         for (int index = 0;  index < this.cells.length;  ++index) {
             final byte color = this.cells[index];
@@ -128,7 +139,7 @@ public class Board {
         }
         // merge ColorAreas that are neighbors of the same color
         for (boolean doMergeAreas = true;  true == doMergeAreas;  ) {
-            final Set<ColorArea> mergedAreas = new ObjectOpenHashSet<>();
+            final Set<ColorArea> mergedAreas = new ObjectOpenHashSet<ColorArea>();
             for (final ColorArea ca1 : result) {
                 if (false == mergedAreas.contains(ca1)) {
                     for (final ColorArea ca2 : result) {
@@ -176,8 +187,8 @@ public class Board {
             final char c = str.charAt(i);
             solution[i] = (byte)(Byte.parseByte(String.valueOf(c)) - 1);
         }
-        final Set<ColorArea> floodAreas = new ObjectRBTreeSet<>();
-        final Set<ColorArea> floodNeighbors = new ObjectRBTreeSet<>();
+        final Set<ColorArea> floodAreas = new ObjectRBTreeSet<ColorArea>();
+        final Set<ColorArea> floodNeighbors = new ObjectRBTreeSet<ColorArea>();
         int floodColor = 0;
         // start with the ColorArea that contains cell startPos
         final ColorArea startCa = this.getColorArea(startPos);
@@ -191,7 +202,7 @@ public class Board {
             }
             floodColor = solutionColor;
             // add all floodNeighbors of matching color to floodAreas
-            final Set<ColorArea> newFloodAreas = new ObjectRBTreeSet<>();
+            final Set<ColorArea> newFloodAreas = new ObjectRBTreeSet<ColorArea>();
             for (final ColorArea ca : floodNeighbors) {
                 if (ca.getColor() == floodColor) {
                     newFloodAreas.add(ca);
@@ -233,7 +244,7 @@ public class Board {
      * @param startPos position of the board cell where the color flood starts (0 == top left)
      * @return maximum depth of all color areas of this board
      */
-    public int determineColorAreasDepth(final int startPos) {
+    public synchronized int determineColorAreasDepth(final int startPos) {
         if (this.startPos == startPos) {
             return this.depth;
         }
@@ -243,7 +254,7 @@ public class Board {
             ca.setDepth(Integer.MAX_VALUE);
         }
         int depth = 0, result = 0;
-        ObjectCollection<ColorArea> nextLevel = new ObjectArrayList<>();
+        ObjectCollection<ColorArea> nextLevel = new ObjectArrayList<ColorArea>();
         // find the ColorArea that contains cell startPos
         final ColorArea startCa = this.getColorArea(startPos);
         startCa.setDepth(depth);
@@ -252,7 +263,7 @@ public class Board {
         while (false == nextLevel.isEmpty()) {
             ++depth;
             final ObjectCollection<ColorArea> thisLevel = nextLevel;
-            nextLevel = new ObjectArrayList<>();
+            nextLevel = new ObjectArrayList<ColorArea>();
             for (final ColorArea ca : thisLevel) {
                 if (ca.getDepth() > depth) {
                     ca.setDepth(depth);
@@ -315,7 +326,7 @@ public class Board {
         return this.cells[cell];
     }
 
-    public int getStartPos() {
+    public synchronized int getStartPos() {
         return this.startPos;
     }
 

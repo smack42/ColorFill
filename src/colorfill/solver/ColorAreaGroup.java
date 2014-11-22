@@ -44,7 +44,7 @@ public class ColorAreaGroup {
      */
     public ColorAreaGroup(final Board board) {
         this.board = board;
-        this.theMap = new Byte2ObjectAVLTreeMap<>();
+        this.theMap = new Byte2ObjectAVLTreeMap<ReferenceOpenHashSet<ColorArea>>();
         for (final byte color : this.board.getColors()) {
             this.theMap.put(color, new ReferenceOpenHashSet<ColorArea>());
         }

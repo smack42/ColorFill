@@ -19,24 +19,37 @@ package colorfill.ui;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import colorfill.model.Board;
 import colorfill.solver.DeepDfsStrategy;
 import colorfill.solver.DeeperDfsStrategy;
-import colorfill.solver.GreedyDfsStrategy;
-import colorfill.solver.Solver;
 import colorfill.solver.DfsSolver;
+import colorfill.solver.GreedyDfsStrategy;
+import colorfill.solver.Solution;
+import colorfill.solver.Solver;
 import colorfill.solver.Strategy;
 
 
 public class Starter {
 
-    public static void main(String[] args) throws IOException {
-//        new MainController("ColorFill __DEV__2014-11-02__");
+    public static void main(String[] args) throws Exception {
+        if (0 == args.length) {
+            new MainController("ColorFill 0.1.3 __DEVELOPMENT__FASTUTIL__ (2014-11-22)");
+        } else {
+            runSolverPc19(args[0]);
+        }
 //        testCheckOne();
 //        testCheckPc19();
-        testSolverPc19();
+//        testSolverPc19();
     }
 
 
@@ -107,9 +120,10 @@ public class Starter {
      * http://cplus.about.com/od/programmingchallenges/a/challenge19.htm
      * 
      * @throws IOException 
+     * @throws InterruptedException
      */
     @SuppressWarnings("unchecked")
-    private static void testSolverPc19() throws IOException {
+    private static void testSolverPc19() throws IOException, InterruptedException {
         // which strategies to run
         final Class<?>[] STRATEGIES = {
             GreedyDfsStrategy.class,
@@ -120,7 +134,7 @@ public class Starter {
 
         // some counters
         int countStepsBest = 0, countSteps25Best = 0;
-        final String[] stSolution = new String[STRATEGIES.length];
+        final Solution[] stSolution = new Solution[STRATEGIES.length];
         final int[] stCountSteps = new int[STRATEGIES.length], stCountSteps25 = new int[STRATEGIES.length], stCountBest = new int[STRATEGIES.length];
         final int[] stCountCheckFailed = new int[STRATEGIES.length], stCountCheckOK = new int[STRATEGIES.length];
         final long[] stNanoTime = new long[STRATEGIES.length];
@@ -139,10 +153,10 @@ public class Starter {
                 final int numSteps = solver.execute(startPos);
                 final long nanoEnd = System.nanoTime();
                 stNanoTime[strategy] += nanoEnd - nanoStart;
-                stSolution[strategy] = solver.getSolutionString();
+                stSolution[strategy] = solver.getSolution();
                 stCountSteps[strategy] += numSteps;
                 stCountSteps25[strategy] += (numSteps > 25 ? 25 : numSteps);
-                final String solutionCheckResult = board.checkSolution(solver.getSolutionString(), startPos);
+                final String solutionCheckResult = board.checkSolution(solver.getSolution().toString(), startPos);
                 if (solutionCheckResult.isEmpty()) {
                     stCountCheckOK[strategy] += 1;
                 } else {
@@ -156,13 +170,13 @@ public class Starter {
             // which strategy was best for this board?
             int minSteps = Integer.MAX_VALUE;
             for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
-                if (minSteps > stSolution[strategy].length()) {
-                    minSteps = stSolution[strategy].length();
+                if (minSteps > stSolution[strategy].getNumSteps()) {
+                    minSteps = stSolution[strategy].getNumSteps();
                 }
             }
             int minStrategy = Integer.MAX_VALUE;
             for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
-                if (minSteps == stSolution[strategy].length()) {
+                if (minSteps == stSolution[strategy].getNumSteps()) {
                     stCountBest[strategy] += 1;
                     minStrategy = (strategy < minStrategy ? strategy : minStrategy);
                 }
@@ -174,7 +188,7 @@ public class Starter {
                     padRight("" + count, 4 + 1) +
                     padRight(stSolution[minStrategy] + "____________" + minSteps, 30 + 12 + 2 + 2)  +
                     (minSteps > 25 ? "!!!!!!!  " : "         ") +
-                    minStrategy + "_" + STRATEGIES[minStrategy].getSimpleName());
+                    minStrategy + "_" + stSolution[minStrategy].getSolverName());
             //if (100 == count) break; // for (lineTiles)
         }
         // print summary
@@ -192,6 +206,69 @@ public class Starter {
         System.out.println("total steps:   " + countStepsBest);
         System.out.println("total steps25: " + countSteps25Best + (1000 == count ? "  (Programming Challenge 19 score)" : ""));
         brTiles.close();
+    }
+
+
+
+    private static void runSolverPc19(final String inputFileName) throws Exception {
+        final int startPos = 0;
+        final String outputFileName = "results.txt";
+        System.out.println("ColorFill by Michael Henke, running Programming Challenge 19");
+        System.out.println("reading  input file: " + inputFileName);
+        System.out.println("writing output file: " + outputFileName);
+
+        final BufferedReader brTiles = new BufferedReader(new FileReader(inputFileName));
+        final PrintWriter pwResults = new PrintWriter(new FileWriter(outputFileName));
+
+        final ExecutorService executor = Executors.newCachedThreadPool(); // newFixedThreadPool(3)
+        int countLines = 0, countSolutionMoves = 0;
+
+        // pre-load 1st board
+        Board board = null;
+        String lineTiles = brTiles.readLine();
+        if (null != lineTiles) { board = new Board(lineTiles, startPos); }
+
+        while (null != lineTiles) {
+            ++countLines;
+            // run the solvers for the current board
+            final List<Future<Solution>> futureSolutions = new ArrayList<Future<Solution>>();
+            for (final Class<Strategy> strategy : new DfsSolver(board).getSupportedStrategies()) {
+                final Solver solver = new DfsSolver(board);
+                solver.setStrategy(strategy);
+                futureSolutions.add(executor.submit(new Callable<Solution>() {
+                    public Solution call() throws Exception {
+                        solver.execute(0); // startPos = 0
+                        return solver.getSolution();
+                    }
+                }));
+            }
+            // pre-load next board, use the time while the solvers are busy
+            lineTiles = brTiles.readLine();
+            if (null != lineTiles) { board = new Board(lineTiles, startPos); }
+            // wait for the solvers to complete and take the best solution
+            Solution bestSolution = null;
+            for (final Future<Solution> futureSolution : futureSolutions) {
+                final Solution solution = futureSolution.get();
+                if ((null == bestSolution) || (bestSolution.getNumSteps() > solution.getNumSteps())) {
+                    bestSolution = solution;
+                }
+            }
+            // print result and progress indicator
+            pwResults.println(bestSolution.toString());
+            countSolutionMoves += bestSolution.getNumSteps();
+            if (0 == countLines % 10) {
+                System.out.print("\b\b\b\b" + countLines); // stay on the same line - not good for Eclipse console
+                //System.out.println(countLines);
+                System.out.flush();
+            }
+        }
+
+        System.out.println();
+        System.out.println("total moves = " + countSolutionMoves);
+        pwResults.println("Total Moves = " + countSolutionMoves);
+        pwResults.close();
+        brTiles.close();
+        executor.shutdown();
     }
 
 

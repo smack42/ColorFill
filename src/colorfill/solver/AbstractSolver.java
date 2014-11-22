@@ -17,8 +17,6 @@
 
 package colorfill.solver;
 
-import java.util.Arrays;
-
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 
@@ -30,7 +28,7 @@ import colorfill.model.Board;
 public abstract class AbstractSolver implements Solver {
 
     protected final Board board;
-    protected final ObjectList<byte[]> solutions = new ObjectArrayList<>();
+    protected final ObjectList<Solution> solutions = new ObjectArrayList<Solution>();
     protected int solutionSize = 0;
 
     /**
@@ -46,14 +44,15 @@ public abstract class AbstractSolver implements Solver {
      * should call {@link #addSolution(List)} to collect the solution(s).
      * 
      * @param startPos position of the board cell where the color flood starts (0 == top left)
+     * @throws InterruptedException
      */
-    protected abstract void executeInternal(int startPos);
+    protected abstract void executeInternal(int startPos) throws InterruptedException;
 
     /* (non-Javadoc)
      * @see colorfill.solver.Solver#execute(int)
      */
     @Override
-    public int execute(final int startPos) {
+    public int execute(final int startPos) throws InterruptedException {
         this.solutions.clear();
         this.solutionSize = Integer.MAX_VALUE;
 
@@ -63,17 +62,15 @@ public abstract class AbstractSolver implements Solver {
     }
 
     /* (non-Javadoc)
-     * @see colorfill.solver.Solver#getSolutionString()
+     * @see colorfill.solver.Solver#getSolution()
      */
     @Override
-    public String getSolutionString() {
-        final StringBuilder result = new StringBuilder();
+    public Solution getSolution() {
         if (this.solutions.size() > 0) {
-            for (final byte color : this.solutions.get(0)) {
-                result.append(color + 1);
-            }
+            return this.solutions.get(0);
+        } else {
+            return Solution.EMPTY_SOLUTION;
         }
-        return result.toString();
     }
 
     /**
@@ -92,7 +89,7 @@ public abstract class AbstractSolver implements Solver {
             this.solutions.clear();
         }
         if (this.solutionSize == solution.length) {
-            this.solutions.add(Arrays.copyOf(solution, solution.length));
+            this.solutions.add(new Solution(solution, this.getSolverName()));
             return true;
         }
         return false;

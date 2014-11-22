@@ -5,13 +5,13 @@
 
 -libraryjars <java.home>/lib/rt.jar
 
--target 1.7
+-target 1.6
 
 # avoid a crash in some fastutil class  http://sourceforge.net/p/proguard/bugs/462/
 -optimizations !code/allocation/variable
 
-# don't go higher than 5 otherwise the application will crash in some designgridlayout class !!!
--optimizationpasses 5
+# don't go higher than 1 otherwise the application will crash in some designgridlayout class !!!
+-optimizationpasses 1
 
 -allowaccessmodification
 

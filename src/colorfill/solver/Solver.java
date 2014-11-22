@@ -25,15 +25,16 @@ public interface Solver {
      * 
      * @param startPos position of the board cell where the color flood starts (0 == top left)
      * @return number of steps in the solution
+     * @throws InterruptedException
      */
-    public int execute(final int startPos);
+    public int execute(final int startPos) throws InterruptedException;
 
     /**
-     * return the first (best) solution as a String.
+     * return the first (best) solution.
      * 
      * @return the solution
      */
-    public String getSolutionString();
+    public Solution getSolution();
 
     /**
      * set the strategy to be used by this solver.
@@ -47,4 +48,10 @@ public interface Solver {
      * @return array of strategy classes
      */
     public Class<Strategy>[] getSupportedStrategies();
+
+    /**
+     * get the name of the solver and / or the strategy.
+     * @return the name
+     */
+    public String getSolverName();
 }

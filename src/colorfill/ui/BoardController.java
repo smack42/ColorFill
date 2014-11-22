@@ -31,9 +31,9 @@ import colorfill.model.GameState;
  */
 public class BoardController {
 
-    private MainController mainController;
-    private GameState gameState;
-    private BoardPanel boardPanel;
+    private final MainController mainController;
+    private final GameState gameState;
+    private final BoardPanel boardPanel;
 
     protected BoardController(final MainController mainController, final GameState gameState) {
         this.mainController = mainController;
@@ -42,13 +42,16 @@ public class BoardController {
         this.initBoardPanel();
     }
 
-    private void initBoardPanel() {
-        this.boardPanel.init(this.gameState.getBoard().getWidth(), this.gameState.getBoard().getHeight());
+    /**
+     * apply current values of board width + height and color schmeme
+     */
+    protected void initBoardPanel() {
+        this.boardPanel.init(this.gameState.getBoard().getWidth(), this.gameState.getBoard().getHeight(), this.gameState.getPreferences().getUiColors());
         this.repaintBoardPanel();
     }
 
     private void repaintBoardPanel() {
-        this.boardPanel.setCellColors(this.gameState.getColors());
+        this.boardPanel.setCellColors(this.gameState.getSelectedProgress().getColors());
     }
 
     protected JPanel getPanel() {
@@ -56,7 +59,7 @@ public class BoardController {
     }
 
     protected Color[] getUiColors() {
-        return this.gameState.getPrefUiColors();
+        return this.gameState.getPreferences().getUiColors();
     }
 
     /**
@@ -66,7 +69,7 @@ public class BoardController {
      * @param color the cell color
      */
     protected void userClickedOnCell(final MouseEvent e, final int index, final int color) {
-        if (this.gameState.isFloodNeighborCell(index)) {
+        if (this.gameState.isUserProgress() && this.gameState.getSelectedProgress().isFloodNeighborCell(index)) {
             this.mainController.actionAddStep(color);
         }
     }
@@ -85,12 +88,23 @@ public class BoardController {
      * @param color the cell color
      */
     protected void userMovedMouseToCell(MouseEvent e, int index, int color) {
-        final Collection<Integer> neighborCells;
-        if (this.gameState.isFloodNeighborCell(index)) {
-            neighborCells = this.gameState.getFloodNeighborCells(color);
-        } else {
-            neighborCells = Collections.emptyList();
+        if (this.gameState.isUserProgress()) {
+            final Collection<Integer> neighborCells;
+            if (this.gameState.getSelectedProgress().isFloodNeighborCell(index)) {
+                neighborCells = this.gameState.getSelectedProgress().getFloodNeighborCells(color);
+            } else {
+                neighborCells = Collections.emptyList();
+            }
+            this.boardPanel.highlightCells(neighborCells);
         }
+    }
+
+    /**
+     * highlight the flodd neighbor cells of the specified color.
+     * @param color
+     */
+    protected void actionHightlightFloodNeighborCells(final int color) {
+        final Collection<Integer> neighborCells = this.gameState.getSelectedProgress().getFloodNeighborCells(color);
         this.boardPanel.highlightCells(neighborCells);
     }
 }

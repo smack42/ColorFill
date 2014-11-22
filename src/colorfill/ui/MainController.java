@@ -17,8 +17,13 @@
 
 package colorfill.ui;
 
-import javax.swing.SwingUtilities;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
+import colorfill.model.GameProgress;
 import colorfill.model.GameState;
 
 /**
@@ -32,13 +37,13 @@ public class MainController {
     private MainWindow mainView;
     private BoardController boardController;
     private ControlController controlController;
+    private PreferencesController preferencesController;
 
     /**
      * the main entry point to this Swing GUI.
      * @param windowTitle title text of the application window
      */
     public MainController(final String windowTitle) {
-        this.gameState = new GameState();
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 createAndShowGUI(windowTitle);
@@ -47,10 +52,31 @@ public class MainController {
     }
 
     private void createAndShowGUI(final String windowTitle) {
+        try {
+            //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        this.gameState = new GameState();
+        this.gameState.addPropertyChangeListener(new GameStatePropertyChangeListener());
         this.boardController = new BoardController(this, this.gameState);
         this.controlController = new ControlController(this, this.gameState);
         this.mainView = new MainWindow(windowTitle, this.boardController.getPanel(), this.controlController.getPanel());
         this.mainView.update();
+        this.gameState.setAutoRunSolver(true);
+        this.preferencesController = new PreferencesController(this, this.gameState, this.mainView);
+    }
+
+    private void internalUpdateBoardColors() {
+        this.boardController.actionUpdateBoardColors();
+        this.controlController.actionUpdateBoardColors();
+        if (false == this.gameState.isUserProgress()) {
+            final Integer nextColor = this.gameState.getSelectedProgress().getNextColor();
+            if (null != nextColor) {
+                this.boardController.actionHightlightFloodNeighborCells(nextColor.intValue());
+            }
+        }
     }
 
     /**
@@ -58,10 +84,9 @@ public class MainController {
      * @param color
      */
     protected void actionAddStep(final int color) {
-        final boolean isAdded = this.gameState.addStep(color);
+        final boolean isAdded = this.gameState.getSelectedProgress().addStep(color);
         if (isAdded) {
-            this.boardController.actionUpdateBoardColors();
-            this.controlController.actionUpdateBoardColors();
+            this.internalUpdateBoardColors();
         }
     }
 
@@ -69,10 +94,9 @@ public class MainController {
      * undo a color step in gamestate.
      */
     protected void actionUndoStep() {
-        final boolean isDone = this.gameState.undoStep();
+        final boolean isDone = this.gameState.getSelectedProgress().undoStep();
         if (isDone) {
-            this.boardController.actionUpdateBoardColors();
-            this.controlController.actionUpdateBoardColors();
+            this.internalUpdateBoardColors();
         }
     }
 
@@ -80,10 +104,9 @@ public class MainController {
      * redo a color step in gamestate.
      */
     protected void actionRedoStep() {
-        final boolean isDone = this.gameState.redoStep();
+        final boolean isDone = this.gameState.getSelectedProgress().redoStep();
         if (isDone) {
-            this.boardController.actionUpdateBoardColors();
-            this.controlController.actionUpdateBoardColors();
+            this.internalUpdateBoardColors();
         }
     }
 
@@ -92,7 +115,58 @@ public class MainController {
      */
     protected void actionNewBoard() {
         this.gameState.setNewRandomBoard();
-        this.boardController.actionUpdateBoardColors();
-        this.controlController.actionUpdateBoardColors();
+        this.internalUpdateBoardColors();
+    }
+
+    /**
+     * show preferences dialog.
+     */
+    protected void actionPreferences() {
+        this.preferencesController.showDialog();
+    }
+
+    /**
+     * apply updated preferences.
+     */
+    protected void actionUpdatedPrefs(final boolean isNewBoardSize) {
+        if (isNewBoardSize) {
+            this.gameState.setNewRandomBoard();
+        }
+        this.boardController.initBoardPanel();
+        if (isNewBoardSize) {
+            this.mainView.update();
+        }
+        this.internalUpdateBoardColors();
+    }
+
+    /**
+     * select a game progress in gamestate.
+     * @param numProgress number of the selected solution (0 == user solution, other = solver solutions)
+     */
+    protected void actionSelectGameProgress(final int numProgress) {
+        final boolean isDone = this.gameState.selectGameProgress(numProgress);
+        if (isDone) {
+            this.internalUpdateBoardColors();
+        }
+    }
+
+    /**
+     * this class handles the Property Change Events coming from GameState
+     * when the solver(s) running in a worker thread present their solutions.
+     */
+    private class GameStatePropertyChangeListener implements PropertyChangeListener {
+        @Override
+        public void propertyChange(final PropertyChangeEvent evt) {
+            if (GameState.PROPERTY_PROGRESS_SOLUTIONS.equals(evt.getPropertyName())) {
+//                final GameProgress[] oldValue = (GameProgress[]) evt.getOldValue();
+                final GameProgress[] newValue = (GameProgress[]) evt.getNewValue();
+                if (0 == newValue.length) {
+                    MainController.this.controlController.actionClearSolverResults();
+                } else {
+//                    System.out.println("propertyChange add " + (newValue.length - oldValue.length));
+                    MainController.this.controlController.actionAddSolverResult(newValue[newValue.length - 1]);
+                }
+            }
+        }
     }
 }

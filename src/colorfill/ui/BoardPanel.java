@@ -97,19 +97,13 @@ public class BoardPanel extends JPanel {
      * @param columns
      * @param rows
      */
-    protected void init(final int columns, final int rows) {
-        if (SwingUtilities.isEventDispatchThread()) {
-            initInternal(columns, rows);
-        } else {
-            SwingUtilities.invokeLater(new Runnable() {
-                public void run() {
-                    initInternal(columns, rows);
-                }
-            });
-        }
+    protected void init(final int columns, final int rows, final Color[] uiColors) {
+        if (SwingUtilities.isEventDispatchThread()) {                          initInternal(columns, rows, uiColors); }
+        else { SwingUtilities.invokeLater(new Runnable() { public void run() { initInternal(columns, rows, uiColors); } }); }
     }
 
-    private void initInternal(final int columns, final int rows) {
+    private void initInternal(final int columns, final int rows, final Color[] uiColors) {
+        this.uiColors = uiColors;
         this.columns = columns;
         this.rows = rows;
         this.cellColors = new int[columns * rows];

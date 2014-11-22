@@ -32,7 +32,7 @@ public class ColorArea implements Comparable<ColorArea> {
     private final int boardWidth;
     private final IntSortedSet members = new IntAVLTreeSet(); // sorted set - used by compareTo!
     private final IntSortedSet membersUnmodifiable = IntSortedSets.unmodifiable(this.members);
-    private final ObjectSortedSet<ColorArea> neighbors = new ObjectAVLTreeSet<>();
+    private final ObjectSortedSet<ColorArea> neighbors = new ObjectAVLTreeSet<ColorArea>();
     private final ObjectSortedSet<ColorArea> neighborsUnmodifiable = ObjectSortedSets.unmodifiable(this.neighbors);
     private int depth = 0;
 

@@ -100,14 +100,22 @@ public class DfsSolver extends AbstractSolver {
     }
 
     /* (non-Javadoc)
+     * @see colorfill.solver.Solver#getSolverName()
+     */
+    @Override
+    public String getSolverName() {
+        return this.strategy.getClass().getSimpleName();
+    }
+
+    /* (non-Javadoc)
      * @see colorfill.solver.AbstractSolver#executeInternal(int)
      */
     @Override
-    protected void executeInternal(final int startPos) {
+    protected void executeInternal(final int startPos) throws InterruptedException {
         this.strategy = this.makeStrategy(startPos);
 
         final ColorArea startCa = this.board.getColorArea(startPos);
-        this.allFlooded = new ReferenceOpenHashSet<>();
+        this.allFlooded = new ReferenceOpenHashSet<ColorArea>();
         this.notFlooded = new ColorAreaGroup(this.board);
         notFlooded.addAll(this.board.getColorAreas(), this.allFlooded);
         final ColorAreaGroup neighbors = new ColorAreaGroup(this.board);
@@ -122,12 +130,13 @@ public class DfsSolver extends AbstractSolver {
      * @param depth
      * @param thisColor
      * @param neighbors
+     * @throws InterruptedException
      */
     private void doRecursion(final int depth,
             final byte thisColor,
             ColorAreaGroup neighbors,
             final boolean saveNeighbors
-            ) {
+            ) throws InterruptedException {
         // do this step
         final Collection<ColorArea> thisFlooded = neighbors.getColor(thisColor);
         this.notFlooded.removeAllColor(thisFlooded, thisColor);
@@ -141,6 +150,7 @@ public class DfsSolver extends AbstractSolver {
 
         // do next step
         } else if (this.solutionSize > depth + colorsNotFlooded) { // TODO use ">=" instead of ">" to find all shortest solutions; slower!
+            if (Thread.interrupted()) { throw new InterruptedException(); }
             this.allFlooded.addAll(thisFlooded);
             if (saveNeighbors) {
                 neighbors = new ColorAreaGroup(neighbors); // clone for backtracking
