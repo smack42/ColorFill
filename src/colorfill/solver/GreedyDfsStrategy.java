@@ -17,9 +17,8 @@
 
 package colorfill.solver;
 
-import java.util.Set;
-
 import it.unimi.dsi.fastutil.bytes.ByteList;
+import it.unimi.dsi.fastutil.objects.ReferenceSet;
 
 import colorfill.model.ColorArea;
 
@@ -39,7 +38,7 @@ public class GreedyDfsStrategy implements DfsStrategy {
     public ByteList selectColors(final int depth,
             final byte thisColor,
             final byte[] solution,
-            final Set<ColorArea> flooded,
+            final ReferenceSet<ColorArea> flooded,
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
         ByteList result = neighbors.getColorsCompleted(notFlooded);

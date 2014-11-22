@@ -19,11 +19,11 @@ package colorfill.solver;
 
 import it.unimi.dsi.fastutil.bytes.ByteList;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ReferenceSet;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Set;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
@@ -46,7 +46,7 @@ public class DfsSolver extends AbstractSolver {
     private DfsStrategy strategy;
 
     private byte[] solution;
-    private Set<ColorArea> allFlooded;
+    private ReferenceSet<ColorArea> allFlooded;
     private ColorAreaGroup notFlooded;
 
     /**

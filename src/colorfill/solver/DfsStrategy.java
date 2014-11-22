@@ -17,9 +17,8 @@
 
 package colorfill.solver;
 
-import java.util.Set;
-
 import it.unimi.dsi.fastutil.bytes.ByteList;
+import it.unimi.dsi.fastutil.objects.ReferenceSet;
 
 import colorfill.model.ColorArea;
 
@@ -42,7 +41,7 @@ public interface DfsStrategy extends Strategy {
     public ByteList selectColors(int depth,
             byte thisColor,
             byte[] solution,
-            Set<ColorArea> flooded,
+            ReferenceSet<ColorArea> flooded,
             ColorAreaGroup notFlooded,
             ColorAreaGroup neighbors);
 }

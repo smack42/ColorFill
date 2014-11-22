@@ -21,8 +21,9 @@ import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
 import it.unimi.dsi.fastutil.ints.IntSortedSets;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
-import it.unimi.dsi.fastutil.objects.ObjectSortedSet;
-import it.unimi.dsi.fastutil.objects.ObjectSortedSets;
+
+import java.util.Collections;
+import java.util.SortedSet;
 
 /**
  * ColorArea represents a connected area of cells that have the same color.
@@ -32,8 +33,8 @@ public class ColorArea implements Comparable<ColorArea> {
     private final int boardWidth;
     private final IntSortedSet members = new IntAVLTreeSet(); // sorted set - used by compareTo!
     private final IntSortedSet membersUnmodifiable = IntSortedSets.unmodifiable(this.members);
-    private final ObjectSortedSet<ColorArea> neighbors = new ObjectAVLTreeSet<ColorArea>();
-    private final ObjectSortedSet<ColorArea> neighborsUnmodifiable = ObjectSortedSets.unmodifiable(this.neighbors);
+    private final SortedSet<ColorArea> neighbors = new ObjectAVLTreeSet<ColorArea>();
+    private final SortedSet<ColorArea> neighborsUnmodifiable = Collections.unmodifiableSortedSet(this.neighbors);
     private int depth = 0;
 
     protected ColorArea(final byte color, final int boardWidth) {
@@ -141,7 +142,7 @@ public class ColorArea implements Comparable<ColorArea> {
         return this.membersUnmodifiable;
     }
 
-    public ObjectSortedSet<ColorArea> getNeighbors() {
+    public SortedSet<ColorArea> getNeighbors() {
         return this.neighborsUnmodifiable;
     }
 

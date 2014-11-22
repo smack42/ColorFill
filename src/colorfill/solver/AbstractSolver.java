@@ -17,8 +17,8 @@
 
 package colorfill.solver;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectList;
+import java.util.ArrayList;
+import java.util.List;
 
 import colorfill.model.Board;
 
@@ -28,7 +28,7 @@ import colorfill.model.Board;
 public abstract class AbstractSolver implements Solver {
 
     protected final Board board;
-    protected final ObjectList<Solution> solutions = new ObjectArrayList<Solution>();
+    protected final List<Solution> solutions = new ArrayList<Solution>();
     protected int solutionSize = 0;
 
     /**

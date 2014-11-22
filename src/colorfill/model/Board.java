@@ -17,14 +17,14 @@
 
 package colorfill.model;
 
-import it.unimi.dsi.fastutil.bytes.ByteAVLTreeSet;
-import it.unimi.dsi.fastutil.bytes.ByteSortedSet;
+import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
+import it.unimi.dsi.fastutil.ints.IntSortedSet;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectCollection;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 import java.util.SortedSet;
@@ -36,7 +36,7 @@ public class Board {
 
     private final byte[] cells;
     private final int width, height;
-    private final ByteSortedSet colors;
+    private final int colors;
     private final ColorArea[] cellsColorAreas;
     private final SortedSet<ColorArea> colorAreas;
     private int startPos = -1; // -1 == none
@@ -54,10 +54,7 @@ public class Board {
         this.width = width;
         this.height = height;
         final int len = width * height;
-        this.colors = new ByteAVLTreeSet();
-        for (byte color = 0;  color < colors;  ++color) {
-            this.colors.add(color);
-        }
+        this.colors = colors;
         this.cells = new byte[len];
         this.cellsColorAreas = new ColorArea[len];
         this.colorAreas = new ObjectAVLTreeSet<ColorArea>();
@@ -70,9 +67,8 @@ public class Board {
      */
     private void randomCellColors() {
         final Random random = new Random();
-        final byte[] colorArray = this.colors.toByteArray();
         for (int i = 0;  i < this.cells.length;  ++i) {
-            final byte color = colorArray[random.nextInt(colorArray.length)];
+            final byte color = (byte)random.nextInt(this.colors);
             this.cells[i] = color;
         }
         this.colorAreas.clear();
@@ -102,10 +98,11 @@ public class Board {
         this.cellsColorAreas = new ColorArea[len];
         this.colorAreas = new ObjectAVLTreeSet<ColorArea>();
         this.colorAreas.addAll(this.createColorAreas());
-        this.colors = new ByteAVLTreeSet();
+        final IntSortedSet colors = new IntAVLTreeSet();
         for (final byte color : this.cells) {
-            this.colors.add(color);
+            colors.add(color);
         }
+        this.colors = colors.lastInt() + 1;
         this.startPos = this.depth = -1;
     }
 
@@ -120,7 +117,7 @@ public class Board {
     }
 
     private Set<ColorArea> createColorAreas() {
-        final Set<ColorArea> result = new ObjectOpenHashSet<ColorArea>();
+        final Set<ColorArea> result = new HashSet<ColorArea>();
         // build ColorAreas, fill with them with members: adjacent cells of the same color
         for (int index = 0;  index < this.cells.length;  ++index) {
             final byte color = this.cells[index];
@@ -139,7 +136,7 @@ public class Board {
         }
         // merge ColorAreas that are neighbors of the same color
         for (boolean doMergeAreas = true;  true == doMergeAreas;  ) {
-            final Set<ColorArea> mergedAreas = new ObjectOpenHashSet<ColorArea>();
+            final Set<ColorArea> mergedAreas = new HashSet<ColorArea>();
             for (final ColorArea ca1 : result) {
                 if (false == mergedAreas.contains(ca1)) {
                     for (final ColorArea ca2 : result) {
@@ -254,7 +251,7 @@ public class Board {
             ca.setDepth(Integer.MAX_VALUE);
         }
         int depth = 0, result = 0;
-        ObjectCollection<ColorArea> nextLevel = new ObjectArrayList<ColorArea>();
+        Collection<ColorArea> nextLevel = new ArrayList<ColorArea>();
         // find the ColorArea that contains cell startPos
         final ColorArea startCa = this.getColorArea(startPos);
         startCa.setDepth(depth);
@@ -262,8 +259,8 @@ public class Board {
         // visit all ColorAreas and mark them with their depth
         while (false == nextLevel.isEmpty()) {
             ++depth;
-            final ObjectCollection<ColorArea> thisLevel = nextLevel;
-            nextLevel = new ObjectArrayList<ColorArea>();
+            final Collection<ColorArea> thisLevel = nextLevel;
+            nextLevel = new ArrayList<ColorArea>();
             for (final ColorArea ca : thisLevel) {
                 if (ca.getDepth() > depth) {
                     ca.setDepth(depth);
@@ -334,7 +331,7 @@ public class Board {
         return this.determineColorAreasDepth(startPos);
     }
 
-    public ByteSortedSet getColors() {
+    public int getNumColors() {
         return this.colors;
     }
 
