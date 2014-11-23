@@ -24,6 +24,7 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceSet;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
@@ -244,6 +245,36 @@ public class ColorAreaGroup {
             for (final ColorArea ca : this.theArray[color]) {
                 if (false == excludeNeighbors.containsAll(ca.getNeighbors())) {
                     count += ca.getMembers().size();
+                }
+            }
+            if (maxCount < count) {
+                maxCount = count;
+                result.clear();
+            }
+            if (maxCount == count) {
+                result.add(color);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * get the colors that have the maximum number of new neighbor cells,
+     * with the neighbors and all of their neighbors are not contained in excludeNeighbors.
+     * @param excludeNeighbors exclude color areas if their neighbors or their next neighbors are contained here
+     * @return list of colors, not expected to be empty
+     */
+    public ByteList getColorsMaxNextNeighbors(final ReferenceSet<ColorArea> excludeNeighbors) {
+        final ByteList result = new ByteArrayList();
+        int maxCount = -1; // include colors that have zero or more next new neighbors
+        for (byte color = 0;  color < this.theArray.length;  ++color) {
+            int count = 0;
+            for (final ColorArea ca : this.theArray[color]) {
+                for (final ColorArea caNext : ca.getNeighbors()) {
+                    if ((false == excludeNeighbors.contains(caNext))
+                            && Collections.disjoint(excludeNeighbors, caNext.getNeighbors())) {
+                        count += caNext.getMembers().size();
+                    }
                 }
             }
             if (maxCount < count) {

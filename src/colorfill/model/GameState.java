@@ -176,7 +176,7 @@ public class GameState {
                 if (null != solution) {
                     GameState.this.addProgressSolution(new GameProgress(this.board, this.startPos, solution));
                     System.out.println(
-                            padRight(solution.getSolverName(), 17 + 2) // 17==max. length of strategy names
+                            padRight(solution.getSolverName(), 21 + 2) // 21==max. length of strategy names
                             + padRight("steps(" + solution.getNumSteps() + ")", 7 + 2 + 2)
                             + "solution(" + solution + ")");
                 }
