@@ -140,20 +140,26 @@ public class DfsSolver extends AbstractSolver {
             ColorAreaGroup neighbors,
             final boolean saveNeighbors
             ) throws InterruptedException {
-        // do this step
+
         final Collection<ColorArea> thisFlooded = neighbors.getColor(thisColor);
-        this.notFlooded.removeAllColor(thisFlooded, thisColor);
-        final int colorsNotFlooded = this.notFlooded.countColorsNotEmpty();
-        this.solution[depth] = thisColor;
+        int colorsNotFlooded = this.notFlooded.countColorsNotEmpty();
+        if (thisFlooded.size() == this.notFlooded.getColor(thisColor).size()) {
+            --colorsNotFlooded;
+        }
 
         // finished the search?
         if (0 == colorsNotFlooded) {
+            this.solution[depth] = thisColor;
             // skip element 0 because it's not a step but just the initial color at startPos
             this.addSolution(Arrays.copyOfRange(this.solution, 1, depth + 1));
 
         // do next step
         } else if (this.solutionSize > depth + colorsNotFlooded) { // TODO use ">=" instead of ">" to find all shortest solutions; slower!
+
             if (Thread.interrupted()) { throw new InterruptedException(); }
+
+            this.solution[depth] = thisColor;
+            this.notFlooded.removeAllColor(thisFlooded, thisColor);
             this.allFlooded.addAll(thisFlooded);
             if (saveNeighbors) {
                 neighbors = new ColorAreaGroup(neighbors); // clone for backtracking
@@ -166,13 +172,12 @@ public class DfsSolver extends AbstractSolver {
             // pick the "best" neighbor colors to go on
             final ByteList nextColors = this.strategy.selectColors(depth, thisColor, this.solution, this.allFlooded, this.notFlooded, neighbors);
             // go to next recursion level
+            final boolean nextSaveNeighbors = (nextColors.size() > 1);
             for (final byte nextColor : nextColors) {
-                doRecursion(depth + 1, nextColor, neighbors,
-                        (nextColors.size() > 1)); // saveNeighbors
+                doRecursion(depth + 1, nextColor, neighbors, nextSaveNeighbors);
             }
             this.allFlooded.removeAll(thisFlooded); // restore for backtracking
+            this.notFlooded.addAllColor(thisFlooded, thisColor); // restore for backtracking
         }
-
-        this.notFlooded.addAllColor(thisFlooded, thisColor); // restore for backtracking
     }
 }
