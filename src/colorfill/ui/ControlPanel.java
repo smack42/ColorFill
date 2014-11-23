@@ -60,7 +60,7 @@ public class ControlPanel extends JPanel {
     private static final int MAX_NUMBER_COLOR_BUTTONS = 6; // TODO dynamically handle max. number of color buttons
     private final JButton[] buttonColors = new JButton[MAX_NUMBER_COLOR_BUTTONS];
 
-    private static final int MAX_NUMBER_SOLVER_SOLUTIONS = 3; // TODO dynamically handle max. number of solver solutions visible
+    private static final int MAX_NUMBER_SOLVER_SOLUTIONS = 4; // TODO dynamically handle max. number of solver solutions visible
     private final JPanel[]              solverPanels        = new JPanel[MAX_NUMBER_SOLVER_SOLUTIONS];
     private final DesignGridLayout[]    solverLayouts       = new DesignGridLayout[MAX_NUMBER_SOLVER_SOLUTIONS];
     private final JRadioButton[]        solverRButtons      = new JRadioButton[MAX_NUMBER_SOLVER_SOLUTIONS];

@@ -46,9 +46,6 @@ public class DeepDfsStrategy implements DfsStrategy {
         this.maxDepth = board.getDepth(startPos);
     }
 
-    /* (non-Javadoc)
-     * @see colorfill.solver.DfsStrategy#selectColors(int, java.lang.Integer, java.util.List, java.util.Set, colorfill.solver.ColorAreaGroup, colorfill.solver.ColorAreaGroup)
-     */
     @Override
     public List<Integer> selectColors(final int depth,
             final Integer thisColor,

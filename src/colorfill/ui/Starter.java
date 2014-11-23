@@ -34,6 +34,7 @@ import colorfill.solver.DeepDfsStrategy;
 import colorfill.solver.DeeperDfsStrategy;
 import colorfill.solver.DfsSolver;
 import colorfill.solver.GreedyDfsStrategy;
+import colorfill.solver.GreedyNextDfsStrategy;
 import colorfill.solver.Solution;
 import colorfill.solver.Solver;
 import colorfill.solver.Strategy;
@@ -43,7 +44,7 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         if (0 == args.length) {
-            new MainController("ColorFill 0.1.3 __DEVELOPMENT__ (2014-11-22)");
+            new MainController("ColorFill 0.1.3 __DEVELOPMENT__ (2014-11-23)");
         } else {
             runSolverPc19(args[0]);
         }
@@ -127,6 +128,7 @@ public class Starter {
         // which strategies to run
         final Class<?>[] STRATEGIES = {
             GreedyDfsStrategy.class,
+            GreedyNextDfsStrategy.class,
             DeepDfsStrategy.class,
             DeeperDfsStrategy.class
         };
@@ -194,7 +196,7 @@ public class Starter {
         // print summary
         for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
             System.out.println(
-                    padRight(strategy + "_" + STRATEGIES[strategy].getSimpleName(), 2 + 17 + 2) +
+                    padRight(strategy + "_" + STRATEGIES[strategy].getSimpleName(), 2 + 21 + 2) +
                     padRight("steps=" + stCountSteps[strategy], 6 + 5 + 2) +
                     padRight("steps25=" + stCountSteps25[strategy], 8 + 5 + 2) +
                     padRight("best=" + stCountBest[strategy], 5 + 4 + 2) +

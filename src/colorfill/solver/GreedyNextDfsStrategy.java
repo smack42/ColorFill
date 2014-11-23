@@ -20,7 +20,6 @@ package colorfill.solver;
 import java.util.List;
 import java.util.Set;
 
-import colorfill.model.Board;
 import colorfill.model.ColorArea;
 
 /**
@@ -30,16 +29,12 @@ import colorfill.model.ColorArea;
  * 1) colors that can be completely flooded in the next step.
  * (these are always optimal moves!?)
  * <p>
- * 2 a) if 1) gives no result then the colors that are situated at depth + 1
- * or lower. (hence the name "deeper")
+ * 2) if 1) gives no result then the colors that have the maximum number
+ * of new neighbor member cells, that means neighbors that are not yet flooded
+ * and not yet known as neighbors of the flooded area.
+ * (hence the name "greedy next")
  */
-public class DeeperDfsStrategy implements DfsStrategy {
-
-    private final int maxDepth;
-
-    public DeeperDfsStrategy(final Board board, final int startPos) {
-        this.maxDepth = board.getDepth(startPos);
-    }
+public class GreedyNextDfsStrategy implements DfsStrategy {
 
     @Override
     public List<Integer> selectColors(final int depth,
@@ -49,31 +44,9 @@ public class DeeperDfsStrategy implements DfsStrategy {
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
         List<Integer> result = neighbors.getColorsCompleted(notFlooded);
-        if (result.size() > 0) {
-            return result;
-        }
-
-        // slow. score(100)=2082  score(1000)=20815   262 seconds
-        for (int i = Math.min(depth + 1, this.maxDepth);  i > 0;  --i) {
-            result = neighbors.getColorsDepth(i);
-            if (result.size() > 0) {
-                return result;
-            }
+        if (result.isEmpty()) {
+            result = neighbors.getColorsMaxNextNeighbors(flooded);
         }
         return result;
-
-        // very slow! score(100)=2071  score(1000)=???
-//        if (depth < this.maxDepth) {
-//            for (int i = depth + 1;  i > 0;  --i) {
-//                result = neighbors.getColorsDepth(i);
-//                if (result.size() > 0) {
-//                    return result;
-//                }
-//            }
-//            return result;
-//        } else {
-//            return neighbors.getColorsNotEmpty();
-//        }
-
     }
 }

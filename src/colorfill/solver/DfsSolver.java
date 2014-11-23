@@ -37,6 +37,7 @@ public class DfsSolver extends AbstractSolver {
     @SuppressWarnings("rawtypes")
     private static final Class[] SUPPORTED_STRATEGIES = {
         GreedyDfsStrategy.class,
+        GreedyNextDfsStrategy.class,
         DeepDfsStrategy.class,
         DeeperDfsStrategy.class
     };
@@ -87,6 +88,8 @@ public class DfsSolver extends AbstractSolver {
         }
         if (GreedyDfsStrategy.class.equals(this.strategyClass)) {
             result = new GreedyDfsStrategy();
+        } else if (GreedyNextDfsStrategy.class.equals(this.strategyClass)) {
+            result = new GreedyNextDfsStrategy();
         } else if (DeepDfsStrategy.class.equals(this.strategyClass)) {
             result = new DeepDfsStrategy(this.board, startPos);
         } else if (DeeperDfsStrategy.class.equals(this.strategyClass)) {
