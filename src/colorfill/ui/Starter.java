@@ -43,10 +43,11 @@ import colorfill.solver.Strategy;
 public class Starter {
 
     public static void main(String[] args) throws Exception {
+        final String title = "ColorFill 0.1.3 __DEVELOPMENT__ (2014-11-27)";
         if (0 == args.length) {
-            new MainController("ColorFill 0.1.3 __DEVELOPMENT__ (2014-11-23)");
+            new MainController(title);
         } else {
-            runSolverPc19(args[0]);
+            runSolverPc19(title, args[0]);
         }
 //        testCheckOne();
 //        testCheckPc19();
@@ -212,65 +213,64 @@ public class Starter {
 
 
 
-    private static void runSolverPc19(final String inputFileName) throws Exception {
+    private static void runSolverPc19(final String title, final String inputFileName) throws Exception {
         final int startPos = 0;
         final String outputFileName = "results.txt";
-        System.out.println("ColorFill by Michael Henke, running Programming Challenge 19");
+        System.out.println(title);
+        System.out.println("running Programming Challenge 19");
         System.out.println("reading  input file: " + inputFileName);
         System.out.println("writing output file: " + outputFileName);
-
         final BufferedReader brTiles = new BufferedReader(new FileReader(inputFileName));
         final PrintWriter pwResults = new PrintWriter(new FileWriter(outputFileName));
 
-        final ExecutorService executor = Executors.newCachedThreadPool(); // newFixedThreadPool(3)
-        int countLines = 0, countSolutionMoves = 0;
+        final List<Board> boards = new ArrayList<Board>();
+        String inputLine;
+        while ((inputLine = brTiles.readLine()) != null) {
+            boards.add(new Board(inputLine, startPos));
+        }
+        brTiles.close();
+        System.out.println("input lines read:    " + boards.size());
 
-        // pre-load 1st board
-        Board board = null;
-        String lineTiles = brTiles.readLine();
-        if (null != lineTiles) { board = new Board(lineTiles, startPos); }
-
-        while (null != lineTiles) {
-            ++countLines;
-            // run the solvers for the current board
-            final List<Future<Solution>> futureSolutions = new ArrayList<Future<Solution>>();
-            for (final Class<Strategy> strategy : new DfsSolver(board).getSupportedStrategies()) {
-                final Solver solver = new DfsSolver(board);
-                solver.setStrategy(strategy);
-                futureSolutions.add(executor.submit(new Callable<Solution>() {
-                    public Solution call() throws Exception {
-                        solver.execute(0); // startPos = 0
-                        return solver.getSolution();
+        final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+        final List<Future<List<Solution>>> futureSolutions = new ArrayList<Future<List<Solution>>>();
+        for (final Class<Strategy> strategy : new DfsSolver(boards.get(0)).getSupportedStrategies()) {
+            futureSolutions.add(executor.submit(new Callable<List<Solution>>() {
+                public List<Solution> call() throws Exception {
+                    final List<Solution> result = new ArrayList<Solution>();
+                    for (final Board board : boards) {
+                        final Solver solver = new DfsSolver(board);
+                        solver.setStrategy(strategy);
+                        solver.execute(startPos);
+                        result.add(solver.getSolution());
                     }
-                }));
-            }
-            // pre-load next board, use the time while the solvers are busy
-            lineTiles = brTiles.readLine();
-            if (null != lineTiles) { board = new Board(lineTiles, startPos); }
-            // wait for the solvers to complete and take the best solution
-            Solution bestSolution = null;
-            for (final Future<Solution> futureSolution : futureSolutions) {
-                final Solution solution = futureSolution.get();
-                if ((null == bestSolution) || (bestSolution.getNumSteps() > solution.getNumSteps())) {
-                    bestSolution = solution;
+                    return result;
                 }
+            }));
+        }
+        executor.shutdown();
+
+        final Solution[] bestSolutions = new Solution[boards.size()];
+        for (final Future<List<Solution>> future : futureSolutions) {
+            final List<Solution> solutions = future.get();
+            int moves = 0;
+            for (int i = 0;  i < solutions.size();  ++i) {
+                final Solution solution = solutions.get(i);
+                if ((null == bestSolutions[i]) || (solution.getNumSteps() < bestSolutions[i].getNumSteps())) {
+                    bestSolutions[i] = solution;
+                }
+                moves += solution.getNumSteps();
             }
-            // print result and progress indicator
-            pwResults.println(bestSolution.toString());
-            countSolutionMoves += bestSolution.getNumSteps();
-            if (0 == countLines % 10) {
-                System.out.print("\b\b\b\b" + countLines); // stay on the same line - not good for Eclipse console
-                //System.out.println(countLines);
-                System.out.flush();
-            }
+            System.out.println("finished " + padRight(solutions.get(0).getSolverName(), 21 + 1) + moves);
         }
 
-        System.out.println();
-        System.out.println("total moves = " + countSolutionMoves);
-        pwResults.println("Total Moves = " + countSolutionMoves);
+        int totalMoves = 0;
+        for (final Solution solution : bestSolutions) {
+            pwResults.println(solution.toString());
+            totalMoves += solution.getNumSteps();
+        }
+        System.out.println("total moves = " + totalMoves);
+        pwResults.println("Total Moves = " + totalMoves);
         pwResults.close();
-        brTiles.close();
-        executor.shutdown();
     }
 
 
