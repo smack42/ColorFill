@@ -270,6 +270,9 @@ public class GameProgress {
         }
     }
 
+    public String getName() {
+        return this.name;
+    }
 
     @Override
     public String toString() {

@@ -111,6 +111,6 @@ public class ControlController {
      */
     protected void actionAddSolverResult(final GameProgress gameProgress) {
 //        System.out.println("ControlController.actionAddSolverResult " + gameProgress);
-        this.controlPanel.addSolverResult(gameProgress.toString());
+        this.controlPanel.addSolverResult(gameProgress.getTotalSteps() + " " + gameProgress.getName());
     }
 }
