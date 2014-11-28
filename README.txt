@@ -1,7 +1,7 @@
 ColorFill game and solver - yet another Flood-It / Globs clone
 
-Version   0.1.2 (2014-11-17)
-Homepage  https://github.com/smack42/ColorFill
+Version   0.1.3 (2014-11-28)
+Homepage  https://github.com/smack42/ColorFill/wiki
 
 
 
