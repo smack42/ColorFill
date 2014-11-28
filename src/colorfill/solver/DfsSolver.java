@@ -17,12 +17,13 @@
 
 package colorfill.solver;
 
+import it.unimi.dsi.fastutil.bytes.ByteList;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ReferenceSet;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
@@ -46,7 +47,7 @@ public class DfsSolver extends AbstractSolver {
     private DfsStrategy strategy;
 
     private byte[] solution;
-    private Set<ColorArea> allFlooded;
+    private ReferenceSet<ColorArea> allFlooded;
     private ColorAreaGroup notFlooded;
 
     /**
@@ -117,7 +118,7 @@ public class DfsSolver extends AbstractSolver {
         this.strategy = this.makeStrategy(startPos);
 
         final ColorArea startCa = this.board.getColorArea(startPos);
-        this.allFlooded = new HashSet<ColorArea>();
+        this.allFlooded = new ReferenceOpenHashSet<ColorArea>();
         this.notFlooded = new ColorAreaGroup(this.board);
         notFlooded.addAll(this.board.getColorAreas(), this.allFlooded);
         final ColorAreaGroup neighbors = new ColorAreaGroup(this.board);
@@ -135,24 +136,30 @@ public class DfsSolver extends AbstractSolver {
      * @throws InterruptedException
      */
     private void doRecursion(final int depth,
-            final Integer thisColor,
+            final byte thisColor,
             ColorAreaGroup neighbors,
             final boolean saveNeighbors
             ) throws InterruptedException {
-        // do this step
+
         final Collection<ColorArea> thisFlooded = neighbors.getColor(thisColor);
-        this.notFlooded.removeAllColor(thisFlooded, thisColor);
-        final int colorsNotFlooded = this.notFlooded.countColorsNotEmpty();
-        this.solution[depth] = thisColor.byteValue();
+        int colorsNotFlooded = this.notFlooded.countColorsNotEmpty();
+        if (thisFlooded.size() == this.notFlooded.getColor(thisColor).size()) {
+            --colorsNotFlooded;
+        }
 
         // finished the search?
         if (0 == colorsNotFlooded) {
+            this.solution[depth] = thisColor;
             // skip element 0 because it's not a step but just the initial color at startPos
             this.addSolution(Arrays.copyOfRange(this.solution, 1, depth + 1));
 
         // do next step
         } else if (this.solutionSize > depth + colorsNotFlooded) { // TODO use ">=" instead of ">" to find all shortest solutions; slower!
+
             if (Thread.interrupted()) { throw new InterruptedException(); }
+
+            this.solution[depth] = thisColor;
+            this.notFlooded.removeAllColor(thisFlooded, thisColor);
             this.allFlooded.addAll(thisFlooded);
             if (saveNeighbors) {
                 neighbors = new ColorAreaGroup(neighbors); // clone for backtracking
@@ -163,15 +170,14 @@ public class DfsSolver extends AbstractSolver {
                 neighbors.addAll(ca.getNeighbors(), this.allFlooded);
             }
             // pick the "best" neighbor colors to go on
-            final List<Integer> nextColors = this.strategy.selectColors(depth, thisColor, this.solution, this.allFlooded, this.notFlooded, neighbors);
+            final ByteList nextColors = this.strategy.selectColors(depth, thisColor, this.solution, this.allFlooded, this.notFlooded, neighbors);
             // go to next recursion level
-            for (final Integer nextColor : nextColors) {
-                doRecursion(depth + 1, nextColor, neighbors,
-                        (nextColors.size() > 1)); // saveNeighbors
+            final boolean nextSaveNeighbors = (nextColors.size() > 1);
+            for (final byte nextColor : nextColors) {
+                doRecursion(depth + 1, nextColor, neighbors, nextSaveNeighbors);
             }
             this.allFlooded.removeAll(thisFlooded); // restore for backtracking
+            this.notFlooded.addAllColor(thisFlooded, thisColor); // restore for backtracking
         }
-
-        this.notFlooded.addAllColor(thisFlooded, thisColor); // restore for backtracking
     }
 }

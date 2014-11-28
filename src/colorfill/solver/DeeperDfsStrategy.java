@@ -17,8 +17,8 @@
 
 package colorfill.solver;
 
-import java.util.List;
-import java.util.Set;
+import it.unimi.dsi.fastutil.bytes.ByteList;
+import it.unimi.dsi.fastutil.objects.ReferenceSet;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
@@ -42,25 +42,19 @@ public class DeeperDfsStrategy implements DfsStrategy {
     }
 
     @Override
-    public List<Integer> selectColors(final int depth,
-            final Integer thisColor,
+    public ByteList selectColors(final int depth,
+            final byte thisColor,
             final byte[] solution,
-            final Set<ColorArea> flooded,
+            final ReferenceSet<ColorArea> flooded,
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
-        List<Integer> result = neighbors.getColorsCompleted(notFlooded);
+        ByteList result = neighbors.getColorsCompleted(notFlooded);
         if (result.size() > 0) {
             return result;
         }
 
-        // slow. score(100)=2082  score(1000)=20815   262 seconds
-        for (int i = Math.min(depth + 1, this.maxDepth);  i > 0;  --i) {
-            result = neighbors.getColorsDepth(i);
-            if (result.size() > 0) {
-                return result;
-            }
-        }
-        return result;
+        // slow. score(100)=2082  score(1000)=20815   164 seconds
+        return neighbors.getColorsDepthOrLower(Math.min(depth + 1, this.maxDepth));
 
         // very slow! score(100)=2071  score(1000)=???
 //        if (depth < this.maxDepth) {

@@ -17,14 +17,14 @@
 
 package colorfill.solver;
 
-import java.util.ArrayList;
+import it.unimi.dsi.fastutil.bytes.ByteArrayList;
+import it.unimi.dsi.fastutil.bytes.ByteList;
+import it.unimi.dsi.fastutil.bytes.ByteLists;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ReferenceSet;
+
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
@@ -36,16 +36,17 @@ import colorfill.model.ColorArea;
 public class ColorAreaGroup {
 
     private final Board board;
-    private final HashMap<Integer, HashSet<ColorArea>> theMap;
+    private final ReferenceOpenHashSet<ColorArea>[] theArray;
 
     /**
      * the standard constructor
      */
+    @SuppressWarnings("unchecked")
     public ColorAreaGroup(final Board board) {
         this.board = board;
-        this.theMap = new HashMap<Integer, HashSet<ColorArea>>();
-        for (final Integer color : this.board.getColors()) {
-            this.theMap.put(color, new HashSet<ColorArea>());
+        this.theArray = new ReferenceOpenHashSet[this.board.getNumColors()];
+        for (byte color = 0;  color < this.theArray.length;  ++color) {
+            this.theArray[color] = new ReferenceOpenHashSet<ColorArea>();
         }
     }
 
@@ -55,9 +56,9 @@ public class ColorAreaGroup {
     @SuppressWarnings("unchecked")
     public ColorAreaGroup(final ColorAreaGroup other) {
         this.board = other.board;
-        this.theMap = (HashMap<Integer, HashSet<ColorArea>>) other.theMap.clone();
-        for (final Map.Entry<Integer, HashSet<ColorArea>> entry : this.theMap.entrySet()) {
-            entry.setValue((HashSet<ColorArea>) entry.getValue().clone());
+        this.theArray = new ReferenceOpenHashSet[this.board.getNumColors()];
+        for (byte color = 0;  color < this.theArray.length;  ++color) {
+            this.theArray[color] = other.theArray[color].clone();
         }
     }
 
@@ -66,10 +67,10 @@ public class ColorAreaGroup {
      * @param addColorAreas the color areas to be added
      * @param excludeColorAreas color areas that are also members of this set will not be added
      */
-    public void addAll(final Collection<ColorArea> addColorAreas, final Set<ColorArea> excludeColorAreas) {
+    public void addAll(final Collection<ColorArea> addColorAreas, final ReferenceSet<ColorArea> excludeColorAreas) {
         for (final ColorArea ca : addColorAreas) {
             if (false == excludeColorAreas.contains(ca)) {
-                this.theMap.get(ca.getColor()).add(ca);
+                this.theArray[ca.getColor()].add(ca);
             }
         }
     }
@@ -80,7 +81,7 @@ public class ColorAreaGroup {
      */
     public void removeAll(final Collection<ColorArea> removeColorAreas) {
         for (final ColorArea ca : removeColorAreas) {
-            this.theMap.get(ca.getColor()).remove(ca);
+            this.theArray[ca.getColor()].remove(ca);
         }
     }
 
@@ -90,8 +91,8 @@ public class ColorAreaGroup {
      * @param addColorAreas the color areas to be added
      * @param color the color
      */
-    public void addAllColor(final Collection<ColorArea> addColorAreas, final Integer color) {
-        this.theMap.get(color).addAll(addColorAreas);
+    public void addAllColor(final Collection<ColorArea> addColorAreas, final byte color) {
+        this.theArray[color].addAll(addColorAreas);
     }
 
     /**
@@ -100,8 +101,8 @@ public class ColorAreaGroup {
      * @param removeColorAreas the color areas to be removed
      * @param color the color
      */
-    public void removeAllColor(final Collection<ColorArea> removeColorAreas, final Integer color) {
-        this.theMap.get(color).removeAll(removeColorAreas);
+    public void removeAllColor(final Collection<ColorArea> removeColorAreas, final byte color) {
+        this.theArray[color].removeAll(removeColorAreas);
     }
 
     /**
@@ -110,7 +111,7 @@ public class ColorAreaGroup {
      */
     public int countColorsNotEmpty() {
         int result = 0;
-        for (final Set<ColorArea> setCa : this.theMap.values()) {
+        for (final ReferenceSet<ColorArea> setCa : this.theArray) {
             if (false == setCa.isEmpty()) {
                 ++result;
             }
@@ -122,11 +123,11 @@ public class ColorAreaGroup {
      * get the colors that have at least one color area.
      * @return list of occupied colors, not expected to be empty
      */
-    public List<Integer> getColorsNotEmpty() {
-        final List<Integer> result = new ArrayList<Integer>();
-        for (final Map.Entry<Integer, HashSet<ColorArea>> entry : this.theMap.entrySet()) {
-            if (false == entry.getValue().isEmpty()) {
-                result.add(entry.getKey());
+    public ByteList getColorsNotEmpty() {
+        final ByteList result = new ByteArrayList();
+        for (byte color = 0;  color < this.theArray.length;  ++color) {
+            if (false == this.theArray[color].isEmpty()) {
+                result.add(color);
             }
         }
         return result;
@@ -136,17 +137,50 @@ public class ColorAreaGroup {
      * get the colors that are situated at the specified depth.
      * @return list of colors at depth, may be empty
      */
-    public List<Integer> getColorsDepth(final int depth) {
-        List<Integer> result = Collections.emptyList();
-        for (final Map.Entry<Integer, HashSet<ColorArea>> entry : this.theMap.entrySet()) {
-            for (final ColorArea ca : entry.getValue()) {
+    public ByteList getColorsDepth(final int depth) {
+        ByteList result = ByteLists.EMPTY_LIST;
+        for (final ReferenceSet<ColorArea> caSet : this.theArray) {
+            for (final ColorArea ca : caSet) {
                 if (ca.getDepth() == depth) {
-                    if (false == result instanceof ArrayList) {
-                        result = new ArrayList<Integer>();
+                    if (false == result instanceof ByteArrayList) {
+                        result = new ByteArrayList();
                     }
-                    result.add(entry.getKey());
+                    result.add(ca.getColor());
                     break; // for (ca)
                 }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * get the colors that are situated at the specified depth or lower,
+     * but only the colors at the maximum depth level.
+     * @return list of colors at depth or lower, not expected to be empty
+     */
+    public ByteList getColorsDepthOrLower(final int depth) {
+        final ByteList result = new ByteArrayList();
+        int depthMax = -1;
+        for (final ReferenceSet<ColorArea> caSet : this.theArray) {
+            byte color = Byte.MIN_VALUE;
+            int depthColor = -2;
+            for (final ColorArea ca : caSet) {
+                final int d = ca.getDepth();
+                if (d == depth) {
+                    color = ca.getColor();
+                    depthColor = d;
+                    break; // for (ca)
+                } else if ((d > depthColor) && (d < depth)) {
+                    color = ca.getColor();
+                    depthColor = d;
+                }
+            }
+            if (depthMax < depthColor) {
+                depthMax = depthColor;
+                result.clear();
+                result.add(color);
+            } else if (depthMax == depthColor) {
+                result.add(color);
             }
         }
         return result;
@@ -157,17 +191,18 @@ public class ColorAreaGroup {
      * @param other
      * @return list of completed colors, may be empty
      */
-    public List<Integer> getColorsCompleted(final ColorAreaGroup other) {
-        List<Integer> result = Collections.emptyList();
-        for (final Map.Entry<Integer, HashSet<ColorArea>> entry : this.theMap.entrySet()) {
-            final Integer color = entry.getKey();
-            final Set<ColorArea> thisSet = entry.getValue();
-            final Set<ColorArea> otherSet = other.theMap.get(color);
-            if ((0 < thisSet.size()) && (thisSet.size() == otherSet.size()) && (thisSet.containsAll(otherSet))) {
-                if (false == result instanceof ArrayList) {
-                    result = new ArrayList<Integer>();
+    public ByteList getColorsCompleted(final ColorAreaGroup other) {
+        ByteList result = ByteLists.EMPTY_LIST;
+        for (byte color = 0;  color < this.theArray.length;  ++color) {
+            final ReferenceSet<ColorArea> thisSet = this.theArray[color];
+            if (thisSet.size() > 0) {
+                final ReferenceSet<ColorArea> otherSet = other.theArray[color];
+                if ((thisSet.size() == otherSet.size()) && (thisSet.containsAll(otherSet))) {
+                    if (false == result instanceof ByteArrayList) {
+                        result = new ByteArrayList();
+                    }
+                    result.add(color);
                 }
-                result.add(color);
             }
         }
         return result;
@@ -177,12 +212,12 @@ public class ColorAreaGroup {
      * get the colors that have the maximum number of member cells.
      * @return list of colors, not expected to be empty
      */
-    public List<Integer> getColorsMaxMembers() {
-        final List<Integer> result = new ArrayList<Integer>();
+    public ByteList getColorsMaxMembers() {
+        final ByteList result = new ByteArrayList();
         int maxCount = 1; // return empty collection if all colors are empty. not expected!
-        for (final Map.Entry<Integer, HashSet<ColorArea>> entry : this.theMap.entrySet()) {
+        for (byte color = 0;  color < this.theArray.length;  ++color) {
             int count = 0;
-            for (final ColorArea ca : entry.getValue()) {
+            for (final ColorArea ca : this.theArray[color]) {
                 count += ca.getMembers().size();
             }
             if (maxCount < count) {
@@ -190,7 +225,7 @@ public class ColorAreaGroup {
                 result.clear();
             }
             if (maxCount == count) {
-                result.add(entry.getKey());
+                result.add(color);
             }
         }
         return result;
@@ -202,12 +237,12 @@ public class ColorAreaGroup {
      * @param excludeNeighbors exclude color areas if their neighbors are contained here
      * @return list of colors, not expected to be empty
      */
-    public List<Integer> getColorsMaxMembers(final Set<ColorArea> excludeNeighbors) {
-        final List<Integer> result = new ArrayList<Integer>();
+    public ByteList getColorsMaxMembers(final ReferenceSet<ColorArea> excludeNeighbors) {
+        final ByteList result = new ByteArrayList();
         int maxCount = 1; // return empty collection if all colors are empty. not expected!
-        for (final Map.Entry<Integer, HashSet<ColorArea>> entry : this.theMap.entrySet()) {
+        for (byte color = 0;  color < this.theArray.length;  ++color) {
             int count = 0;
-            for (final ColorArea ca : entry.getValue()) {
+            for (final ColorArea ca : this.theArray[color]) {
                 if (false == excludeNeighbors.containsAll(ca.getNeighbors())) {
                     count += ca.getMembers().size();
                 }
@@ -217,7 +252,7 @@ public class ColorAreaGroup {
                 result.clear();
             }
             if (maxCount == count) {
-                result.add(entry.getKey());
+                result.add(color);
             }
         }
         return result;
@@ -229,12 +264,12 @@ public class ColorAreaGroup {
      * @param excludeNeighbors exclude color areas if their neighbors or their next neighbors are contained here
      * @return list of colors, not expected to be empty
      */
-    public List<Integer> getColorsMaxNextNeighbors(final Set<ColorArea> excludeNeighbors) {
-        final List<Integer> result = new ArrayList<Integer>();
+    public ByteList getColorsMaxNextNeighbors(final ReferenceSet<ColorArea> excludeNeighbors) {
+        final ByteList result = new ByteArrayList();
         int maxCount = -1; // include colors that have zero or more next new neighbors
-        for (final Map.Entry<Integer, HashSet<ColorArea>> entry : this.theMap.entrySet()) {
+        for (byte color = 0;  color < this.theArray.length;  ++color) {
             int count = 0;
-            for (final ColorArea ca : entry.getValue()) {
+            for (final ColorArea ca : this.theArray[color]) {
                 for (final ColorArea caNext : ca.getNeighbors()) {
                     if ((false == excludeNeighbors.contains(caNext))
                             && Collections.disjoint(excludeNeighbors, caNext.getNeighbors())) {
@@ -247,7 +282,7 @@ public class ColorAreaGroup {
                 result.clear();
             }
             if (maxCount == count) {
-                result.add(entry.getKey());
+                result.add(color);
             }
         }
         return result;
@@ -258,16 +293,15 @@ public class ColorAreaGroup {
      * @param color
      * @return the areas
      */
-    public Collection<ColorArea> getColor(final Integer color) {
-        return this.theMap.get(color);
+    public Collection<ColorArea> getColor(final byte color) {
+        return this.theArray[color];
     }
 
     /**
-     * remove this object and return the areas of this color.
+     * remove from this object the areas of this color.
      * @param color
-     * @return the areas
      */
-    public Collection<ColorArea> removeColor(final Integer color) {
-        return this.theMap.put(color, new HashSet<ColorArea>());
+    public Collection<ColorArea> removeColor(final byte color) {
+        return this.theArray[color] = new ReferenceOpenHashSet<ColorArea>();
     }
 }

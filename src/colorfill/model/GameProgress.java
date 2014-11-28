@@ -89,7 +89,7 @@ public class GameProgress {
      * @param color
      * @return true if the step was actually added
      */
-    public boolean addStep(int color) {
+    public boolean addStep(final int color) {
         if (false == this.isModifiable) {
             throw new IllegalStateException("addStep error: this GameProgress \"" + this.name + "\" is not modifiable");
         }
@@ -102,7 +102,7 @@ public class GameProgress {
         // determine new flooded area
         final Set<ColorArea> newFlood = new HashSet<ColorArea>();
         for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
-            if (ca.getColor().equals(col)) {
+            if (ca.getColor() == color) {
                 newFlood.add(ca);
             }
         }
@@ -151,9 +151,8 @@ public class GameProgress {
         final int floodColor = this.stepColor.get(this.numSteps).intValue();
         for (int i = 0;  i < result.length;  ++i) {
             result[i] = this.board.getColor(i);
-            final Integer cell = Integer.valueOf(i);
             for (final ColorArea ca : flooded) {
-                if (ca.getMembers().contains(cell)) {
+                if (ca.getMembers().contains(i)) {
                     result[i] = floodColor;
                     break; // for (ca)
                 }
@@ -209,9 +208,8 @@ public class GameProgress {
      * @return true if cell can be flooded in the next step
      */
     public boolean isFloodNeighborCell(int index) {
-        final Integer cell = Integer.valueOf(index);
         for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
-            if (ca.getMembers().contains(cell)) {
+            if (ca.getMembers().contains(index)) {
                 return true;
             }
         }
@@ -227,7 +225,7 @@ public class GameProgress {
     public Collection<Integer> getFloodNeighborCells(final int color) {
         final ArrayList<Integer> result = new ArrayList<Integer>();
         for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
-            if (ca.getColor().intValue() == color) {
+            if (ca.getColor() == color) {
                 result.addAll(ca.getMembers());
             }
         }

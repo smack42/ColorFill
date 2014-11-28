@@ -43,7 +43,7 @@ import colorfill.solver.Strategy;
 public class Starter {
 
     public static void main(String[] args) throws Exception {
-        final String title = "ColorFill 0.1.3 __DEVELOPMENT__ (2014-11-27)";
+        final String title = "ColorFill 0.1.3 __DEVELOPMENT__ (2014-11-28)";
         if (0 == args.length) {
             new MainController(title);
         } else {
