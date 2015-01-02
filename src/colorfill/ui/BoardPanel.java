@@ -44,7 +44,7 @@ public class BoardPanel extends JPanel {
 
     private final BoardController controller;
     private Color[] uiColors;
-    private int columns, rows;
+    private int columns, rows, startPos;
     private int[] cellColors = new int[0];
     private boolean[] cellHighlights = new boolean[0];
 
@@ -97,15 +97,16 @@ public class BoardPanel extends JPanel {
      * @param columns
      * @param rows
      */
-    protected void init(final int columns, final int rows, final Color[] uiColors) {
-        if (SwingUtilities.isEventDispatchThread()) {                          initInternal(columns, rows, uiColors); }
-        else { SwingUtilities.invokeLater(new Runnable() { public void run() { initInternal(columns, rows, uiColors); } }); }
+    protected void init(final int columns, final int rows, final Color[] uiColors, final int startPos) {
+        if (SwingUtilities.isEventDispatchThread()) {                          initInternal(columns, rows, uiColors, startPos); }
+        else { SwingUtilities.invokeLater(new Runnable() { public void run() { initInternal(columns, rows, uiColors, startPos); } }); }
     }
 
-    private void initInternal(final int columns, final int rows, final Color[] uiColors) {
+    private void initInternal(final int columns, final int rows, final Color[] uiColors, final int startPos) {
         this.uiColors = uiColors;
         this.columns = columns;
         this.rows = rows;
+        this.startPos = startPos;
         this.cellColors = new int[columns * rows];
         this.cellHighlights = new boolean[this.cellColors.length];
         this.setPreferredSize(new Dimension(columns * DEFAULT_UI_BOARD_CELL_WIDTH, rows * DEFAULT_UI_BOARD_CELL_HEIGHT));
@@ -136,15 +137,19 @@ public class BoardPanel extends JPanel {
         final int cwHighlight = cellWidth - cw4 - cw4;
         final int chHighlight = cellHeight - ch4 - ch4;
         for (int index = 0, y = 0, row = 0;  row < this.rows;  y += cellHeight, ++row) {
-            for (int x = 0, column = 0;  column < this.columns;  x += cellWidth, ++column) {
+            for (int x = 0, column = 0;  column < this.columns;  x += cellWidth, ++column, ++index) {
                 final boolean highlight = this.cellHighlights[index];
-                final int color = this.cellColors[index++];
+                final int color = this.cellColors[index];
                 g2d.setColor(uiColors[color]);
                 g2d.fillRect(x, y, cellWidth, cellHeight);
                 if (highlight) {
                     g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     g2d.setColor(Color.WHITE);
                     g2d.fillOval(x + cw4, y + ch4, cwHighlight, chHighlight);
+                }
+                if (index == this.startPos) {
+                    g2d.setColor(Color.WHITE);
+                    g2d.fillRect(x + cellWidth * 3/8, y + cellHeight * 3/8, cw4, ch4);
                 }
             }
         }

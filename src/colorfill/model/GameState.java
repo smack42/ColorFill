@@ -88,6 +88,10 @@ public class GameState {
         return this.board;
     }
 
+    public int getStartPos() {
+        return this.startPos;
+    }
+
     public GamePreferences getPreferences() {
         return this.pref;
     }
