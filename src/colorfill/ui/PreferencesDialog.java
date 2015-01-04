@@ -179,7 +179,7 @@ public class PreferencesDialog extends JDialog {
         this.rbuttonsColors[this.controller.getUiColorsNumber()].setSelected(true);
         this.jspinWidth.setValue(Integer.valueOf(this.controller.getWidth()));
         this.jspinHeight.setValue(Integer.valueOf(this.controller.getHeight()));
-        this.jcomboStartPos.setSelectedItem(this.controller.getStartPos());
+        this.jcomboStartPos.setSelectedIndex(this.controller.getStartPos().ordinal());
         this.pack();
         this.setLocationRelativeTo(this.mainWindow);
         this.setVisible(true);
