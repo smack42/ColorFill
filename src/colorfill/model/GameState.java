@@ -63,7 +63,7 @@ public class GameState {
 
     private void initBoard() {
         this.board = new Board(this.pref.getWidth(), this.pref.getHeight(), this.pref.getNumColors());
-        this.startPos = this.pref.getStartPos();
+        this.startPos = this.pref.getStartPos(this.pref.getWidth(), this.pref.getHeight());
         this.board.determineColorAreasDepth(this.startPos);
         this.progressUser = new GameProgress(this.board, this.startPos);
         this.progressSelected = this.progressUser;

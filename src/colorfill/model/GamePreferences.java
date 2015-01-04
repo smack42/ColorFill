@@ -24,7 +24,7 @@ public class GamePreferences {
     private static final int DEFAULT_BOARD_WIDTH  = 14;
     private static final int DEFAULT_BOARD_HEIGHT = 14;
     private static final int DEFAULT_BOARD_NUM_COLORS = 6;
-    private static final int DEFAULT_BOARD_STARTPOS = 0; // 0 == top left corner
+    private static final int DEFAULT_BOARD_STARTPOS = StartPositionEnum.TOP_LEFT.getIntValue();
     private static final Color[][] DEFAULT_UI_COLORS = {
         { // Flood-It scheme
             new Color(0xDC4A20), // Color.RED
@@ -98,8 +98,21 @@ public class GamePreferences {
     public int getStartPos() {
         return this.startPos;
     }
+    public int getStartPos(int width, int height) {
+        return StartPositionEnum.calculatePosition(this.startPos, width, height);
+    }
+    public StartPositionEnum getStartPosEnum() {
+        return StartPositionEnum.valueOf(this.startPos); // may be null
+    }
     public void setStartPos(int startPos) {
         this.startPos = startPos;
+    }
+    public boolean setStartPos(StartPositionEnum spe) {
+        if (this.startPos != spe.getIntValue()) {
+            this.startPos = spe.getIntValue();
+            return true; // new value has been set
+        }
+        return false; // value not changed
     }
 
     public Color[][] getAllUiColors() {

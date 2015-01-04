@@ -25,6 +25,7 @@ import java.util.ResourceBundle;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -35,6 +36,8 @@ import javax.swing.JSpinner;
 import javax.swing.KeyStroke;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
+
+import colorfill.model.StartPositionEnum;
 
 import net.java.dev.designgridlayout.DesignGridLayout;
 import net.java.dev.designgridlayout.ISpannableGridRow;
@@ -51,6 +54,7 @@ public class PreferencesDialog extends JDialog {
 
     private final JSpinner jspinWidth = new JSpinner();
     private final JSpinner jspinHeight = new JSpinner();
+    private final JComboBox jcomboStartPos = new JComboBox(); // Java 6: rawtype JComboBox
     private final JButton buttonOk = new JButton();
     private final JButton buttonCancel = new JButton();
     private final JRadioButton[] rbuttonsColors;
@@ -70,6 +74,7 @@ public class PreferencesDialog extends JDialog {
         final DesignGridLayout layout = new DesignGridLayout(panel);
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.Width.txt"))).addMulti(this.makeJspinWidth());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.Height.txt"))).addMulti(this.makeJspinHeight());
+        layout.row().grid(new JLabel(L10N.getString("pref.lbl.StartPos.txt"))).addMulti(this.makeJcomboStartPos());
         layout.emptyRow();
         layout.row().grid().add(new JSeparator());
         layout.emptyRow();
@@ -94,6 +99,13 @@ public class PreferencesDialog extends JDialog {
     private JSpinner makeJspinHeight() {
         this.jspinHeight.setModel(new SpinnerNumberModel(this.controller.getHeight(), 2, 1000, 1)); // TODO preferences min/max "height"
         return this.jspinHeight;
+    }
+
+    private JComboBox makeJcomboStartPos() { // Java 6: rawtype JComboBox
+        for (final StartPositionEnum spe : StartPositionEnum.values()) {
+            this.jcomboStartPos.addItem(new StartPosItem(spe));
+        }
+        return this.jcomboStartPos;
     }
 
     private void makeColorButtons(final DesignGridLayout layout, final Color[][] allUiColors) {
@@ -133,6 +145,7 @@ public class PreferencesDialog extends JDialog {
                 PreferencesDialog.this.controller.userPrefsOK(
                         ((Number)PreferencesDialog.this.jspinWidth.getValue()).intValue(),
                         ((Number)PreferencesDialog.this.jspinHeight.getValue()).intValue(),
+                        ((StartPosItem)PreferencesDialog.this.jcomboStartPos.getSelectedItem()).spe,
                         colorSchemeNumber);
                 PreferencesDialog.this.setVisible(false);
             }
@@ -166,8 +179,29 @@ public class PreferencesDialog extends JDialog {
         this.rbuttonsColors[this.controller.getUiColorsNumber()].setSelected(true);
         this.jspinWidth.setValue(Integer.valueOf(this.controller.getWidth()));
         this.jspinHeight.setValue(Integer.valueOf(this.controller.getHeight()));
+        this.jcomboStartPos.setSelectedItem(this.controller.getStartPos());
         this.pack();
         this.setLocationRelativeTo(this.mainWindow);
         this.setVisible(true);
+    }
+
+
+
+    private static class StartPosItem {
+        private final StartPositionEnum spe;
+        private final String l10nString;
+
+        private StartPosItem(StartPositionEnum spe) {
+            this.spe = spe;
+            this.l10nString = PreferencesDialog.L10N.getString(spe.getL10nKey());
+        }
+
+        /* (non-Javadoc)
+         * @see java.lang.Object#toString()
+         */
+        @Override
+        public String toString() {
+            return this.l10nString;
+        }
     }
 }

@@ -20,6 +20,7 @@ package colorfill.ui;
 import java.awt.Color;
 
 import colorfill.model.GameState;
+import colorfill.model.StartPositionEnum;
 
 public class PreferencesController {
 
@@ -40,11 +41,12 @@ public class PreferencesController {
     /**
      * called by PreferencesDialog when user pressed the "OK" button.
      */
-    protected void userPrefsOK(final int width, final int height, final int uiColorsNumber) {
-        boolean isNewBoardSize = this.gameState.getPreferences().setWidth(width);
-        isNewBoardSize |= this.gameState.getPreferences().setHeight(height);
+    protected void userPrefsOK(final int width, final int height, final StartPositionEnum spe, final int uiColorsNumber) {
+        boolean isNewBoard = this.gameState.getPreferences().setWidth(width);
+        isNewBoard |= this.gameState.getPreferences().setHeight(height);
+        isNewBoard |= this.gameState.getPreferences().setStartPos(spe);
         this.gameState.getPreferences().setUiColorsNumber(uiColorsNumber);
-        this.mainController.actionUpdatedPrefs(isNewBoardSize);
+        this.mainController.actionUpdatedPrefs(isNewBoard);
     }
 
     protected int getWidth() {
@@ -58,5 +60,8 @@ public class PreferencesController {
     }
     protected int getUiColorsNumber() {
         return this.gameState.getPreferences().getUiColorsNumber();
+    }
+    protected StartPositionEnum getStartPos() {
+        return this.gameState.getPreferences().getStartPosEnum();
     }
 }
