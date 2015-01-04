@@ -25,6 +25,7 @@ import java.util.ResourceBundle;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -58,6 +59,7 @@ public class PreferencesDialog extends JDialog {
     private final JButton buttonOk = new JButton();
     private final JButton buttonCancel = new JButton();
     private final JRadioButton[] rbuttonsColors;
+    private final JCheckBox checkGridLines = new JCheckBox();
 
     /**
      * constructor
@@ -79,6 +81,8 @@ public class PreferencesDialog extends JDialog {
         layout.row().grid().add(new JSeparator());
         layout.emptyRow();
 
+        layout.row().grid(new JLabel(L10N.getString("pref.lbl.GridLines.txt"))).addMulti(this.makeCheckGridLines());
+        layout.emptyRow();
         final Color[][] allUiColors = this.controller.getAllUiColors();
         this.rbuttonsColors = new JRadioButton[allUiColors.length];
         this.makeColorButtons(layout, allUiColors);
@@ -106,6 +110,10 @@ public class PreferencesDialog extends JDialog {
             this.jcomboStartPos.addItem(new StartPosItem(spe));
         }
         return this.jcomboStartPos;
+    }
+
+    private JCheckBox makeCheckGridLines() {
+        return this.checkGridLines;
     }
 
     private void makeColorButtons(final DesignGridLayout layout, final Color[][] allUiColors) {
@@ -146,6 +154,7 @@ public class PreferencesDialog extends JDialog {
                         ((Number)PreferencesDialog.this.jspinWidth.getValue()).intValue(),
                         ((Number)PreferencesDialog.this.jspinHeight.getValue()).intValue(),
                         ((StartPosItem)PreferencesDialog.this.jcomboStartPos.getSelectedItem()).spe,
+                        PreferencesDialog.this.checkGridLines.isSelected(),
                         colorSchemeNumber);
                 PreferencesDialog.this.setVisible(false);
             }
@@ -180,6 +189,7 @@ public class PreferencesDialog extends JDialog {
         this.jspinWidth.setValue(Integer.valueOf(this.controller.getWidth()));
         this.jspinHeight.setValue(Integer.valueOf(this.controller.getHeight()));
         this.jcomboStartPos.setSelectedIndex(this.controller.getStartPos().ordinal());
+        this.checkGridLines.setSelected(this.controller.isShowGridLines());
         this.pack();
         this.setLocationRelativeTo(this.mainWindow);
         this.setVisible(true);

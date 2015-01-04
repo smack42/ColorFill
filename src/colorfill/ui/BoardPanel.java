@@ -47,6 +47,7 @@ public class BoardPanel extends JPanel {
     private int columns, rows, startPos;
     private int[] cellColors = new int[0];
     private boolean[] cellHighlights = new boolean[0];
+    private boolean showGridLines;
 
     /**
      * constructor
@@ -116,9 +117,10 @@ public class BoardPanel extends JPanel {
      * set the colors of all cells.
      * @param cellColors the new colors
      */
-    protected void setCellColors(final int[] cellColors) {
+    protected void setCellColors(final int[] cellColors, final boolean showGridLines) {
         this.cellColors = cellColors;
         this.cellHighlights = new boolean[this.cellColors.length];
+        this.showGridLines = showGridLines;
         this.repaint();
     }
 
@@ -132,6 +134,8 @@ public class BoardPanel extends JPanel {
         final Dimension size = this.getSize();
         final int cellWidth = size.width / this.columns;
         final int cellHeight = size.height / this.rows;
+        final int cw1 = cellWidth - 1;
+        final int ch1 = cellHeight - 1;
         final int cw4 = cellWidth / 4;
         final int ch4 = cellHeight / 4;
         final int cwHighlight = cellWidth - cw4 - cw4;
@@ -140,7 +144,7 @@ public class BoardPanel extends JPanel {
             for (int x = 0, column = 0;  column < this.columns;  x += cellWidth, ++column, ++index) {
                 final boolean highlight = this.cellHighlights[index];
                 final int color = this.cellColors[index];
-                g2d.setColor(uiColors[color]);
+                g2d.setColor(this.uiColors[color]);
                 g2d.fillRect(x, y, cellWidth, cellHeight);
                 if (highlight) {
                     g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -150,6 +154,15 @@ public class BoardPanel extends JPanel {
                 if (index == this.startPos) {
                     g2d.setColor(Color.WHITE);
                     g2d.fillRect(x + cellWidth * 3/8, y + cellHeight * 3/8, cw4, ch4);
+                }
+                if (this.showGridLines) {
+                    g2d.setColor(Color.WHITE);
+                    if (column < this.columns - 1) {
+                        g2d.drawLine(x + cw1, y, x + cw1, y + ch1);
+                    }
+                    if (row < this.rows - 1) {
+                        g2d.drawLine(x, y + ch1, x + cw1, y + ch1);
+                    }
                 }
             }
         }

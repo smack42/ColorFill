@@ -51,7 +51,7 @@ public class BoardController {
     }
 
     private void repaintBoardPanel() {
-        this.boardPanel.setCellColors(this.gameState.getSelectedProgress().getColors());
+        this.boardPanel.setCellColors(this.gameState.getSelectedProgress().getColors(), this.gameState.getPreferences().isShowGridLines());
     }
 
     protected JPanel getPanel() {

@@ -25,6 +25,7 @@ public class GamePreferences {
     private static final int DEFAULT_BOARD_HEIGHT = 14;
     private static final int DEFAULT_BOARD_NUM_COLORS = 6;
     private static final int DEFAULT_BOARD_STARTPOS = StartPositionEnum.TOP_LEFT.getIntValue();
+    private static final boolean DEFAULT_UI_SHOW_GRIDLINES = false;
     private static final Color[][] DEFAULT_UI_COLORS = {
         { // Flood-It scheme
             new Color(0xDC4A20), // Color.RED
@@ -57,6 +58,7 @@ public class GamePreferences {
     private int numColors;
     private int startPos;
     private int uiColors;
+    private boolean showGridLines;
 
     public GamePreferences() {
         this.width = DEFAULT_BOARD_WIDTH;
@@ -64,6 +66,7 @@ public class GamePreferences {
         this.numColors = DEFAULT_BOARD_NUM_COLORS;
         this.startPos = DEFAULT_BOARD_STARTPOS;
         this.uiColors = 0;
+        this.showGridLines = DEFAULT_UI_SHOW_GRIDLINES;
     }
 
     public int getWidth() {
@@ -129,4 +132,12 @@ public class GamePreferences {
             this.uiColors = num;
         }
     }
+
+    public boolean isShowGridLines() {
+        return this.showGridLines;
+    }
+    public void setShowGridLines(boolean showGridLines) {
+        this.showGridLines = showGridLines;
+    }
+
 }
