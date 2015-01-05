@@ -1,0 +1,33 @@
+ColorFill  CHANGES
+
+
+
+0.1.4 (2015-01-05)
+
+- added optional grid lines
+- added starting position marker (little white square) and selection
+  in settings dialog (corner top/bottom left/right or central)
+
+
+
+0.1.3 (2014-11-28)
+
+- small GUI improvements
+- faster solver algorithm
+- program solves the Programming Challenge 19
+  if the input file name (like "tiles.txt") is given as command line argument.
+  result: Total Moves = 20708; runs less than 2 minutes.
+  http://cplus.about.com/od/programmingchallenges/a/challenge19.htm
+
+
+
+0.1.2 (2014-11-17)
+
+- fixed a small bug in settings dialog
+- compatible with Java 6 or higher
+
+
+
+0.1.1 (2014-11-16)
+
+- initial release, with solver algorithm working and integrated into GUI

@@ -43,8 +43,9 @@ import colorfill.solver.Strategy;
 public class Starter {
 
     public static void main(String[] args) throws Exception {
-        final String title = "ColorFill 0.1.4 __DEVELOPMENT__ (2015-01-04)";
+        final String title = "ColorFill 0.1.4 (2015-01-05)";
         if (0 == args.length) {
+            System.out.println(title);
             new MainController(title);
         } else {
             runSolverPc19(title, args[0]);
