@@ -47,6 +47,7 @@ public class PreferencesController {
         isNewBoard |= this.gameState.getPreferences().setStartPos(spe);
         this.gameState.getPreferences().setShowGridLines(showGridLines);
         this.gameState.getPreferences().setUiColorsNumber(uiColorsNumber);
+        this.gameState.getPreferences().savePrefs();
         this.mainController.actionUpdatedPrefs(isNewBoard);
     }
 

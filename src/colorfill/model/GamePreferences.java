@@ -18,9 +18,20 @@
 package colorfill.model;
 
 import java.awt.Color;
+import java.util.prefs.Preferences;
 
 public class GamePreferences {
 
+    // keys in the persistent preferences store
+    private static final String PREFS_NODE_NAME = "smack42ColorFill";
+    private static final String PREFS_WIDTH     = "width";
+    private static final String PREFS_HEIGHT    = "height";
+    private static final String PREFS_NUMCOLORS = "numColors";
+    private static final String PREFS_STARTPOS  = "startPos";
+    private static final String PREFS_GRIDLINES = "gridLines";
+    private static final String PREFS_COLSCHEME = "colorScheme";
+
+    // hard-coded default values
     private static final int DEFAULT_BOARD_WIDTH  = 14;
     private static final int DEFAULT_BOARD_HEIGHT = 14;
     private static final int DEFAULT_BOARD_NUM_COLORS = 6;
@@ -59,6 +70,7 @@ public class GamePreferences {
     private int startPos;
     private int uiColors;
     private boolean showGridLines;
+    private final Preferences prefs;
 
     public GamePreferences() {
         this.width = DEFAULT_BOARD_WIDTH;
@@ -67,6 +79,8 @@ public class GamePreferences {
         this.startPos = DEFAULT_BOARD_STARTPOS;
         this.uiColors = 0;
         this.showGridLines = DEFAULT_UI_SHOW_GRIDLINES;
+        this.prefs = Preferences.userRoot().node(PREFS_NODE_NAME);
+        this.loadPrefs();
     }
 
     public int getWidth() {
@@ -140,4 +154,21 @@ public class GamePreferences {
         this.showGridLines = showGridLines;
     }
 
+    private void loadPrefs() {
+        this.setWidth(this.prefs.getInt(PREFS_WIDTH, DEFAULT_BOARD_WIDTH));
+        this.setHeight(this.prefs.getInt(PREFS_HEIGHT, DEFAULT_BOARD_HEIGHT));
+        this.setNumColors(this.prefs.getInt(PREFS_NUMCOLORS, DEFAULT_BOARD_NUM_COLORS));
+        this.setStartPos(this.prefs.getInt(PREFS_STARTPOS, DEFAULT_BOARD_STARTPOS));
+        this.setUiColorsNumber(this.prefs.getInt(PREFS_COLSCHEME, 0));
+        this.setShowGridLines(this.prefs.getBoolean(PREFS_GRIDLINES, DEFAULT_UI_SHOW_GRIDLINES));
+    }
+
+    public void savePrefs() {
+        this.prefs.putInt(PREFS_WIDTH, this.getWidth());
+        this.prefs.putInt(PREFS_HEIGHT, this.getHeight());
+        this.prefs.putInt(PREFS_NUMCOLORS, this.getNumColors());
+        this.prefs.putInt(PREFS_STARTPOS, this.getStartPos());
+        this.prefs.putInt(PREFS_COLSCHEME, this.getUiColorsNumber());
+        this.prefs.putBoolean(PREFS_GRIDLINES, this.isShowGridLines());
+    }
 }
