@@ -46,13 +46,45 @@ public class GamePreferences {
             new Color(0x46B1E2), // Color.CYAN
             new Color(0xED70A1)  // Color.MAGENTA
         },
-        { // Color Flood (Android) scheme 1 (default)
+        { // Color Flood (Android) scheme 1
             new Color(0x6261A8),
             new Color(0x6AAECC),
             new Color(0x5EDD67),
             new Color(0xF66A61),
             new Color(0xF6BF61),
             new Color(0xF0F461)
+        },
+        { // Color Flood (Android) scheme 2
+            new Color(0x707B87),
+            new Color(0x6AD5CD),
+            new Color(0xD0F67D),
+            new Color(0xFF8383),
+            new Color(0xB35F8D),
+            new Color(0xFFC27A)
+        },
+        { // Color Flood (Android) scheme 3
+            new Color(0x875E7F),
+            new Color(0xDF759A),
+            new Color(0xF1AB58),
+            new Color(0xFADC57),
+            new Color(0xA8BB61),
+            new Color(0x5E9496)
+        },
+        { // Color Flood (Android) scheme 4
+            new Color(0x24ADBB),
+            new Color(0x7F6458),
+            new Color(0xD3505A),
+            new Color(0xEE8E5C),
+            new Color(0xF0D16A),
+            new Color(0x7BD15F)
+        },
+        { // Color Flood (Android) scheme 5
+            new Color(0x6D5D52),
+            new Color(0xF88B44),
+            new Color(0xA1CC55),
+            new Color(0xF3F1B2),
+            new Color(0x76C3A8),
+            new Color(0xEB6476)
         },
         { // Color Flood (Android) scheme 6
             new Color(0xDF5162),
