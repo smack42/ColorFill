@@ -57,6 +57,7 @@ public class PreferencesDialog extends JDialog {
 
     private final JSpinner jspinWidth = new JSpinner();
     private final JSpinner jspinHeight = new JSpinner();
+    private final JSpinner jspinNumColors = new JSpinner();
     private final JComboBox jcomboStartPos = new JComboBox(); // Java 6: rawtype JComboBox
     private final JButton buttonOk = new JButton();
     private final JButton buttonCancel = new JButton();
@@ -82,6 +83,7 @@ public class PreferencesDialog extends JDialog {
         final DesignGridLayout layout = new DesignGridLayout(panel);
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.Width.txt"))).addMulti(this.makeJspinWidth());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.Height.txt"))).addMulti(this.makeJspinHeight());
+        layout.row().grid(new JLabel(L10N.getString("pref.lbl.NumColors.txt"))).addMulti(this.makeJspinNumColors());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.StartPos.txt"))).addMulti(this.makeJcomboStartPos());
         layout.emptyRow();
         layout.row().grid().add(new JSeparator());
@@ -119,6 +121,11 @@ public class PreferencesDialog extends JDialog {
     private JSpinner makeJspinHeight() {
         this.jspinHeight.setModel(new SpinnerNumberModel(this.controller.getHeight(), 2, 1000, 1)); // TODO preferences min/max "height"
         return this.jspinHeight;
+    }
+
+    private JSpinner makeJspinNumColors() {
+        this.jspinNumColors.setModel(new SpinnerNumberModel(2, 2, 6, 1)); // TODO preferences min/max "numColors"
+        return this.jspinNumColors;
     }
 
     private JComboBox makeJcomboStartPos() { // Java 6: rawtype JComboBox
@@ -170,6 +177,7 @@ public class PreferencesDialog extends JDialog {
                 PreferencesDialog.this.controller.userPrefsOK(
                         ((Number)PreferencesDialog.this.jspinWidth.getValue()).intValue(),
                         ((Number)PreferencesDialog.this.jspinHeight.getValue()).intValue(),
+                        ((Number)PreferencesDialog.this.jspinNumColors.getValue()).intValue(),
                         ((StartPosItem)PreferencesDialog.this.jcomboStartPos.getSelectedItem()).spe,
                         PreferencesDialog.this.checkGridLines.isSelected(),
                         colorSchemeNumber);
@@ -206,6 +214,7 @@ public class PreferencesDialog extends JDialog {
         this.rbuttonsColors[this.controller.getUiColorsNumber()].setSelected(true);
         this.jspinWidth.setValue(Integer.valueOf(this.controller.getWidth()));
         this.jspinHeight.setValue(Integer.valueOf(this.controller.getHeight()));
+        this.jspinNumColors.setValue(Integer.valueOf(this.controller.getNumColors()));
         this.jcomboStartPos.setSelectedIndex(this.controller.getStartPos().ordinal());
         this.checkGridLines.setSelected(this.controller.isShowGridLines());
         this.getRootPane().setDefaultButton(this.buttonOk);

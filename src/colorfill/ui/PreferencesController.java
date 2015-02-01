@@ -41,9 +41,10 @@ public class PreferencesController {
     /**
      * called by PreferencesDialog when user pressed the "OK" button.
      */
-    protected void userPrefsOK(final int width, final int height, final StartPositionEnum spe, final boolean showGridLines, final int uiColorsNumber) {
+    protected void userPrefsOK(final int width, final int height, final int numColors, final StartPositionEnum spe, final boolean showGridLines, final int uiColorsNumber) {
         boolean isNewBoard = this.gameState.getPreferences().setWidth(width);
         isNewBoard |= this.gameState.getPreferences().setHeight(height);
+        isNewBoard |= this.gameState.getPreferences().setNumColors(numColors);
         isNewBoard |= this.gameState.getPreferences().setStartPos(spe);
         this.gameState.getPreferences().setShowGridLines(showGridLines);
         this.gameState.getPreferences().setUiColorsNumber(uiColorsNumber);
@@ -63,6 +64,9 @@ public class PreferencesController {
     }
     protected int getHeight() {
         return this.gameState.getPreferences().getHeight();
+    }
+    protected int getNumColors() {
+        return this.gameState.getPreferences().getNumColors();
     }
     protected Color[][] getAllUiColors() {
         return this.gameState.getPreferences().getAllUiColors();

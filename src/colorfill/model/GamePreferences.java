@@ -140,8 +140,12 @@ public class GamePreferences {
     public int getNumColors() {
         return this.numColors;
     }
-    public void setNumColors(int numColors) {
-        this.numColors = numColors;
+    public boolean setNumColors(final int numColors) {
+        if ((this.numColors != numColors) && (numColors >= 2) && (numColors <= 6)) { // validation
+            this.numColors = numColors;
+            return true; // new value has been set
+        }
+        return false; // value not changed
     }
 
     public int getStartPos() {
