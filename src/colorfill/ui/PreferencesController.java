@@ -51,6 +51,13 @@ public class PreferencesController {
         this.mainController.actionUpdatedPrefs(isNewBoard);
     }
 
+    /**
+     * called by PreferencesDialog when user selects a color scheme.
+     */
+    protected void userPreviewUiColors(final int colorSchemeNumber) {
+        this.mainController.actionRepaintBoardUiColors(this.getAllUiColors()[colorSchemeNumber]);
+    }
+
     protected int getWidth() {
         return this.gameState.getPreferences().getWidth();
     }

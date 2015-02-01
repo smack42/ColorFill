@@ -82,6 +82,14 @@ public class BoardController {
     }
 
     /**
+     * repaint board using this UI color scheme.
+     * @param uiColors
+     */
+    protected void actionRepaintBoardUiColors(final Color[] uiColors) {
+        this.boardPanel.applyColorScheme(uiColors);
+    }
+
+    /**
      * called by BoardPanel when user moves the mouse pointer to a board cell.
      * @param e MouseEvent
      * @param index the cell index

@@ -180,4 +180,9 @@ public class BoardPanel extends JPanel {
         }
         this.repaint();
     }
+
+    public void applyColorScheme(final Color[] uiColors) {
+        this.uiColors = uiColors;
+        this.repaint();
+    }
 }

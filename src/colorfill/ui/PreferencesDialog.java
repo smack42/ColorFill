@@ -21,6 +21,8 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ResourceBundle;
 
 import javax.swing.ButtonGroup;
@@ -61,6 +63,9 @@ public class PreferencesDialog extends JDialog {
     private final JRadioButton[] rbuttonsColors;
     private final JCheckBox checkGridLines = new JCheckBox();
 
+    private boolean closedByOkButton = false;
+
+
     /**
      * constructor
      * @param controller
@@ -71,6 +76,7 @@ public class PreferencesDialog extends JDialog {
         this.controller = controller;
         this.mainWindow = mainWindow;
         this.setTitle(L10N.getString("pref.Title.txt"));
+        this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
         final JPanel panel = new JPanel();
         final DesignGridLayout layout = new DesignGridLayout(panel);
@@ -93,6 +99,16 @@ public class PreferencesDialog extends JDialog {
         layout.row().bar().add(this.makeButtonOk(), Tag.OK).add(this.makeButtonCancel(), Tag.CANCEL);
 
         this.add(panel);
+
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                // Cancel or Close button: undo preview of color scheme
+                if (false == PreferencesDialog.this.closedByOkButton) {
+                    PreferencesDialog.this.controller.userPreviewUiColors(PreferencesDialog.this.controller.getUiColorsNumber());
+                }
+            }
+        });
     }
 
     private JSpinner makeJspinWidth() {
@@ -124,6 +140,7 @@ public class PreferencesDialog extends JDialog {
             final ActionListener actionListener = new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     PreferencesDialog.this.rbuttonsColors[colorSchemeNumber].setSelected(true);
+                    PreferencesDialog.this.controller.userPreviewUiColors(colorSchemeNumber);
                 }
             };
             final JLabel label = new JLabel(L10N.getString("pref.lbl.ColorScheme.txt"));
@@ -132,7 +149,7 @@ public class PreferencesDialog extends JDialog {
             this.rbuttonsColors[colorSchemeNumber].addActionListener(actionListener);
             final ISpannableGridRow row = layout.row().grid(label).add(this.rbuttonsColors[colorSchemeNumber]);
             for (int color = 0;  color < colorScheme.length;  ++color) {
-                final JButton button = new JButton("" + (color + 1));
+                final JButton button = new JButton(" ");
                 button.addActionListener(actionListener);
                 button.setBackground(colorScheme[color]);
                 row.add(button);
@@ -156,10 +173,10 @@ public class PreferencesDialog extends JDialog {
                         ((StartPosItem)PreferencesDialog.this.jcomboStartPos.getSelectedItem()).spe,
                         PreferencesDialog.this.checkGridLines.isSelected(),
                         colorSchemeNumber);
-                PreferencesDialog.this.setVisible(false);
+                PreferencesDialog.this.closedByOkButton = true;
+                PreferencesDialog.this.dispose();
             }
         });
-        this.getRootPane().setDefaultButton(this.buttonOk);
         return this.buttonOk;
     }
 
@@ -167,7 +184,7 @@ public class PreferencesDialog extends JDialog {
         this.buttonCancel.setText(L10N.getString("pref.btn.Cancel.txt"));
         final ActionListener actionListener = new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                PreferencesDialog.this.setVisible(false);
+                PreferencesDialog.this.dispose();
             }
         };
         this.buttonCancel.addActionListener(actionListener);
@@ -185,11 +202,13 @@ public class PreferencesDialog extends JDialog {
         else SwingUtilities.invokeLater(new Runnable() { public void run() { showDialogInternal(); } });
     }
     private void showDialogInternal() {
+        this.closedByOkButton = false;
         this.rbuttonsColors[this.controller.getUiColorsNumber()].setSelected(true);
         this.jspinWidth.setValue(Integer.valueOf(this.controller.getWidth()));
         this.jspinHeight.setValue(Integer.valueOf(this.controller.getHeight()));
         this.jcomboStartPos.setSelectedIndex(this.controller.getStartPos().ordinal());
         this.checkGridLines.setSelected(this.controller.isShowGridLines());
+        this.getRootPane().setDefaultButton(this.buttonOk);
         this.pack();
         this.setLocationRelativeTo(this.mainWindow);
         this.setVisible(true);

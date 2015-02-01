@@ -17,6 +17,7 @@
 
 package colorfill.ui;
 
+import java.awt.Color;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
@@ -137,6 +138,14 @@ public class MainController {
             this.mainView.update();
         }
         this.internalUpdateBoardColors();
+    }
+
+    /**
+     * repaint board using this UI color scheme.
+     * @param uiColors
+     */
+    protected void actionRepaintBoardUiColors(final Color[] uiColors) {
+        this.boardController.actionRepaintBoardUiColors(uiColors);
     }
 
     /**
