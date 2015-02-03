@@ -119,7 +119,7 @@ public class GamePreferences {
         return this.width;
     }
     public boolean setWidth(final int width) {
-        if (this.width != width) { // TODO setWidth validation
+        if ((this.width != width) && (width >= 2) && (width <= 100)) { // validation
             this.width = width;
             return true; // new value has been set
         }
@@ -130,7 +130,7 @@ public class GamePreferences {
         return this.height;
     }
     public boolean setHeight(final int height) {
-        if (this.height != height) { // TODO setHeight validation
+        if ((this.height != height) && (height >= 2) && (height <= 100)) { // validation
             this.height = height;
             return true; // new value has been set
         }

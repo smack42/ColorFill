@@ -114,12 +114,12 @@ public class PreferencesDialog extends JDialog {
     }
 
     private JSpinner makeJspinWidth() {
-        this.jspinWidth.setModel(new SpinnerNumberModel(this.controller.getWidth(), 2, 1000, 1)); // TODO preferences min/max "width"
+        this.jspinWidth.setModel(new SpinnerNumberModel(2, 2, 100, 1)); // TODO preferences min/max "width"
         return this.jspinWidth;
     }
 
     private JSpinner makeJspinHeight() {
-        this.jspinHeight.setModel(new SpinnerNumberModel(this.controller.getHeight(), 2, 1000, 1)); // TODO preferences min/max "height"
+        this.jspinHeight.setModel(new SpinnerNumberModel(2, 2, 100, 1)); // TODO preferences min/max "height"
         return this.jspinHeight;
     }
 
