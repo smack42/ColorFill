@@ -107,7 +107,9 @@ public class PreferencesDialog extends JDialog {
             public void windowClosed(WindowEvent e) {
                 // Cancel or Close button: undo preview of color scheme
                 if (false == PreferencesDialog.this.closedByOkButton) {
-                    PreferencesDialog.this.controller.userPreviewUiColors(PreferencesDialog.this.controller.getUiColorsNumber());
+                    PreferencesDialog.this.controller.userPreviewUiColors(
+                            PreferencesDialog.this.controller.getUiColorsNumber(),
+                            PreferencesDialog.this.controller.isShowGridLines());
                 }
             }
         });
@@ -136,6 +138,14 @@ public class PreferencesDialog extends JDialog {
     }
 
     private JCheckBox makeCheckGridLines() {
+        this.checkGridLines.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                PreferencesDialog.this.controller.userPreviewUiColors(
+                        PreferencesDialog.this.getSelectedColorSchemeNumber(),
+                        PreferencesDialog.this.checkGridLines.isSelected());
+            }
+        });
         return this.checkGridLines;
     }
 
@@ -147,7 +157,9 @@ public class PreferencesDialog extends JDialog {
             final ActionListener actionListener = new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     PreferencesDialog.this.rbuttonsColors[colorSchemeNumber].setSelected(true);
-                    PreferencesDialog.this.controller.userPreviewUiColors(colorSchemeNumber);
+                    PreferencesDialog.this.controller.userPreviewUiColors(
+                            colorSchemeNumber,
+                            PreferencesDialog.this.checkGridLines.isSelected());
                 }
             };
             final JLabel label = new JLabel(L10N.getString("pref.lbl.ColorScheme.txt"));
@@ -168,19 +180,13 @@ public class PreferencesDialog extends JDialog {
         this.buttonOk.setText(L10N.getString("pref.btn.OK.txt"));
         this.buttonOk.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                int colorSchemeNumber = 0;
-                for (int i = 0;  i < PreferencesDialog.this.rbuttonsColors.length;  ++i) {
-                    if (PreferencesDialog.this.rbuttonsColors[i].isSelected()) {
-                        colorSchemeNumber = i;
-                    }
-                }
                 PreferencesDialog.this.controller.userPrefsOK(
                         ((Number)PreferencesDialog.this.jspinWidth.getValue()).intValue(),
                         ((Number)PreferencesDialog.this.jspinHeight.getValue()).intValue(),
                         ((Number)PreferencesDialog.this.jspinNumColors.getValue()).intValue(),
                         ((StartPosItem)PreferencesDialog.this.jcomboStartPos.getSelectedItem()).spe,
                         PreferencesDialog.this.checkGridLines.isSelected(),
-                        colorSchemeNumber);
+                        PreferencesDialog.this.getSelectedColorSchemeNumber());
                 PreferencesDialog.this.closedByOkButton = true;
                 PreferencesDialog.this.dispose();
             }
@@ -200,6 +206,17 @@ public class PreferencesDialog extends JDialog {
                 KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
         return this.buttonCancel;
+    }
+
+    private int getSelectedColorSchemeNumber() {
+        int colorSchemeNumber = 0;
+        for (int i = 0;  i < this.rbuttonsColors.length;  ++i) {
+            if (this.rbuttonsColors[i].isSelected()) {
+                colorSchemeNumber = i;
+                break; // for (i)
+            }
+        }
+        return colorSchemeNumber;
     }
 
     /**

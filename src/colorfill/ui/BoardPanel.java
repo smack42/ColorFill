@@ -181,8 +181,9 @@ public class BoardPanel extends JPanel {
         this.repaint();
     }
 
-    public void applyColorScheme(final Color[] uiColors) {
+    public void applyColorScheme(final Color[] uiColors, final boolean isShowGridLines) {
         this.uiColors = uiColors;
+        this.showGridLines = isShowGridLines;
         this.repaint();
     }
 }

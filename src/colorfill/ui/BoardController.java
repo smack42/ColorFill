@@ -83,10 +83,9 @@ public class BoardController {
 
     /**
      * repaint board using this UI color scheme.
-     * @param uiColors
      */
-    protected void actionRepaintBoardUiColors(final Color[] uiColors) {
-        this.boardPanel.applyColorScheme(uiColors);
+    protected void actionRepaintBoardUiColors(final Color[] uiColors, final boolean isShowGridLines) {
+        this.boardPanel.applyColorScheme(uiColors, isShowGridLines);
     }
 
     /**

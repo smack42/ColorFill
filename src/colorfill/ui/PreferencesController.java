@@ -55,8 +55,8 @@ public class PreferencesController {
     /**
      * called by PreferencesDialog when user selects a color scheme.
      */
-    protected void userPreviewUiColors(final int colorSchemeNumber) {
-        this.mainController.actionRepaintBoardUiColors(this.getAllUiColors()[colorSchemeNumber]);
+    protected void userPreviewUiColors(final int colorSchemeNumber, final boolean isShowGridLines) {
+        this.mainController.actionRepaintBoardUiColors(this.getAllUiColors()[colorSchemeNumber], isShowGridLines);
     }
 
     protected int getWidth() {
