@@ -59,6 +59,7 @@ public class ControlPanel extends JPanel {
 
     private static final int MAX_NUMBER_COLOR_BUTTONS = 6; // TODO dynamically handle max. number of color buttons
     private final JButton[] buttonColors = new JButton[MAX_NUMBER_COLOR_BUTTONS];
+    private int numColors = MAX_NUMBER_COLOR_BUTTONS;
 
     private static final int MAX_NUMBER_SOLVER_SOLUTIONS = 4; // TODO dynamically handle max. number of solver solutions visible
     private final JPanel[]              solverPanels        = new JPanel[MAX_NUMBER_SOLVER_SOLUTIONS];
@@ -97,9 +98,10 @@ public class ControlPanel extends JPanel {
      * constructor
      * @param controller
      */
-    protected ControlPanel(final ControlController controller, final Color[] colors) {
+    protected ControlPanel(final ControlController controller, final Color[] colors, final int numColors) {
         super();
         this.controller = controller;
+        this.numColors = numColors;
 
         final ButtonGroup bgroup = new ButtonGroup();
 
@@ -184,7 +186,7 @@ public class ControlPanel extends JPanel {
             this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(i1txt), "ACTION_" + i1txt);
             this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("NUMPAD" + i1txt), "ACTION_" + i1txt);
         }
-        this.setButtonColors(colors);
+        this.setButtonColors(colors, this.numColors);
         return this.buttonColors;
     }
 
@@ -245,8 +247,8 @@ public class ControlPanel extends JPanel {
         final int sel = this.selectedSolution;
         this.buttonUndo.setVisible(0 == sel);
         this.buttonRedo.setVisible(0 == sel);
-        for (final JButton b : this.buttonColors) {
-            b.setVisible(0 == sel);
+        for (int i = 0;  i < this.buttonColors.length;  ++i) {
+            this.buttonColors[i].setVisible((0 == sel) && (i < this.numColors));
         }
         for (int i = 1;  i <= this.numVisibleSolverSolutions;  ++i) {
             this.solverPrevButtons[i - 1].setVisible(i == sel);
@@ -330,14 +332,18 @@ public class ControlPanel extends JPanel {
      * set the background colors of the color buttons.
      * @param colors
      */
-    protected void setButtonColors(final Color[] colors) {
-        if (SwingUtilities.isEventDispatchThread()) {                        setButtonColorsInternal(colors); }
-        else SwingUtilities.invokeLater(new Runnable() { public void run() { setButtonColorsInternal(colors); } });
+    protected void setButtonColors(final Color[] colors, final int numColors) {
+        if (SwingUtilities.isEventDispatchThread()) {                        setButtonColorsInternal(colors, numColors); }
+        else SwingUtilities.invokeLater(new Runnable() { public void run() { setButtonColorsInternal(colors, numColors); } });
     }
-    private void setButtonColorsInternal(final Color[] colors) {
+    private void setButtonColorsInternal(final Color[] colors, final int numColors) {
+        this.numColors = numColors;
         for (int i = 0;  i < this.buttonColors.length;  ++i) {
             final Color color = (i < colors.length ? colors[i] : Color.WHITE);
             this.buttonColors[i].setBackground(color);
+            if (i >= numColors) {
+                this.buttonColors[i].setVisible(false);
+            }
         }
     }
 }
