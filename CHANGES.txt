@@ -2,6 +2,14 @@ ColorFill  CHANGES
 
 
 
+0.1.5 (2015-02-04)
+
+- added more color schemes
+- added "number of colors" option, values 2...6 are available
+- persistent settings, using the standard Java Preferences API
+
+
+
 0.1.4 (2015-01-05)
 
 - added optional grid lines

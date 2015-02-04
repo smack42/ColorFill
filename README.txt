@@ -1,6 +1,6 @@
 ColorFill game and solver - yet another Flood-It / Globs clone
 
-Version   0.1.4 (2015-01-05)
+Version   0.1.5 (2015-02-04)
 Homepage  https://github.com/smack42/ColorFill/wiki
 
 
@@ -19,7 +19,7 @@ To run the program just doubleclick "colorfill.jar".
 license
 
 ColorFill game and solver
-Copyright (C) 2014 Michael Henke
+Copyright (C) 2014, 2015 Michael Henke <smack42@googlemail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

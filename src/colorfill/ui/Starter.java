@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014 Michael Henke
+    Copyright (C) 2014, 2015 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ import colorfill.solver.Strategy;
 public class Starter {
 
     public static void main(String[] args) throws Exception {
-        final String title = "ColorFill 0.1.4 (2015-01-05)";
+        final String title = "ColorFill 0.1.5 (2015-02-04)";
         if (0 == args.length) {
             System.out.println(title);
             new MainController(title);
