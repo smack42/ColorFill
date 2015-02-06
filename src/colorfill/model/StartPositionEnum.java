@@ -25,19 +25,12 @@ public enum StartPositionEnum {
     BOTTOM_RIGHT(-4, "pref.startPos.bottomRight.txt"),
     CENTRAL     (-5, "pref.startPos.central.txt");
 
-    private final int intValue;
-    private final String l10nKey;
+    public final int intValue;
+    public final String l10nKey;
 
     private StartPositionEnum(final int intValue, final String l10nKey) {
         this.intValue = intValue;
         this.l10nKey = l10nKey; //L10N = Localization
-    }
-
-    public int getIntValue() {
-        return this.intValue;
-    }
-    public String getL10nKey() {
-        return this.l10nKey;
     }
 
     /**

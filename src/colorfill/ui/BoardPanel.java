@@ -32,6 +32,8 @@ import java.util.Collection;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import colorfill.model.GridLinesEnum;
+
 /**
  * representation of the board with its colored cells.
  */
@@ -47,7 +49,7 @@ public class BoardPanel extends JPanel {
     private int columns, rows, startPos;
     private int[] cellColors = new int[0];
     private boolean[] cellHighlights = new boolean[0];
-    private boolean showGridLines;
+    private GridLinesEnum gridLines;
 
     /**
      * constructor
@@ -115,12 +117,11 @@ public class BoardPanel extends JPanel {
 
     /**
      * set the colors of all cells.
-     * @param cellColors the new colors
      */
-    protected void setCellColors(final int[] cellColors, final boolean showGridLines) {
+    protected void setCellColors(final int[] cellColors, final GridLinesEnum gle) {
         this.cellColors = cellColors;
         this.cellHighlights = new boolean[this.cellColors.length];
-        this.showGridLines = showGridLines;
+        this.gridLines = gle;
         this.repaint();
     }
 
@@ -155,12 +156,12 @@ public class BoardPanel extends JPanel {
                     g2d.setColor(Color.WHITE);
                     g2d.fillRect(x + cellWidth * 3/8, y + cellHeight * 3/8, cw4, ch4);
                 }
-                if (this.showGridLines) {
+                if (GridLinesEnum.NONE != this.gridLines) {
                     g2d.setColor(Color.WHITE);
-                    if (column < this.columns - 1) {
+                    if ((column < this.columns - 1) && ((GridLinesEnum.ALL == this.gridLines) || (color != this.cellColors[index + 1]))) {
                         g2d.drawLine(x + cw1, y, x + cw1, y + ch1);
                     }
-                    if (row < this.rows - 1) {
+                    if ((row < this.rows - 1) && ((GridLinesEnum.ALL == this.gridLines) || (color != this.cellColors[index + this.columns]))) {
                         g2d.drawLine(x, y + ch1, x + cw1, y + ch1);
                     }
                 }
@@ -181,9 +182,9 @@ public class BoardPanel extends JPanel {
         this.repaint();
     }
 
-    public void applyColorScheme(final Color[] uiColors, final boolean isShowGridLines) {
+    public void applyColorScheme(final Color[] uiColors, final GridLinesEnum gle) {
         this.uiColors = uiColors;
-        this.showGridLines = isShowGridLines;
+        this.gridLines = gle;
         this.repaint();
     }
 }

@@ -20,6 +20,7 @@ package colorfill.ui;
 import java.awt.Color;
 
 import colorfill.model.GameState;
+import colorfill.model.GridLinesEnum;
 import colorfill.model.StartPositionEnum;
 
 public class PreferencesController {
@@ -41,12 +42,12 @@ public class PreferencesController {
     /**
      * called by PreferencesDialog when user pressed the "OK" button.
      */
-    protected void userPrefsOK(final int width, final int height, final int numColors, final StartPositionEnum spe, final boolean showGridLines, final int uiColorsNumber) {
+    protected void userPrefsOK(final int width, final int height, final int numColors, final StartPositionEnum spe, final GridLinesEnum gle, final int uiColorsNumber) {
         boolean isNewBoard = this.gameState.getPreferences().setWidth(width);
         isNewBoard |= this.gameState.getPreferences().setHeight(height);
         isNewBoard |= this.gameState.getPreferences().setNumColors(numColors);
         isNewBoard |= this.gameState.getPreferences().setStartPos(spe);
-        this.gameState.getPreferences().setShowGridLines(showGridLines);
+        this.gameState.getPreferences().setGridLines(gle);
         this.gameState.getPreferences().setUiColorsNumber(uiColorsNumber);
         this.gameState.getPreferences().savePrefs();
         this.mainController.actionUpdatedPrefs(isNewBoard);
@@ -55,8 +56,8 @@ public class PreferencesController {
     /**
      * called by PreferencesDialog when user selects a color scheme.
      */
-    protected void userPreviewUiColors(final int colorSchemeNumber, final boolean isShowGridLines) {
-        this.mainController.actionRepaintBoardUiColors(this.getAllUiColors()[colorSchemeNumber], isShowGridLines);
+    protected void userPreviewUiColors(final int colorSchemeNumber, final GridLinesEnum gle) {
+        this.mainController.actionRepaintBoardUiColors(this.getAllUiColors()[colorSchemeNumber], gle);
     }
 
     protected int getWidth() {
@@ -77,7 +78,7 @@ public class PreferencesController {
     protected StartPositionEnum getStartPos() {
         return this.gameState.getPreferences().getStartPosEnum();
     }
-    protected boolean isShowGridLines() {
-        return this.gameState.getPreferences().isShowGridLines();
+    protected GridLinesEnum getGridLines() {
+        return this.gameState.getPreferences().getGridLinesEnum();
     }
 }

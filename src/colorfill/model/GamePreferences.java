@@ -35,8 +35,8 @@ public class GamePreferences {
     private static final int DEFAULT_BOARD_WIDTH  = 14;
     private static final int DEFAULT_BOARD_HEIGHT = 14;
     private static final int DEFAULT_BOARD_NUM_COLORS = 6;
-    private static final int DEFAULT_BOARD_STARTPOS = StartPositionEnum.TOP_LEFT.getIntValue();
-    private static final boolean DEFAULT_UI_SHOW_GRIDLINES = false;
+    private static final int DEFAULT_BOARD_STARTPOS = StartPositionEnum.TOP_LEFT.intValue;
+    private static final int DEFAULT_UI_GRIDLINES = GridLinesEnum.NONE.intValue;
     private static final Color[][] DEFAULT_UI_COLORS = {
         { // Flood-It scheme
             new Color(0xDC4A20), // Color.RED
@@ -101,7 +101,7 @@ public class GamePreferences {
     private int numColors;
     private int startPos;
     private int uiColors;
-    private boolean showGridLines;
+    private int gridLines;
     private final Preferences prefs;
 
     public GamePreferences() {
@@ -110,7 +110,7 @@ public class GamePreferences {
         this.numColors = DEFAULT_BOARD_NUM_COLORS;
         this.startPos = DEFAULT_BOARD_STARTPOS;
         this.uiColors = 0;
-        this.showGridLines = DEFAULT_UI_SHOW_GRIDLINES;
+        this.gridLines = DEFAULT_UI_GRIDLINES;
         this.prefs = Preferences.userRoot().node(PREFS_NODE_NAME);
         this.loadPrefs();
     }
@@ -161,8 +161,8 @@ public class GamePreferences {
         this.startPos = startPos;
     }
     public boolean setStartPos(StartPositionEnum spe) {
-        if (this.startPos != spe.getIntValue()) {
-            this.startPos = spe.getIntValue();
+        if (this.startPos != spe.intValue) {
+            this.startPos = spe.intValue;
             return true; // new value has been set
         }
         return false; // value not changed
@@ -183,11 +183,19 @@ public class GamePreferences {
         }
     }
 
-    public boolean isShowGridLines() {
-        return this.showGridLines;
+    public int getGridLines() {
+        return this.gridLines;
     }
-    public void setShowGridLines(boolean showGridLines) {
-        this.showGridLines = showGridLines;
+    public GridLinesEnum getGridLinesEnum() {
+        return GridLinesEnum.valueOf(this.gridLines);
+    }
+    public void setGridLines(final int gridLines) {
+        if (null != GridLinesEnum.valueOf(gridLines)) {
+            this.gridLines = gridLines;
+        }
+    }
+    public void setGridLines(final GridLinesEnum gle) {
+        this.gridLines = gle.intValue;
     }
 
     private void loadPrefs() {
@@ -196,7 +204,7 @@ public class GamePreferences {
         this.setNumColors(this.prefs.getInt(PREFS_NUMCOLORS, DEFAULT_BOARD_NUM_COLORS));
         this.setStartPos(this.prefs.getInt(PREFS_STARTPOS, DEFAULT_BOARD_STARTPOS));
         this.setUiColorsNumber(this.prefs.getInt(PREFS_COLSCHEME, 0));
-        this.setShowGridLines(this.prefs.getBoolean(PREFS_GRIDLINES, DEFAULT_UI_SHOW_GRIDLINES));
+        this.setGridLines(this.prefs.getInt(PREFS_GRIDLINES, DEFAULT_UI_GRIDLINES));
     }
 
     public void savePrefs() {
@@ -205,6 +213,6 @@ public class GamePreferences {
         this.prefs.putInt(PREFS_NUMCOLORS, this.getNumColors());
         this.prefs.putInt(PREFS_STARTPOS, this.getStartPos());
         this.prefs.putInt(PREFS_COLSCHEME, this.getUiColorsNumber());
-        this.prefs.putBoolean(PREFS_GRIDLINES, this.isShowGridLines());
+        this.prefs.putInt(PREFS_GRIDLINES, this.getGridLines());
     }
 }

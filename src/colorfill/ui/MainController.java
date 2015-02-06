@@ -26,6 +26,7 @@ import javax.swing.UIManager;
 
 import colorfill.model.GameProgress;
 import colorfill.model.GameState;
+import colorfill.model.GridLinesEnum;
 
 /**
  * the main controller of the GUI, coordinates the control flows
@@ -143,8 +144,8 @@ public class MainController {
     /**
      * repaint board using this UI color scheme.
      */
-    protected void actionRepaintBoardUiColors(final Color[] uiColors, final boolean isShowGridLines) {
-        this.boardController.actionRepaintBoardUiColors(uiColors, isShowGridLines);
+    protected void actionRepaintBoardUiColors(final Color[] uiColors, final GridLinesEnum gle) {
+        this.boardController.actionRepaintBoardUiColors(uiColors, gle);
     }
 
     /**
