@@ -157,8 +157,12 @@ public class GamePreferences {
     public StartPositionEnum getStartPosEnum() {
         return StartPositionEnum.valueOf(this.startPos); // may be null
     }
-    public void setStartPos(int startPos) {
-        this.startPos = startPos;
+    public boolean setStartPos(int startPos) {
+        if (null != StartPositionEnum.valueOf(startPos)) {
+            this.startPos = startPos;
+            return true; // new value has been set
+        }
+        return false; // value not changed
     }
     public boolean setStartPos(StartPositionEnum spe) {
         if (this.startPos != spe.intValue) {
