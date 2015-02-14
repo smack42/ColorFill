@@ -58,14 +58,28 @@ public class GameState {
     public GameState() {
         this.pref = new GamePreferences();
         this.setAutoRunSolver(false);
-        this.initBoard();
+        this.initBoard(true);
     }
 
-    private void initBoard() {
-        this.board = new Board(this.pref.getWidth(), this.pref.getHeight(), this.pref.getNumColors());
-        this.startPos = this.pref.getStartPos(this.pref.getWidth(), this.pref.getHeight());
-        this.board.determineColorAreasDepth(this.startPos);
-        this.progressUser = new GameProgress(this.board, this.startPos);
+    private void initBoard(final boolean initialLoad) {
+        this.board = null;
+        this.progressUser = null;
+        if (initialLoad) { // load board
+            this.board = GamePreferences.loadBoard();
+        }
+        if (null != this.board) { // board loaded
+            this.startPos = this.board.getStartPos();
+            this.progressUser = GamePreferences.loadSolution(this.board, this.startPos);
+        } else { // board not loaded
+            this.board = new Board(this.pref.getWidth(), this.pref.getHeight(), this.pref.getNumColors());
+            this.startPos = this.pref.getStartPos(this.pref.getWidth(), this.pref.getHeight());
+            this.board.determineColorAreasDepth(this.startPos);
+            GamePreferences.saveBoard(this.board);
+        }
+        if (null == this.progressUser) { // solution not loaded
+            this.progressUser = new GameProgress(this.board, this.startPos);
+            GamePreferences.saveSolution(this.progressUser);
+        }
         this.progressSelected = this.progressUser;
         if (this.isAutoRunSolver) {
             new SolverRun(this.board, this.startPos);
@@ -100,7 +114,7 @@ public class GameState {
      * create a new board with random cell color values.
      */
     public void setNewRandomBoard() {
-        this.initBoard();
+        this.initBoard(false);
     }
 
     /**

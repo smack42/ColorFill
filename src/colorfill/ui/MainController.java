@@ -64,6 +64,7 @@ public class MainController {
         this.gameState.addPropertyChangeListener(new GameStatePropertyChangeListener());
         this.boardController = new BoardController(this, this.gameState);
         this.controlController = new ControlController(this, this.gameState);
+        this.controlController.actionUpdateBoardColors();
         this.mainView = new MainWindow(windowTitle, this.boardController.getPanel(), this.controlController.getPanel());
         this.mainView.update();
         this.gameState.setAutoRunSolver(true);

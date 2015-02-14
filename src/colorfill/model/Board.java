@@ -116,6 +116,27 @@ public class Board {
         this.determineColorAreasDepth(startPos);
     }
 
+    /**
+     * construct a new Board from values and text representation and set the start position.
+     * warning: may throw an exception if the specified parameters are inconsistent!
+     *
+     * @param width
+     * @param height
+     * @param colors
+     * @param strCells
+     * @param startPos
+     */
+    public Board(final int width, final int height, final int colors, final String strCells, final int startPos) {
+        this(width, height, colors);
+        for (int i = 0;  i < this.cells.length;  ++i) {
+            final char c = strCells.charAt(i);
+            this.cells[i] = (byte)(Byte.parseByte(String.valueOf(c)) - 1);
+        }
+        this.colorAreas.clear();
+        this.colorAreas.addAll(this.createColorAreas());
+        this.determineColorAreasDepth(startPos);
+    }
+
     private Set<ColorArea> createColorAreas() {
         final Set<ColorArea> result = new HashSet<ColorArea>();
         // build ColorAreas, fill with them with members: adjacent cells of the same color
@@ -307,6 +328,15 @@ public class Board {
             }
         }
         sb.append(this.colorAreas);
+        return sb.toString();
+    }
+
+
+    public String toStringCells() {
+        final StringBuilder sb = new StringBuilder();
+        for (final byte cell : this.cells) {
+            sb.append(cell + 1);
+        }
         return sb.toString();
     }
 

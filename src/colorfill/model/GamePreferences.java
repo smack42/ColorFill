@@ -30,6 +30,11 @@ public class GamePreferences {
     private static final String PREFS_STARTPOS  = "startPos";
     private static final String PREFS_GRIDLINES = "gridLines";
     private static final String PREFS_COLSCHEME = "colorScheme";
+    private static final String PREFS_GAMESTATE_BOARD    = "gameStateBoard";
+    private static final String PREFS_GAMESTATE_SOLUTION = "gameStateSolution";
+    private static final char   PREFS_GAMESTATE_SEPARATOR = ';';
+
+    private static final Preferences PREFS = Preferences.userRoot().node(PREFS_NODE_NAME);
 
     // hard-coded default values
     private static final int DEFAULT_BOARD_WIDTH  = 14;
@@ -102,7 +107,6 @@ public class GamePreferences {
     private int startPos;
     private int uiColors;
     private int gridLines;
-    private final Preferences prefs;
 
     public GamePreferences() {
         this.width = DEFAULT_BOARD_WIDTH;
@@ -111,8 +115,8 @@ public class GamePreferences {
         this.startPos = DEFAULT_BOARD_STARTPOS;
         this.uiColors = 0;
         this.gridLines = DEFAULT_UI_GRIDLINES;
-        this.prefs = Preferences.userRoot().node(PREFS_NODE_NAME);
         this.loadPrefs();
+        this.savePrefs();
     }
 
     public int getWidth() {
@@ -203,20 +207,66 @@ public class GamePreferences {
     }
 
     private void loadPrefs() {
-        this.setWidth(this.prefs.getInt(PREFS_WIDTH, DEFAULT_BOARD_WIDTH));
-        this.setHeight(this.prefs.getInt(PREFS_HEIGHT, DEFAULT_BOARD_HEIGHT));
-        this.setNumColors(this.prefs.getInt(PREFS_NUMCOLORS, DEFAULT_BOARD_NUM_COLORS));
-        this.setStartPos(this.prefs.getInt(PREFS_STARTPOS, DEFAULT_BOARD_STARTPOS));
-        this.setUiColorsNumber(this.prefs.getInt(PREFS_COLSCHEME, 0));
-        this.setGridLines(this.prefs.getInt(PREFS_GRIDLINES, DEFAULT_UI_GRIDLINES));
+        this.setWidth(PREFS.getInt(PREFS_WIDTH, DEFAULT_BOARD_WIDTH));
+        this.setHeight(PREFS.getInt(PREFS_HEIGHT, DEFAULT_BOARD_HEIGHT));
+        this.setNumColors(PREFS.getInt(PREFS_NUMCOLORS, DEFAULT_BOARD_NUM_COLORS));
+        this.setStartPos(PREFS.getInt(PREFS_STARTPOS, DEFAULT_BOARD_STARTPOS));
+        this.setUiColorsNumber(PREFS.getInt(PREFS_COLSCHEME, 0));
+        this.setGridLines(PREFS.getInt(PREFS_GRIDLINES, DEFAULT_UI_GRIDLINES));
     }
 
     public void savePrefs() {
-        this.prefs.putInt(PREFS_WIDTH, this.getWidth());
-        this.prefs.putInt(PREFS_HEIGHT, this.getHeight());
-        this.prefs.putInt(PREFS_NUMCOLORS, this.getNumColors());
-        this.prefs.putInt(PREFS_STARTPOS, this.getStartPos());
-        this.prefs.putInt(PREFS_COLSCHEME, this.getUiColorsNumber());
-        this.prefs.putInt(PREFS_GRIDLINES, this.getGridLines());
+        PREFS.putInt(PREFS_WIDTH, this.getWidth());
+        PREFS.putInt(PREFS_HEIGHT, this.getHeight());
+        PREFS.putInt(PREFS_NUMCOLORS, this.getNumColors());
+        PREFS.putInt(PREFS_STARTPOS, this.getStartPos());
+        PREFS.putInt(PREFS_COLSCHEME, this.getUiColorsNumber());
+        PREFS.putInt(PREFS_GRIDLINES, this.getGridLines());
+    }
+
+    public static void saveBoard(final Board board) {
+        final StringBuilder sb = new StringBuilder()
+            .append(board.getWidth())       .append(PREFS_GAMESTATE_SEPARATOR)
+            .append(board.getHeight())      .append(PREFS_GAMESTATE_SEPARATOR)
+            .append(board.getNumColors())   .append(PREFS_GAMESTATE_SEPARATOR)
+            .append(board.getStartPos())    .append(PREFS_GAMESTATE_SEPARATOR)
+            .append(board.toStringCells());
+        PREFS.put(PREFS_GAMESTATE_BOARD, sb.toString());
+    }
+
+    public static Board loadBoard() {
+        Board result = null;
+        try {
+            final String str = PREFS.get(PREFS_GAMESTATE_BOARD, "");
+            final String[] strSplit = str.split(String.valueOf(PREFS_GAMESTATE_SEPARATOR));
+            final int width = Integer.parseInt(strSplit[0]);
+            final int height = Integer.parseInt(strSplit[1]);
+            final int numColors = Integer.parseInt(strSplit[2]);
+            final int startPos = Integer.parseInt(strSplit[3]);
+            result = new Board(width, height, numColors, strSplit[4], startPos);
+        } catch (Exception e) {
+            System.out.println("loadBoard() failed: " + e.toString());
+        }
+        return result;
+    }
+
+    public static void saveSolution(final GameProgress progress) {
+        final StringBuilder sb = new StringBuilder()
+            .append(progress.getCurrentStep())  .append(PREFS_GAMESTATE_SEPARATOR)
+            .append(progress.toStringSteps());
+        PREFS.put(PREFS_GAMESTATE_SOLUTION, sb.toString());
+    }
+
+    public static GameProgress loadSolution(final Board board, final int startPos) {
+        GameProgress result = null;
+        try {
+            final String str = PREFS.get(PREFS_GAMESTATE_SOLUTION, "");
+            final String[] strSplit = str.split(String.valueOf(PREFS_GAMESTATE_SEPARATOR));
+            final int step = Integer.parseInt(strSplit[0]);
+            result = new GameProgress(board, startPos, step, strSplit[1]);
+        } catch (Exception e) {
+            System.out.println("loadSolution() failed: " + e.toString());
+        }
+        return result;
     }
 }

@@ -29,10 +29,9 @@ import colorfill.solver.Solution;
 public class GameProgress {
 
     private final String name;
-    private boolean isModifiable;
+    private final boolean isModifiable;
 
     private final Board board;
-    private final int startPos;
 
     private int numSteps;
     private final List<Integer> stepColor = new ArrayList<Integer>();
@@ -48,8 +47,7 @@ public class GameProgress {
         this.name = "User";
         this.isModifiable = true;
         this.board = board;
-        this.startPos = startPos;
-        this.initSteps();
+        this.initSteps(startPos);
     }
 
     /**
@@ -59,25 +57,38 @@ public class GameProgress {
      */
     protected GameProgress(final Board board, final int startPos, final Solution solution) {
         this.name = solution.getSolverName();
-        this.board = board;
-        this.startPos = startPos;
-        this.initSteps();
-        this.isModifiable = true;
-        for (final byte color : solution.getSteps()) {
-            this.addStep(color);
-        }
         this.isModifiable = false;
+        this.board = board;
+        this.initSteps(startPos);
+        for (final byte color : solution.getSteps()) {
+            this.addStep(color, true);
+        }
         this.numSteps = 0;
     }
 
-    private void initSteps() {
+    /**
+     * construct a "user progress" object, from a saved state (step + strStepColors).
+     * @param board
+     * @param startPos
+     * @param step
+     * @param strStepColors
+     */
+    protected GameProgress(final Board board, final int startPos, final int step, final String strStepColors) {
+        this(board, startPos);
+        for (final char c : strStepColors.toCharArray()) {
+            this.addStep(Integer.parseInt(String.valueOf(c)) - 1, true);
+        }
+        this.numSteps = step;
+    }
+
+    private void initSteps(final int startPos) {
         this.numSteps = 0;
         this.stepColor.clear();
-        this.stepColor.add(Integer.valueOf(this.board.getColor(this.startPos)));
+        this.stepColor.add(Integer.valueOf(this.board.getColor(startPos)));
         this.stepFlooded.clear();
-        this.stepFlooded.add(new HashSet<ColorArea>(Collections.singleton(this.board.getColorArea(this.startPos))));
+        this.stepFlooded.add(new HashSet<ColorArea>(Collections.singleton(this.board.getColorArea(startPos))));
         this.stepFloodNext.clear();
-        this.stepFloodNext.add(new HashSet<ColorArea>(this.board.getColorArea(this.startPos).getNeighbors()));
+        this.stepFloodNext.add(new HashSet<ColorArea>(this.board.getColorArea(startPos).getNeighbors()));
     }
 
     /**
@@ -90,7 +101,11 @@ public class GameProgress {
      * @return true if the step was actually added
      */
     public boolean addStep(final int color) {
-        if (false == this.isModifiable) {
+        return this.addStep(color, false);
+    }
+
+    private boolean addStep(final int color, final boolean init) {
+        if ((false == this.isModifiable) && (false == init)) {
             throw new IllegalStateException("addStep error: this GameProgress \"" + this.name + "\" is not modifiable");
         }
         final Integer col = Integer.valueOf(color);
@@ -136,6 +151,9 @@ public class GameProgress {
         this.stepFloodNext.add(floodNext);
         // next step
         ++ this.numSteps;
+        if ((true == this.isModifiable) && (false == init)) { // user added step
+            GamePreferences.saveSolution(this);
+        }
         return true;
     }
 
@@ -176,6 +194,9 @@ public class GameProgress {
     public boolean undoStep() {
         if (this.canUndoStep()) {
             -- this.numSteps;
+            if (true == this.isModifiable) { // user solution
+                GamePreferences.saveSolution(this);
+            }
             return true;
         }
         return false;
@@ -196,6 +217,9 @@ public class GameProgress {
     public boolean redoStep() {
         if (this.canRedoStep()) {
             ++ this.numSteps;
+            if (true == this.isModifiable) { // user solution
+                GamePreferences.saveSolution(this);
+            }
             return true;
         }
         return false;
@@ -275,5 +299,13 @@ public class GameProgress {
     @Override
     public String toString() {
         return this.name + " " + this.getTotalSteps();
+    }
+
+    public String toStringSteps() {
+        final StringBuilder sb = new StringBuilder();
+        for (final Integer color : this.stepColor) {
+            sb.append(color.intValue() + 1);
+        }
+        return sb.toString();
     }
 }
