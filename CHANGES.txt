@@ -2,6 +2,14 @@ ColorFill  CHANGES
 
 
 
+0.1.6 (2015-02-16)
+
+- added grid lines option "colors"
+- persistent game state: current board and (partial) solution are
+  saved when program is closed and restored when program is started
+
+
+
 0.1.5 (2015-02-04)
 
 - added more color schemes
