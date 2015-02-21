@@ -24,7 +24,6 @@ import java.util.ResourceBundle;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -37,7 +36,7 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import net.java.dev.designgridlayout.DesignGridLayout;
-import net.java.dev.designgridlayout.ISpannableGridRow;
+import net.java.dev.designgridlayout.IRow;
 
 /**
  * this panel contains various controls (buttons etc.)
@@ -62,9 +61,9 @@ public class ControlPanel extends JPanel {
     private int numColors = MAX_NUMBER_COLOR_BUTTONS;
 
     private static final int MAX_NUMBER_SOLVER_SOLUTIONS = 4; // TODO dynamically handle max. number of solver solutions visible
-    private final JPanel[]              solverPanels        = new JPanel[MAX_NUMBER_SOLVER_SOLUTIONS];
-    private final DesignGridLayout[]    solverLayouts       = new DesignGridLayout[MAX_NUMBER_SOLVER_SOLUTIONS];
+    private final IRow[]                solverRows1         = new IRow[MAX_NUMBER_SOLVER_SOLUTIONS];
     private final JRadioButton[]        solverRButtons      = new JRadioButton[MAX_NUMBER_SOLVER_SOLUTIONS];
+    private final IRow[]                solverRows2         = new IRow[MAX_NUMBER_SOLVER_SOLUTIONS];
     private final JLabel[]              solverMoves         = new JLabel[MAX_NUMBER_SOLVER_SOLUTIONS];
     private final JButton[]             solverPrevButtons   = new JButton[MAX_NUMBER_SOLVER_SOLUTIONS];
     private final JButton[]             solverNextButtons   = new JButton[MAX_NUMBER_SOLVER_SOLUTIONS];
@@ -105,26 +104,20 @@ public class ControlPanel extends JPanel {
 
         final ButtonGroup bgroup = new ButtonGroup();
 
-        final JPanel userPanel = new JPanel();
-        final DesignGridLayout userLayout = new DesignGridLayout(userPanel);
-        userLayout.row().left().add(this.makeButtonNew()).add(this.makeButtonPrefs());
-        userLayout.emptyRow();
-        userLayout.row().grid().add(new JSeparator());
-        userLayout.row().grid().add(this.makeRButtonUser(bgroup)).add(this.makeLabelMove());
-        final ISpannableGridRow rowButtonColors = userLayout.row().grid();
+        final JPanel panel = new JPanel();
+        final DesignGridLayout layout = new DesignGridLayout(panel);
+        layout.row().left().add(this.makeButtonNew()).add(this.makeButtonPrefs());
+        layout.row().grid().add(new JSeparator());
+        layout.row().grid().add(this.makeRButtonUser(bgroup)).add(this.makeLabelMove());
+        final IRow rowButtonColors = layout.row().grid();
         for (final JButton button : this.makeButtonColors(colors)) {
             rowButtonColors.add(button);
         }
-        userLayout.row().left().add(this.makeButtonUndo()).add(this.makeButtonRedo());
-        userLayout.emptyRow();
-        userLayout.row().grid().add(new JSeparator());
-        userLayout.row().grid().add(new JLabel(L10N.getString("ctrl.lbl.SolverResults.txt")));
-
-        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        this.add(userPanel);
-        for (final JPanel solverPanel : this.makeSolverPanels(bgroup)) {
-            this.add(solverPanel);
-        }
+        layout.row().left().add(this.makeButtonUndo()).add(this.makeButtonRedo());
+        layout.row().grid().add(new JSeparator());
+        layout.row().grid().add(new JLabel(L10N.getString("ctrl.lbl.SolverResults.txt")));
+        this.makeSolverRows(bgroup, layout);
+        this.add(panel);
     }
 
     private JButton makeButtonNew() {
@@ -212,11 +205,8 @@ public class ControlPanel extends JPanel {
         return this.buttonRedo;
     }
 
-    private JPanel[] makeSolverPanels(final ButtonGroup bgroup) {
+    private void makeSolverRows(final ButtonGroup bgroup, final DesignGridLayout layout) {
         for (int i = 0;  i < MAX_NUMBER_SOLVER_SOLUTIONS;  ++i) {
-            this.solverPanels[i] = new JPanel();
-            this.solverPanels[i].setVisible(false);
-            this.solverLayouts[i] = new DesignGridLayout(this.solverPanels[i]);
             this.solverRButtons[i] = new JRadioButton();
             bgroup.add(this.solverRButtons[i]);
             final int numProgress = i + 1;
@@ -236,11 +226,11 @@ public class ControlPanel extends JPanel {
             this.solverNextButtons[i] = new JButton("+");
             this.solverNextButtons[i].setVisible(false);
             this.solverNextButtons[i].addActionListener(this.actionRedoStep);
-            this.solverLayouts[i].margins(0, 1, 1, 1); // remove top margin
-            this.solverLayouts[i].row().grid().add(this.solverRButtons[i]);
-            this.solverLayouts[i].row().grid().add(this.solverPrevButtons[i]).add(this.solverMoves[i]).add(this.solverNextButtons[i]);
+            this.solverRows1[i] = layout.row().grid();
+            this.solverRows1[i].add(this.solverRButtons[i]).hide();
+            this.solverRows2[i] = layout.row().grid();
+            this.solverRows2[i].add(this.solverPrevButtons[i]).add(this.solverMoves[i]).add(this.solverNextButtons[i]).hide();
         }
-        return this.solverPanels;
     }
 
     private void setVisibleUserOrSolver() {
@@ -251,6 +241,12 @@ public class ControlPanel extends JPanel {
             this.buttonColors[i].setVisible((0 == sel) && (i < this.numColors));
         }
         for (int i = 1;  i <= this.numVisibleSolverSolutions;  ++i) {
+            this.solverMoves[i - 1].setVisible(i == sel);
+            if (i == sel) {
+                this.solverRows2[i - 1].forceShow();
+            } else {
+                this.solverRows2[i - 1].hide();
+            }
             this.solverPrevButtons[i - 1].setVisible(i == sel);
             this.solverNextButtons[i - 1].setVisible(i == sel);
             this.solverMoves[i - 1].setVisible(i == sel);
@@ -305,7 +301,8 @@ public class ControlPanel extends JPanel {
             this.solverPrevButtons[i].setVisible(false);
             this.solverNextButtons[i].setVisible(false);
             this.solverMoves[i].setVisible(false);
-            this.solverPanels[i].setVisible(false);
+            this.solverRows1[i].hide();
+            this.solverRows2[i].hide();
         }
         this.numVisibleSolverSolutions = 0;
         this.userRButton.doClick();
@@ -322,8 +319,9 @@ public class ControlPanel extends JPanel {
     private void addSolverResultInternal(final String str) {
         if (this.numVisibleSolverSolutions < this.solverRButtons.length) {
             final int i = this.numVisibleSolverSolutions++;
+            this.solverRows1[i].forceShow();
+            this.solverRows2[i].hide();
             this.solverRButtons[i].setText(str);
-            this.solverPanels[i].setVisible(true);
             this.solverMoves[i].setText("0");
         }
     }
