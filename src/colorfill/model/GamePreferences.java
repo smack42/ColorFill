@@ -38,12 +38,13 @@ public class GamePreferences {
     private static final Preferences PREFS = Preferences.userRoot().node(PREFS_NODE_NAME);
 
     // hard-coded default values
-    private static final int DEFAULT_BOARD_WIDTH  = 14;
-    private static final int DEFAULT_BOARD_HEIGHT = 14;
-    private static final int DEFAULT_BOARD_NUM_COLORS = 6;
-    private static final int DEFAULT_BOARD_STARTPOS = StartPositionEnum.TOP_LEFT.intValue;
-    private static final int DEFAULT_UI_GRIDLINES = GridLinesEnum.NONE.intValue;
-    private static final int DEFAULT_UI_CELLSIZE = 32;
+    public static final int DEFAULT_BOARD_WIDTH  = 14;
+    public static final int DEFAULT_BOARD_HEIGHT = 14;
+    public static final int DEFAULT_BOARD_NUM_COLORS = 6;
+    public static final StartPositionEnum DEFAULT_BOARD_STARTPOS = StartPositionEnum.TOP_LEFT;
+    public static final GridLinesEnum DEFAULT_UI_GRIDLINES = GridLinesEnum.NONE;
+    public static final int DEFAULT_UI_CELLSIZE = 32;
+    public static final int DEFAULT_UI_COLSCHEME = 0;
     private static final Color[][] DEFAULT_UI_COLORS = {
         { // Flood-It scheme
             new Color(0xDC4A20), // Color.RED
@@ -115,9 +116,9 @@ public class GamePreferences {
         this.width = DEFAULT_BOARD_WIDTH;
         this.height = DEFAULT_BOARD_HEIGHT;
         this.numColors = DEFAULT_BOARD_NUM_COLORS;
-        this.startPos = DEFAULT_BOARD_STARTPOS;
-        this.uiColors = 0;
-        this.gridLines = DEFAULT_UI_GRIDLINES;
+        this.startPos = DEFAULT_BOARD_STARTPOS.intValue;
+        this.uiColors = DEFAULT_UI_COLSCHEME;
+        this.gridLines = DEFAULT_UI_GRIDLINES.intValue;
         this.cellSize = DEFAULT_UI_CELLSIZE;
         this.loadPrefs();
         this.savePrefs();
@@ -225,9 +226,9 @@ public class GamePreferences {
         this.setWidth(PREFS.getInt(PREFS_WIDTH, DEFAULT_BOARD_WIDTH));
         this.setHeight(PREFS.getInt(PREFS_HEIGHT, DEFAULT_BOARD_HEIGHT));
         this.setNumColors(PREFS.getInt(PREFS_NUMCOLORS, DEFAULT_BOARD_NUM_COLORS));
-        this.setStartPos(PREFS.getInt(PREFS_STARTPOS, DEFAULT_BOARD_STARTPOS));
-        this.setUiColorsNumber(PREFS.getInt(PREFS_COLSCHEME, 0));
-        this.setGridLines(PREFS.getInt(PREFS_GRIDLINES, DEFAULT_UI_GRIDLINES));
+        this.setStartPos(PREFS.getInt(PREFS_STARTPOS, DEFAULT_BOARD_STARTPOS.intValue));
+        this.setUiColorsNumber(PREFS.getInt(PREFS_COLSCHEME, DEFAULT_UI_COLSCHEME));
+        this.setGridLines(PREFS.getInt(PREFS_GRIDLINES, DEFAULT_UI_GRIDLINES.intValue));
         this.setCellSize(PREFS.getInt(PREFS_CELLSIZE, DEFAULT_UI_CELLSIZE));
     }
 

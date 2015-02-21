@@ -19,6 +19,7 @@ package colorfill.ui;
 
 import java.awt.Color;
 
+import colorfill.model.GamePreferences;
 import colorfill.model.GameState;
 import colorfill.model.GridLinesEnum;
 import colorfill.model.StartPositionEnum;
@@ -63,7 +64,21 @@ public class PreferencesController {
     }
 
     /**
-     * called by PreferencesDialog when user selects a color scheme.
+     * called by PreferencesDialog when user pressed the "Restore Defaults" button.
+     */
+    protected void userDefaults() {
+        this.prefDialog.setValues(
+                GamePreferences.DEFAULT_BOARD_WIDTH,
+                GamePreferences.DEFAULT_BOARD_HEIGHT,
+                GamePreferences.DEFAULT_BOARD_NUM_COLORS,
+                GamePreferences.DEFAULT_BOARD_STARTPOS,
+                GamePreferences.DEFAULT_UI_GRIDLINES,
+                GamePreferences.DEFAULT_UI_COLSCHEME,
+                GamePreferences.DEFAULT_UI_CELLSIZE);
+    }
+
+    /**
+     * called by PreferencesDialog when user selects a color scheme or grid line option.
      */
     protected void userPreviewUiColors(final int colorSchemeNumber, final GridLinesEnum gle) {
         this.mainController.actionRepaintBoardUiColors(this.getAllUiColors()[colorSchemeNumber], gle);
