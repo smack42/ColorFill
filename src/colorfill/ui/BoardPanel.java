@@ -41,9 +41,6 @@ public class BoardPanel extends JPanel {
 
     private static final long serialVersionUID = 8760536779314645208L;
 
-    public static final int DEFAULT_UI_BOARD_CELL_WIDTH  = 32;
-    public static final int DEFAULT_UI_BOARD_CELL_HEIGHT = 32;
-
     private final BoardController controller;
     private Color[] uiColors;
     private int columns, rows, startPos;
@@ -100,19 +97,19 @@ public class BoardPanel extends JPanel {
      * @param columns
      * @param rows
      */
-    protected void init(final int columns, final int rows, final Color[] uiColors, final int startPos) {
-        if (SwingUtilities.isEventDispatchThread()) {                          initInternal(columns, rows, uiColors, startPos); }
-        else { SwingUtilities.invokeLater(new Runnable() { public void run() { initInternal(columns, rows, uiColors, startPos); } }); }
+    protected void init(final int columns, final int rows, final Color[] uiColors, final int startPos, final int cellSize) {
+        if (SwingUtilities.isEventDispatchThread()) {                          initInternal(columns, rows, uiColors, startPos, cellSize); }
+        else { SwingUtilities.invokeLater(new Runnable() { public void run() { initInternal(columns, rows, uiColors, startPos, cellSize); } }); }
     }
 
-    private void initInternal(final int columns, final int rows, final Color[] uiColors, final int startPos) {
+    private void initInternal(final int columns, final int rows, final Color[] uiColors, final int startPos, final int cellSize) {
         this.uiColors = uiColors;
         this.columns = columns;
         this.rows = rows;
         this.startPos = startPos;
         this.cellColors = new int[columns * rows];
         this.cellHighlights = new boolean[this.cellColors.length];
-        this.setPreferredSize(new Dimension(columns * DEFAULT_UI_BOARD_CELL_WIDTH, rows * DEFAULT_UI_BOARD_CELL_HEIGHT));
+        this.setPreferredSize(new Dimension(columns * cellSize, rows * cellSize));
     }
 
     /**

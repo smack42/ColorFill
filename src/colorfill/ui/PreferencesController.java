@@ -42,15 +42,24 @@ public class PreferencesController {
     /**
      * called by PreferencesDialog when user pressed the "OK" button.
      */
-    protected void userPrefsOK(final int width, final int height, final int numColors, final StartPositionEnum spe, final GridLinesEnum gle, final int uiColorsNumber) {
+    protected void userPrefsOK(
+            final int width,
+            final int height,
+            final int numColors,
+            final StartPositionEnum spe,
+            final GridLinesEnum gle,
+            final int uiColorsNumber,
+            final int cellSize) {
         boolean isNewBoard = this.gameState.getPreferences().setWidth(width);
         isNewBoard |= this.gameState.getPreferences().setHeight(height);
+        boolean isNewSize = isNewBoard;
         isNewBoard |= this.gameState.getPreferences().setNumColors(numColors);
         isNewBoard |= this.gameState.getPreferences().setStartPos(spe);
+        isNewSize |= this.gameState.getPreferences().setCellSize(cellSize);
         this.gameState.getPreferences().setGridLines(gle);
         this.gameState.getPreferences().setUiColorsNumber(uiColorsNumber);
         this.gameState.getPreferences().savePrefs();
-        this.mainController.actionUpdatedPrefs(isNewBoard);
+        this.mainController.actionUpdatedPrefs(isNewBoard, isNewSize);
     }
 
     /**
@@ -80,5 +89,8 @@ public class PreferencesController {
     }
     protected GridLinesEnum getGridLines() {
         return this.gameState.getPreferences().getGridLinesEnum();
+    }
+    protected int getCellSize() {
+        return this.gameState.getPreferences().getCellSize();
     }
 }

@@ -47,7 +47,12 @@ public class BoardController {
      * apply current values of board width + height and color schmeme
      */
     protected void initBoardPanel() {
-        this.boardPanel.init(this.gameState.getBoard().getWidth(), this.gameState.getBoard().getHeight(), this.gameState.getPreferences().getUiColors(), this.gameState.getStartPos());
+        this.boardPanel.init(
+                this.gameState.getBoard().getWidth(),
+                this.gameState.getBoard().getHeight(),
+                this.gameState.getPreferences().getUiColors(),
+                this.gameState.getStartPos(),
+                this.gameState.getPreferences().getCellSize());
         this.repaintBoardPanel();
     }
 

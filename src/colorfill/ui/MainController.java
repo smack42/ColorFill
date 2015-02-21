@@ -131,12 +131,12 @@ public class MainController {
     /**
      * apply updated preferences.
      */
-    protected void actionUpdatedPrefs(final boolean isNewBoard) {
+    protected void actionUpdatedPrefs(final boolean isNewBoard, final boolean isNewSize) {
         if (isNewBoard) {
             this.gameState.setNewRandomBoard();
         }
         this.boardController.initBoardPanel();
-        if (isNewBoard) {
+        if (isNewSize) {
             this.mainView.update();
         }
         this.internalUpdateBoardColors();

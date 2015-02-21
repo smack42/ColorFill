@@ -29,6 +29,7 @@ public class GamePreferences {
     private static final String PREFS_NUMCOLORS = "numColors";
     private static final String PREFS_STARTPOS  = "startPos";
     private static final String PREFS_GRIDLINES = "gridLines";
+    private static final String PREFS_CELLSIZE  = "cellSize";
     private static final String PREFS_COLSCHEME = "colorScheme";
     private static final String PREFS_GAMESTATE_BOARD    = "gameStateBoard";
     private static final String PREFS_GAMESTATE_SOLUTION = "gameStateSolution";
@@ -42,6 +43,7 @@ public class GamePreferences {
     private static final int DEFAULT_BOARD_NUM_COLORS = 6;
     private static final int DEFAULT_BOARD_STARTPOS = StartPositionEnum.TOP_LEFT.intValue;
     private static final int DEFAULT_UI_GRIDLINES = GridLinesEnum.NONE.intValue;
+    private static final int DEFAULT_UI_CELLSIZE = 32;
     private static final Color[][] DEFAULT_UI_COLORS = {
         { // Flood-It scheme
             new Color(0xDC4A20), // Color.RED
@@ -107,6 +109,7 @@ public class GamePreferences {
     private int startPos;
     private int uiColors;
     private int gridLines;
+    private int cellSize;
 
     public GamePreferences() {
         this.width = DEFAULT_BOARD_WIDTH;
@@ -115,6 +118,7 @@ public class GamePreferences {
         this.startPos = DEFAULT_BOARD_STARTPOS;
         this.uiColors = 0;
         this.gridLines = DEFAULT_UI_GRIDLINES;
+        this.cellSize = DEFAULT_UI_CELLSIZE;
         this.loadPrefs();
         this.savePrefs();
     }
@@ -206,6 +210,17 @@ public class GamePreferences {
         this.gridLines = gle.intValue;
     }
 
+    public int getCellSize() {
+        return this.cellSize;
+    }
+    public boolean setCellSize(final int cellSize) {
+        if ((this.cellSize != cellSize) && (cellSize >= 3) && (cellSize <= 300)) { // validation
+            this.cellSize = cellSize;
+            return true; // new value has been set
+        }
+        return false; // value not changed
+    }
+
     private void loadPrefs() {
         this.setWidth(PREFS.getInt(PREFS_WIDTH, DEFAULT_BOARD_WIDTH));
         this.setHeight(PREFS.getInt(PREFS_HEIGHT, DEFAULT_BOARD_HEIGHT));
@@ -213,6 +228,7 @@ public class GamePreferences {
         this.setStartPos(PREFS.getInt(PREFS_STARTPOS, DEFAULT_BOARD_STARTPOS));
         this.setUiColorsNumber(PREFS.getInt(PREFS_COLSCHEME, 0));
         this.setGridLines(PREFS.getInt(PREFS_GRIDLINES, DEFAULT_UI_GRIDLINES));
+        this.setCellSize(PREFS.getInt(PREFS_CELLSIZE, DEFAULT_UI_CELLSIZE));
     }
 
     public void savePrefs() {
@@ -222,6 +238,7 @@ public class GamePreferences {
         PREFS.putInt(PREFS_STARTPOS, this.getStartPos());
         PREFS.putInt(PREFS_COLSCHEME, this.getUiColorsNumber());
         PREFS.putInt(PREFS_GRIDLINES, this.getGridLines());
+        PREFS.putInt(PREFS_CELLSIZE, this.getCellSize());
     }
 
     public static void saveBoard(final Board board) {
