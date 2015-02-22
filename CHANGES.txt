@@ -2,6 +2,14 @@ ColorFill  CHANGES
 
 
 
+0.1.7 (2015-02-22)
+
+- added option Cell Size (Pixels)
+- added Restore Defaults to settings dialog
+- improved dynamic layout of ControlPanel
+
+
+
 0.1.6 (2015-02-16)
 
 - added grid lines option "colors"
