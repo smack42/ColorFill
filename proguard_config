@@ -10,8 +10,7 @@
 # avoid a crash in some fastutil class  http://sourceforge.net/p/proguard/bugs/462/
 -optimizations !code/allocation/variable
 
-# don't go higher than 1 otherwise the application will crash in some designgridlayout class !!!
--optimizationpasses 1
+-optimizationpasses 9
 
 -allowaccessmodification
 
