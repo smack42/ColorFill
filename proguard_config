@@ -1,6 +1,6 @@
 -injars bin
 -injars lib/designgridlayout-1.11.jar(**.class)
--injars lib/fastutil-6.5.15.jar(**.class)
+-injars lib/fastutil-6.6.3.jar(**.class)
 # specify this on the command line: -outjars colorfill.jar
 
 -libraryjars <java.home>/lib/rt.jar
