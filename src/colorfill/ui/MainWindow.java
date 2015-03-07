@@ -18,7 +18,11 @@
 package colorfill.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Image;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -41,6 +45,13 @@ public class MainWindow extends JFrame {
         this.getContentPane().add(boardPanel, BorderLayout.CENTER);
         this.getContentPane().add(controlPanel, BorderLayout.EAST);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        final List<Image> icons = new ArrayList<Image>();
+        icons.add(new ImageIcon(this.getClass().getResource("/icon16.png")).getImage());
+        icons.add(new ImageIcon(this.getClass().getResource("/icon32.png")).getImage());
+        icons.add(new ImageIcon(this.getClass().getResource("/icon64.png")).getImage());
+        icons.add(new ImageIcon(this.getClass().getResource("/icon128.png")).getImage());
+        this.setIconImages(icons);
     }
 
     /**
