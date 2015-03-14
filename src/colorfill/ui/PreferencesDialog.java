@@ -74,7 +74,8 @@ public class PreferencesDialog extends JDialog {
      * @param controller
      * @param mainWindow
      */
-    protected PreferencesDialog(final PreferencesController controller, final MainWindow mainWindow) {
+    protected PreferencesDialog(final PreferencesController controller, final MainWindow mainWindow,
+            final String progname, final String version, final String author) {
         super(mainWindow, true); // modal
         this.controller = controller;
         this.mainWindow = mainWindow;
@@ -83,19 +84,22 @@ public class PreferencesDialog extends JDialog {
 
         final JPanel panel = new JPanel();
         final DesignGridLayout layout = new DesignGridLayout(panel);
-        layout.row().grid().addMulti(this.makeButtonDefaults());
-        layout.row().grid().add(new JSeparator());
+        layout.withoutConsistentWidthAcrossNonGridRows();
+        layout.row().left().addMulti(new JLabel(progname + " " + version));
+        layout.row().left().addMulti(new JLabel(author));
+        layout.row().left().fill().add(new JSeparator());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.Width.txt"))).addMulti(this.makeJspinWidth());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.Height.txt"))).addMulti(this.makeJspinHeight());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.NumColors.txt"))).addMulti(this.makeJspinNumColors());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.StartPos.txt"))).addMulti(this.makeJcomboStartPos());
-        layout.row().grid().add(new JSeparator());
+        layout.row().left().fill().add(new JSeparator());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.GridLines.txt"))).addMulti(this.makeJcomboGridLines());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.CellSize.txt"))).addMulti(this.makeJspinCellSize());
         final Color[][] allUiColors = this.controller.getAllUiColors();
         this.rbuttonsColors = new JRadioButton[allUiColors.length];
         this.makeColorButtons(layout, allUiColors);
-        layout.row().grid().add(new JSeparator());
+        layout.row().left().fill().add(new JSeparator());
+        layout.row().left().addMulti(this.makeButtonDefaults());
         layout.row().bar().add(this.makeButtonOk(), Tag.OK).add(this.makeButtonCancel(), Tag.CANCEL);
 
         this.add(panel);

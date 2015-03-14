@@ -45,15 +45,15 @@ public class MainController {
      * the main entry point to this Swing GUI.
      * @param windowTitle title text of the application window
      */
-    public MainController(final String windowTitle) {
+    public MainController(final String progname, final String version, final String author) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                createAndShowGUI(windowTitle);
+                createAndShowGUI(progname, version, author);
             }
         });
     }
 
-    private void createAndShowGUI(final String windowTitle) {
+    private void createAndShowGUI(final String progname, final String version, final String author) {
         try {
             //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
@@ -65,10 +65,10 @@ public class MainController {
         this.boardController = new BoardController(this, this.gameState);
         this.controlController = new ControlController(this, this.gameState);
         this.controlController.actionUpdateBoardColors();
-        this.mainView = new MainWindow(windowTitle, this.boardController.getPanel(), this.controlController.getPanel());
+        this.mainView = new MainWindow(progname, this.boardController.getPanel(), this.controlController.getPanel());
         this.mainView.update();
         this.gameState.setAutoRunSolver(true);
-        this.preferencesController = new PreferencesController(this, this.gameState, this.mainView);
+        this.preferencesController = new PreferencesController(this, this.gameState, this.mainView, progname, version, author);
     }
 
     private void internalUpdateBoardColors() {

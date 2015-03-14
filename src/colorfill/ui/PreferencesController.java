@@ -30,10 +30,11 @@ public class PreferencesController {
     private final GameState gameState;
     private final PreferencesDialog prefDialog;
 
-    protected PreferencesController(final MainController mainController, final GameState gameState, final MainWindow mainWindow) {
+    protected PreferencesController(final MainController mainController, final GameState gameState, final MainWindow mainWindow,
+            final String progname, final String version, final String author) {
         this.mainController = mainController;
         this.gameState = gameState;
-        this.prefDialog = new PreferencesDialog(this, mainWindow);
+        this.prefDialog = new PreferencesDialog(this, mainWindow, progname, version, author);
     }
 
     protected void showDialog() {

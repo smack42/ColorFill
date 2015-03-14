@@ -43,12 +43,15 @@ import colorfill.solver.Strategy;
 public class Starter {
 
     public static void main(String[] args) throws Exception {
-        final String title = "ColorFill 0.1.7 (2015-02-22)";
+        final String progname = "ColorFill __DEVELOPMENT__";
+        final String version  = "0.1.8 (2015-03-14)";
+        final String author   = "Copyright (C) 2015 Michael Henke <smack42@gmail.com>";
         if (0 == args.length) {
-            System.out.println(title);
-            new MainController(title);
+            System.out.println(progname + " " + version);
+            System.out.println(author);
+            new MainController(progname, version, author);
         } else {
-            runSolverPc19(title, args[0]);
+            runSolverPc19(progname + " " + version, author, args[0]);
         }
 //        testCheckOne();
 //        testCheckPc19();
@@ -214,10 +217,11 @@ public class Starter {
 
 
 
-    private static void runSolverPc19(final String title, final String inputFileName) throws Exception {
+    private static void runSolverPc19(final String title, final String author, final String inputFileName) throws Exception {
         final int startPos = 0;
         final String outputFileName = "results.txt";
         System.out.println(title);
+        System.out.println(author);
         System.out.println("running Programming Challenge 19");
         System.out.println("reading  input file: " + inputFileName);
         System.out.println("writing output file: " + outputFileName);
