@@ -2,6 +2,13 @@ ColorFill  CHANGES
 
 
 
+0.1.8 (2015-03-15)
+
+- added application icon
+- some performance tweaks (slightly smaller and faster program)
+
+
+
 0.1.7 (2015-02-22)
 
 - added option Cell Size (Pixels)

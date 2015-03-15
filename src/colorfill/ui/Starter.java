@@ -43,8 +43,8 @@ import colorfill.solver.Strategy;
 public class Starter {
 
     public static void main(String[] args) throws Exception {
-        final String progname = "ColorFill __DEVELOPMENT__";
-        final String version  = "0.1.8 (2015-03-14)";
+        final String progname = "ColorFill";
+        final String version  = "0.1.8 (2015-03-15)";
         final String author   = "Copyright (C) 2015 Michael Henke <smack42@gmail.com>";
         if (0 == args.length) {
             System.out.println(progname + " " + version);
