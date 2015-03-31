@@ -40,7 +40,8 @@ public class DfsSolver extends AbstractSolver {
         GreedyDfsStrategy.class,
         GreedyNextDfsStrategy.class,
         DeepDfsStrategy.class,
-        DeeperDfsStrategy.class
+        DeeperDfsStrategy.class,
+        ExhaustiveDfsStrategy.class
     };
 
     private Class<? extends DfsStrategy> strategyClass;
@@ -95,6 +96,8 @@ public class DfsSolver extends AbstractSolver {
             result = new DeepDfsStrategy(this.board, startPos);
         } else if (DeeperDfsStrategy.class.equals(this.strategyClass)) {
             result = new DeeperDfsStrategy(this.board, startPos);
+        } else if (ExhaustiveDfsStrategy.class.equals(this.strategyClass)) {
+            result = new ExhaustiveDfsStrategy();
         } else {
             throw new IllegalArgumentException(
                     "DfsSolver.makeStrategy() - unsupported strategy class " + this.strategyClass.getName());
