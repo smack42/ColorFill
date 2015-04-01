@@ -69,7 +69,7 @@ public abstract class AbstractSolver implements Solver {
         if (this.solutions.size() > 0) {
             return this.solutions.get(0);
         } else {
-            return Solution.EMPTY_SOLUTION;
+            return new Solution(new byte[0], this.getSolverName());
         }
     }
 

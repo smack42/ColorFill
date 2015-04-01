@@ -24,11 +24,6 @@ import java.util.Arrays;
  */
 public class Solution {
 
-    /**
-     * an empty solution, with zero steps and no solver name.
-     */
-    public static final Solution EMPTY_SOLUTION = new Solution(new byte[0], "");
-
     private final byte[] steps;
     private final String stepsString;
     private final String solverName;
