@@ -17,9 +17,19 @@
 
 package colorfill.solver;
 
+import java.util.Arrays;
+import java.util.Collection;
+
+import net.jpountz.xxhash.XXHash32;
+import net.jpountz.xxhash.XXHashFactory;
+
 import it.unimi.dsi.fastutil.bytes.ByteList;
+import it.unimi.dsi.fastutil.bytes.ByteListIterator;
+import it.unimi.dsi.fastutil.ints.Int2ByteOpenCustomHashMap;
+import it.unimi.dsi.fastutil.ints.IntHash;
 import it.unimi.dsi.fastutil.objects.ReferenceSet;
 
+import colorfill.model.Board;
 import colorfill.model.ColorArea;
 
 /**
@@ -34,6 +44,17 @@ import colorfill.model.ColorArea;
  */
 public class ExhaustiveDfsStrategy implements DfsStrategy {
 
+    private final byte[] thisState;
+    private final byte[] nextState;
+    private final StateMap stateMap;
+
+    public ExhaustiveDfsStrategy(final Board board) {
+        final int stateBytes = (board.getColorAreas().size() + 7) >> 3;
+        this.thisState = new byte[stateBytes];
+        this.nextState = new byte[stateBytes];
+        this.stateMap = new StateMap(stateBytes);
+    }
+
     @Override
     public ByteList selectColors(final int depth,
             final byte thisColor,
@@ -44,7 +65,116 @@ public class ExhaustiveDfsStrategy implements DfsStrategy {
         ByteList result = neighbors.getColorsCompleted(notFlooded);
         if (result.isEmpty()) {
             result = neighbors.getColorsNotEmpty();
+
+            // filter the result: remove colors which result in already known states
+            this.makeThisState(flooded);
+            final ByteListIterator it = result.iterator();
+            while (it.hasNext()) {
+                final byte nextColor = it.nextByte();
+                this.makeNextState(neighbors.getColor(nextColor));
+                if (false == this.stateMap.put(this.nextState, depth + 1)) {
+                    it.remove();
+                }
+            }
         }
         return result;
+    }
+
+    /** store the id's of the color areas as bits in thisState */
+    private void makeThisState(final Collection<ColorArea> flooded) {
+        Arrays.fill(this.thisState, (byte)0);
+        for (final ColorArea ca : flooded) {
+            final int id = ca.getId();
+            this.thisState[id >> 3] |= 1 << (id & 7);
+        }
+    }
+    /** copy thisState and store the id's of the color areas as bits in nextState */
+    private void makeNextState(final Collection<ColorArea> flooded) {
+        System.arraycopy(this.thisState, 0, this.nextState, 0, this.thisState.length);
+        for (final ColorArea ca : flooded) {
+            final int id = ca.getId();
+            this.nextState[id >> 3] |= 1 << (id & 7);
+        }
+    }
+
+
+    /** this class is a minimal HashMap implementation that is used here
+     * to store the known states and the depths they were found at */
+    private static class StateMap {
+
+        private static final int MEMORY_BLOCK_SHIFT = 20; // 20 == 1 MiB
+        private static final int MEMORY_BLOCK_SIZE = 1 << MEMORY_BLOCK_SHIFT;
+        private static final int MEMORY_BLOCK_MASK = MEMORY_BLOCK_SIZE - 1;
+        private byte[][] memoryBlocks = new byte[100][];
+        private int numMemoryBlocks = 0, nextState = 0, nextMemoryBlock = 0;
+
+        private final int stateSize;
+        private final Int2ByteOpenCustomHashMap theMap = new Int2ByteOpenCustomHashMap(new HashStrategy());
+
+        /** this hash strategy accesses the data in the StateMap memory arrays */
+        private class HashStrategy implements IntHash.Strategy {
+            private final XXHash32 xxhash32 = XXHashFactory.fastestJavaInstance().hash32();
+
+            @Override
+            public boolean equals(final int arg0, final int arg1) {
+                final byte[] memory0 = StateMap.this.memoryBlocks[arg0 >>> MEMORY_BLOCK_SHIFT];
+                int offset0 = arg0 & MEMORY_BLOCK_MASK;
+                final byte[] memory1 = StateMap.this.memoryBlocks[arg1 >>> MEMORY_BLOCK_SHIFT];
+                int offset1 = arg1 & MEMORY_BLOCK_MASK;
+                final int offset0end = offset0 + StateMap.this.stateSize;
+                do {
+                    if (memory0[offset0++] != memory1[offset1++]) {
+                        return false; // not equal
+                    }
+                } while (offset0 < offset0end);
+                return true; // equal
+            }
+
+            @Override
+            public int hashCode(final int arg0) {
+                final byte[] memory = StateMap.this.memoryBlocks[arg0 >>> MEMORY_BLOCK_SHIFT];
+                final int offset = arg0 & MEMORY_BLOCK_MASK;
+                final int hash = this.xxhash32.hash(memory, offset, StateMap.this.stateSize, 0x9747b28c);
+                return hash;
+            }
+        }
+
+        /** the constructor.
+         * @param stateSize number of bytes in a single state
+         */
+        public StateMap(final int stateSize) {
+            this.stateSize = stateSize;
+        }
+
+        /** add state to this map, assign depth to it and return true
+         *  if the state is not present yet
+         *  or if it's present and had a larger depth assigned to it.
+         * @param state to be stored (as key)
+         * @param depth to be assigned (as value) to state
+         * @return true if the state/depth pair was added.
+         */
+        public boolean put(final byte[] state, final int depth) {
+            assert this.stateSize == state.length;
+            // ensure that nextState points to next available memory position
+            if (this.nextState + this.stateSize > this.nextMemoryBlock) {
+                if (this.memoryBlocks.length <= this.numMemoryBlocks) {
+                    this.memoryBlocks = Arrays.copyOf(this.memoryBlocks, this.memoryBlocks.length << 1);
+                }
+                this.memoryBlocks[this.numMemoryBlocks++] = new byte[MEMORY_BLOCK_SIZE];
+                this.nextState = this.nextMemoryBlock;
+                this.nextMemoryBlock += MEMORY_BLOCK_SIZE;
+            }
+            // copy state into memory at nextState
+            final byte[] memory = this.memoryBlocks[this.nextState >>> MEMORY_BLOCK_SHIFT];
+            final int offset = this.nextState & MEMORY_BLOCK_MASK;
+            System.arraycopy(state, 0, memory, offset, this.stateSize);
+            // add to theMap, increment nextState only if we want to accept the new state/depth pair
+            final int oldDepth = 0xff & this.theMap.put(this.nextState, (byte)depth);
+            if ((0 == oldDepth) || (depth < oldDepth)) { // not found or larger depth
+                this.nextState += this.stateSize;
+                return true; // added
+            }
+            return false; // not added
+        }
     }
 }

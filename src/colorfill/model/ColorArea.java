@@ -29,6 +29,7 @@ import java.util.SortedSet;
  * ColorArea represents a connected area of cells that have the same color.
  */
 public class ColorArea implements Comparable<ColorArea> {
+    private int id;
     private final byte color;
     private final int boardWidth;
     private final IntSortedSet members = new IntAVLTreeSet(); // sorted set - used by compareTo!
@@ -147,10 +148,16 @@ public class ColorArea implements Comparable<ColorArea> {
     }
 
     public int getDepth() {
-        return depth;
+        return this.depth;
     }
-
     public void setDepth(int depth) {
         this.depth = depth;
+    }
+
+    public int getId() {
+        return this.id;
+    }
+    public void setId(final int id) {
+        this.id = id;
     }
 }

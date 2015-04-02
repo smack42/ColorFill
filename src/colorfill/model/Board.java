@@ -179,7 +179,9 @@ public class Board {
             }
         }
         // set cellsColorAreas
+        int id = 0;
         for (final ColorArea ca : result) {
+            ca.setId(id++);
             for (final int member : ca.getMembers()) {
                 this.cellsColorAreas[member] = ca;
             }

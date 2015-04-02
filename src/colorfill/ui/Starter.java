@@ -33,6 +33,7 @@ import colorfill.model.Board;
 import colorfill.solver.DeepDfsStrategy;
 import colorfill.solver.DeeperDfsStrategy;
 import colorfill.solver.DfsSolver;
+import colorfill.solver.ExhaustiveDfsStrategy;
 import colorfill.solver.GreedyDfsStrategy;
 import colorfill.solver.GreedyNextDfsStrategy;
 import colorfill.solver.Solution;
@@ -43,19 +44,21 @@ import colorfill.solver.Strategy;
 public class Starter {
 
     public static void main(String[] args) throws Exception {
-        final String progname = "ColorFill";
-        final String version  = "0.1.8 (2015-03-15)";
+        final String progname = "ColorFill __DEV__";
+        final String version  = "0.1.9 (2015-04-02)";
         final String author   = "Copyright (C) 2015 Michael Henke <smack42@gmail.com>";
-        if (0 == args.length) {
-            System.out.println(progname + " " + version);
-            System.out.println(author);
-            new MainController(progname, version, author);
-        } else {
-            runSolverPc19(progname + " " + version, author, args[0]);
-        }
-//        testCheckOne();
-//        testCheckPc19();
-//        testSolverPc19();
+        System.out.println(progname + " " + version);
+        System.out.println(author);
+
+//        if (0 == args.length) {
+//            new MainController(progname, version, author);
+//        } else {
+//            runSolverPc19(args[0]);
+//        }
+
+//      testCheckOne();
+//      testCheckPc19();
+        testSolverPc19();
     }
 
 
@@ -135,7 +138,8 @@ public class Starter {
             GreedyDfsStrategy.class,
             GreedyNextDfsStrategy.class,
             DeepDfsStrategy.class,
-            DeeperDfsStrategy.class
+            DeeperDfsStrategy.class,
+            ExhaustiveDfsStrategy.class
         };
         final int startPos = 0;
 
@@ -217,11 +221,9 @@ public class Starter {
 
 
 
-    private static void runSolverPc19(final String title, final String author, final String inputFileName) throws Exception {
+    private static void runSolverPc19(final String inputFileName) throws Exception {
         final int startPos = 0;
         final String outputFileName = "results.txt";
-        System.out.println(title);
-        System.out.println(author);
         System.out.println("running Programming Challenge 19");
         System.out.println("reading  input file: " + inputFileName);
         System.out.println("writing output file: " + outputFileName);
