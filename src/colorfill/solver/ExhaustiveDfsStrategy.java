@@ -173,8 +173,13 @@ public class ExhaustiveDfsStrategy implements DfsStrategy {
             if ((0 == oldDepth) || (depth < oldDepth)) { // not found or larger depth
                 this.nextState += this.stateSize;
                 return true; // added
+            } else {
+                // restore previous depth value
+                if (depth > oldDepth) {
+                    this.theMap.put(this.nextState, (byte)oldDepth);
+                }
+                return false; // not added
             }
-            return false; // not added
         }
     }
 }
