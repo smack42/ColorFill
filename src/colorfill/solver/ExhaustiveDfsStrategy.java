@@ -118,15 +118,15 @@ public class ExhaustiveDfsStrategy implements DfsStrategy {
             @Override
             public boolean equals(final int arg0, final int arg1) {
                 final byte[] memory0 = StateMap.this.memoryBlocks[arg0 >>> MEMORY_BLOCK_SHIFT];
-                int offset0 = arg0 & MEMORY_BLOCK_MASK;
+                int offset0 = (arg0 & MEMORY_BLOCK_MASK) - 1;
                 final byte[] memory1 = StateMap.this.memoryBlocks[arg1 >>> MEMORY_BLOCK_SHIFT];
-                int offset1 = arg1 & MEMORY_BLOCK_MASK;
-                final int offset0end = offset0 + StateMap.this.stateSize;
+                int offset1 = (arg1 & MEMORY_BLOCK_MASK) - 1;
+                int count = StateMap.this.stateSize;
                 do {
-                    if (memory0[offset0++] != memory1[offset1++]) {
+                    if (memory0[++offset0] != memory1[++offset1]) {
                         return false; // not equal
                     }
-                } while (offset0 < offset0end);
+                } while (--count > 0);
                 return true; // equal
             }
 
