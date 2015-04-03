@@ -45,20 +45,20 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill __DEV__";
-        final String version  = "0.1.9 (2015-04-02)";
+        final String version  = "0.1.9 (2015-04-03)";
         final String author   = "Copyright (C) 2015 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
 
-//        if (0 == args.length) {
-//            new MainController(progname, version, author);
-//        } else {
-//            runSolverPc19(args[0]);
-//        }
+        if (0 == args.length) {
+            new MainController(progname, version, author);
+        } else {
+            testSolverPc19(args[0]);
+            //runSolverPc19(args[0]);
+        }
 
 //      testCheckOne();
 //      testCheckPc19();
-        testSolverPc19();
     }
 
 
@@ -132,7 +132,7 @@ public class Starter {
      * @throws InterruptedException
      */
     @SuppressWarnings("unchecked")
-    private static void testSolverPc19() throws IOException, InterruptedException {
+    private static void testSolverPc19(final String inputFileName) throws IOException, InterruptedException {
         // which strategies to run
         final Class<?>[] STRATEGIES = {
             GreedyDfsStrategy.class,
@@ -143,6 +143,11 @@ public class Starter {
         };
         final int startPos = 0;
 
+        final String outputFileName = "results.txt";
+        System.out.println("running Programming Challenge 19");
+        System.out.println("reading  input file: " + inputFileName);
+        System.out.println("writing output file: " + outputFileName);
+
         // some counters
         int countStepsBest = 0, countSteps25Best = 0;
         final Solution[] stSolution = new Solution[STRATEGIES.length];
@@ -151,7 +156,9 @@ public class Starter {
         final long[] stNanoTime = new long[STRATEGIES.length];
 
         // read lines from the input file
-        final BufferedReader brTiles = new BufferedReader(new FileReader("pc19/tiles.txt"));
+        final BufferedReader brTiles = new BufferedReader(new FileReader(inputFileName));
+        final PrintWriter pwResults = new PrintWriter(new FileWriter(outputFileName));
+
         int count = 0;
         for (String lineTiles = brTiles.readLine();  lineTiles != null;  lineTiles = brTiles.readLine()) {
             ++count;
@@ -200,6 +207,7 @@ public class Starter {
                     padRight(stSolution[minStrategy] + "____________" + minSteps, 30 + 12 + 2 + 2)  +
                     (minSteps > 25 ? "!!!!!!!  " : "         ") +
                     minStrategy + "_" + stSolution[minStrategy].getSolverName());
+            pwResults.println(stSolution[minStrategy].toString());
             //if (100 == count) break; // for (lineTiles)
         }
         // print summary
@@ -216,6 +224,8 @@ public class Starter {
         }
         System.out.println("total steps:   " + countStepsBest);
         System.out.println("total steps25: " + countSteps25Best + (1000 == count ? "  (Programming Challenge 19 score)" : ""));
+        pwResults.println("Total Moves = " + countSteps25Best);
+        pwResults.close();
         brTiles.close();
     }
 
