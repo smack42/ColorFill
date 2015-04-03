@@ -40,8 +40,8 @@ public class DfsSolver extends AbstractSolver {
         GreedyDfsStrategy.class,
         GreedyNextDfsStrategy.class,
         DeepDfsStrategy.class,
-        DeeperDfsStrategy.class,
-        ExhaustiveDfsStrategy.class
+        DeeperDfsStrategy.class
+        //,ExhaustiveDfsStrategy.class // this one is very slow and needs very much RAM!
     };
 
     private Class<? extends DfsStrategy> strategyClass;
