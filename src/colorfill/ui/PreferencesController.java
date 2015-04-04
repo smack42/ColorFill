@@ -34,7 +34,7 @@ public class PreferencesController {
             final String progname, final String version, final String author) {
         this.mainController = mainController;
         this.gameState = gameState;
-        this.prefDialog = new PreferencesDialog(this, mainWindow, progname, version, author);
+        this.prefDialog = new PreferencesDialog(this, mainWindow, progname, version, author, this.getAllUiColors());
     }
 
     protected void showDialog() {

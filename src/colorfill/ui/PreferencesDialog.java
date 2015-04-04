@@ -18,6 +18,8 @@
 package colorfill.ui;
 
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -25,17 +27,19 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ResourceBundle;
 
-import javax.swing.ButtonGroup;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.KeyStroke;
+import javax.swing.ListCellRenderer;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 
@@ -43,7 +47,6 @@ import colorfill.model.GridLinesEnum;
 import colorfill.model.StartPositionEnum;
 
 import net.java.dev.designgridlayout.DesignGridLayout;
-import net.java.dev.designgridlayout.ISpannableGridRow;
 import net.java.dev.designgridlayout.Tag;
 
 public class PreferencesDialog extends JDialog {
@@ -54,6 +57,7 @@ public class PreferencesDialog extends JDialog {
 
     private final PreferencesController controller;
     private final MainWindow mainWindow;
+    private final Color[][] allUiColors;
 
     private final JSpinner jspinWidth = new JSpinner();
     private final JSpinner jspinHeight = new JSpinner();
@@ -63,7 +67,7 @@ public class PreferencesDialog extends JDialog {
     private final JButton buttonOk = new JButton();
     private final JButton buttonCancel = new JButton();
     private final JButton buttonDefaults = new JButton();
-    private final JRadioButton[] rbuttonsColors;
+    private final JComboBox jcomboColorSchemes = new JComboBox(); // Java 6: rawtype JComboBox
     private final JComboBox jcomboGridLines = new JComboBox(); // Java 6: rawtype JComboBox
 
     private boolean closedByOkButton = false;
@@ -75,10 +79,11 @@ public class PreferencesDialog extends JDialog {
      * @param mainWindow
      */
     protected PreferencesDialog(final PreferencesController controller, final MainWindow mainWindow,
-            final String progname, final String version, final String author) {
+            final String progname, final String version, final String author, final Color[][] allUiColors) {
         super(mainWindow, true); // modal
         this.controller = controller;
         this.mainWindow = mainWindow;
+        this.allUiColors = allUiColors;
         this.setTitle(L10N.getString("pref.Title.txt"));
         this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
@@ -95,9 +100,7 @@ public class PreferencesDialog extends JDialog {
         layout.row().left().fill().add(new JSeparator());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.GridLines.txt"))).addMulti(this.makeJcomboGridLines());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.CellSize.txt"))).addMulti(this.makeJspinCellSize());
-        final Color[][] allUiColors = this.controller.getAllUiColors();
-        this.rbuttonsColors = new JRadioButton[allUiColors.length];
-        this.makeColorButtons(layout, allUiColors);
+        layout.row().grid(new JLabel(L10N.getString("pref.lbl.ColorScheme.txt"))).addMulti(this.makeJcomboColorSchemes());
         layout.row().left().fill().add(new JSeparator());
         layout.row().left().addMulti(this.makeButtonDefaults());
         layout.row().bar().add(this.makeButtonOk(), Tag.OK).add(this.makeButtonCancel(), Tag.CANCEL);
@@ -153,38 +156,69 @@ public class PreferencesDialog extends JDialog {
             public void actionPerformed(ActionEvent e) {
                 PreferencesDialog.this.controller.userPreviewUiColors(
                         PreferencesDialog.this.getSelectedColorSchemeNumber(),
-                        ((GridLinesItem)PreferencesDialog.this.jcomboGridLines.getSelectedItem()).gle);
+                        PreferencesDialog.this.getSelectedGridLinesEnum());
             }
         });
         return this.jcomboGridLines;
     }
 
-    private void makeColorButtons(final DesignGridLayout layout, final Color[][] allUiColors) {
-        final ButtonGroup bgroup = new ButtonGroup();
-        int i = 0;
-        for (final Color[] colorScheme : allUiColors) {
-            final int colorSchemeNumber = i++;
-            final ActionListener actionListener = new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    PreferencesDialog.this.rbuttonsColors[colorSchemeNumber].setSelected(true);
-                    PreferencesDialog.this.controller.userPreviewUiColors(
-                            colorSchemeNumber,
-                            ((GridLinesItem)PreferencesDialog.this.jcomboGridLines.getSelectedItem()).gle);
+    private JComboBox makeJcomboColorSchemes() { // Java 6: rawtype JComboBox
+        int i = 1;
+        for (final Color[] uiColors : this.allUiColors) {
+            this.jcomboColorSchemes.addItem(Integer.valueOf(i++));
+        }
+        this.jcomboColorSchemes.setRenderer(new ColorSchemeComboBoxRenderer());
+        this.jcomboColorSchemes.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                PreferencesDialog.this.controller.userPreviewUiColors(
+                        PreferencesDialog.this.getSelectedColorSchemeNumber(),
+                        PreferencesDialog.this.getSelectedGridLinesEnum());
+            }
+        });
+        return this.jcomboColorSchemes;
+    }
+
+
+    private class ColorSchemeComboBoxRenderer extends JLabel implements ListCellRenderer {
+        private final DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
+
+        @Override
+        public Component getListCellRendererComponent(final JList list, final Object value,
+                final int index, final boolean isSelected, final boolean cellHasFocus) {
+            final JLabel renderer = (JLabel)this.defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            final int uiColorsIndex = ((Integer)value).intValue() - 1;
+            renderer.setIcon(new ColorSchemeIcon(uiColorsIndex));
+            renderer.setHorizontalTextPosition(JLabel.LEADING);
+            return renderer;
+        }
+
+        private class ColorSchemeIcon implements Icon {
+            private final int uiColorsIndex;
+            private final int SIZE = 24; // TODO icon size adapting to JLabel text height
+            public ColorSchemeIcon(final int uiColorsIndex) {
+                this.uiColorsIndex = uiColorsIndex;
+            }
+            @Override
+            public int getIconWidth() {
+                return SIZE * PreferencesDialog.this.allUiColors[this.uiColorsIndex].length;
+            }
+            @Override
+            public int getIconHeight() {
+                return SIZE;
+            }
+            @Override
+            public void paintIcon(final Component c, final Graphics g, final int x, final int y) {
+                int i = 0;
+                for (final Color color : PreferencesDialog.this.allUiColors[this.uiColorsIndex]) {
+                    g.setColor(color);
+                    g.fillRect(x + i*SIZE, y, SIZE, SIZE);
+                    ++i;
                 }
-            };
-            final JLabel label = new JLabel(L10N.getString("pref.lbl.ColorScheme.txt"));
-            this.rbuttonsColors[colorSchemeNumber] = new JRadioButton("" + (colorSchemeNumber + 1));
-            bgroup.add(this.rbuttonsColors[colorSchemeNumber]);
-            this.rbuttonsColors[colorSchemeNumber].addActionListener(actionListener);
-            final ISpannableGridRow row = layout.row().grid(label).add(this.rbuttonsColors[colorSchemeNumber]);
-            for (int color = 0;  color < colorScheme.length;  ++color) {
-                final JButton button = new JButton(" ");
-                button.addActionListener(actionListener);
-                button.setBackground(colorScheme[color]);
-                row.add(button);
             }
         }
     }
+
 
     private JButton makeButtonOk() {
         this.buttonOk.setText(L10N.getString("pref.btn.OK.txt"));
@@ -195,7 +229,7 @@ public class PreferencesDialog extends JDialog {
                         ((Number)PreferencesDialog.this.jspinHeight.getValue()).intValue(),
                         ((Number)PreferencesDialog.this.jspinNumColors.getValue()).intValue(),
                         ((StartPosItem)PreferencesDialog.this.jcomboStartPos.getSelectedItem()).spe,
-                        ((GridLinesItem)PreferencesDialog.this.jcomboGridLines.getSelectedItem()).gle,
+                        PreferencesDialog.this.getSelectedGridLinesEnum(),
                         PreferencesDialog.this.getSelectedColorSchemeNumber(),
                         ((Number)PreferencesDialog.this.jspinCellSize.getValue()).intValue());
                 PreferencesDialog.this.closedByOkButton = true;
@@ -231,14 +265,11 @@ public class PreferencesDialog extends JDialog {
     }
 
     private int getSelectedColorSchemeNumber() {
-        int colorSchemeNumber = 0;
-        for (int i = 0;  i < this.rbuttonsColors.length;  ++i) {
-            if (this.rbuttonsColors[i].isSelected()) {
-                colorSchemeNumber = i;
-                break; // for (i)
-            }
-        }
-        return colorSchemeNumber;
+        return this.jcomboColorSchemes.getSelectedIndex();
+    }
+
+    private GridLinesEnum getSelectedGridLinesEnum() {
+        return ((GridLinesItem)this.jcomboGridLines.getSelectedItem()).gle;
     }
 
     /**
@@ -250,7 +281,7 @@ public class PreferencesDialog extends JDialog {
     }
     private void showDialogInternal() {
         this.closedByOkButton = false;
-        this.rbuttonsColors[this.controller.getUiColorsNumber()].setSelected(true);
+        this.jcomboColorSchemes.setSelectedIndex(this.controller.getUiColorsNumber());
         this.jspinWidth.setValue(Integer.valueOf(this.controller.getWidth()));
         this.jspinHeight.setValue(Integer.valueOf(this.controller.getHeight()));
         this.jspinNumColors.setValue(Integer.valueOf(this.controller.getNumColors()));
@@ -271,7 +302,7 @@ public class PreferencesDialog extends JDialog {
             final GridLinesEnum gle,
             final int uiColorsNumber,
             final int cellSize) {
-        this.rbuttonsColors[uiColorsNumber].setSelected(true);
+        this.jcomboColorSchemes.setSelectedIndex(uiColorsNumber);
         this.jspinWidth.setValue(Integer.valueOf(width));
         this.jspinHeight.setValue(Integer.valueOf(height));
         this.jspinNumColors.setValue(Integer.valueOf(numColors));
