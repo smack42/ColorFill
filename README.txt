@@ -13,6 +13,17 @@ http://www.oracle.com/technetwork/java/javase/downloads/index.html
 
 To run the program just doubleclick "colorfill.jar".
 
+On the command line run it like this:
+  java -jar colorfill.jar
+
+
+
+http://cplus.about.com/od/programmingchallenges/a/challenge19.htm
+If you're interested in the "Programming Challenge 19" results then
+have a look at the contents of folder "pc19".
+You can run ColorFill in "PC19 mode" using a command line like this:
+  java -Xmx8G -jar colorfill.jar pc19/tiles.txt
+(warning: this will run for some hours and needs several GB's of RAM)
 
 
 

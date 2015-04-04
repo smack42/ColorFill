@@ -2,6 +2,20 @@ ColorFill  CHANGES
 
 
 
+0.1.9 (2015-04-04)
+
+- added ExhaustiveDfsStrategy
+  * performs an exhaustive search and finds the optimal solutions
+  * not enabled in GUI mode, because it needs too much time and memory
+  * achieves a score of 20086 in Programming Challenge 19
+    http://cplus.about.com/od/programmingchallenges/a/challenge19.htm
+  * available in PC19 mode, which is activated when you specify the input
+    file name as command line parameter, like this:
+    java -Xmx8G -jar colorfill.jar pc19/tiles.txt
+- improved settings dialog: color scheme is now selected using a dropdown list
+
+
+
 0.1.8 (2015-03-15)
 
 - added application icon
