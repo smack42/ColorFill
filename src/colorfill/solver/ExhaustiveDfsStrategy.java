@@ -18,7 +18,6 @@
 package colorfill.solver;
 
 import java.util.Arrays;
-import java.util.Collection;
 
 import net.jpountz.xxhash.XXHash32;
 import net.jpountz.xxhash.XXHashFactory;
@@ -27,10 +26,8 @@ import it.unimi.dsi.fastutil.bytes.ByteList;
 import it.unimi.dsi.fastutil.bytes.ByteListIterator;
 import it.unimi.dsi.fastutil.ints.Int2ByteOpenCustomHashMap;
 import it.unimi.dsi.fastutil.ints.IntHash;
-import it.unimi.dsi.fastutil.objects.ReferenceSet;
 
 import colorfill.model.Board;
-import colorfill.model.ColorArea;
 
 /**
  * this strategy results in a complete search.
@@ -44,14 +41,14 @@ import colorfill.model.ColorArea;
  */
 public class ExhaustiveDfsStrategy implements DfsStrategy {
 
+    private final byte[] prevState;
     private final byte[] thisState;
-    private final byte[] nextState;
     private final StateMap stateMap;
 
     public ExhaustiveDfsStrategy(final Board board) {
         final int stateBytes = (board.getColorAreas().size() + 7) >> 3;
+        this.prevState = new byte[stateBytes];
         this.thisState = new byte[stateBytes];
-        this.nextState = new byte[stateBytes];
         this.stateMap = new StateMap(stateBytes);
     }
 
@@ -59,7 +56,7 @@ public class ExhaustiveDfsStrategy implements DfsStrategy {
     public ByteList selectColors(final int depth,
             final byte thisColor,
             final byte[] solution,
-            final ReferenceSet<ColorArea> flooded,
+            final ColorAreaSet flooded,
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
         ByteList result = neighbors.getColorsCompleted(notFlooded);
@@ -67,12 +64,12 @@ public class ExhaustiveDfsStrategy implements DfsStrategy {
             result = neighbors.getColorsNotEmpty();
 
             // filter the result: remove colors which result in already known states
-            this.makeThisState(flooded);
+            this.makePrevState(flooded);
             final ByteListIterator it = result.iterator();
             while (it.hasNext()) {
                 final byte nextColor = it.nextByte();
-                this.makeNextState(neighbors.getColor(nextColor));
-                if (false == this.stateMap.put(this.nextState, depth + 1)) {
+                this.makeThisState(neighbors.getColor(nextColor));
+                if (false == this.stateMap.put(this.thisState, depth + 1)) {
                     it.remove();
                 }
             }
@@ -80,20 +77,16 @@ public class ExhaustiveDfsStrategy implements DfsStrategy {
         return result;
     }
 
-    /** store the id's of the color areas as bits in thisState */
-    private void makeThisState(final Collection<ColorArea> flooded) {
-        Arrays.fill(this.thisState, (byte)0);
-        for (final ColorArea ca : flooded) {
-            final int id = ca.getId();
-            this.thisState[id >> 3] |= 1 << (id & 7);
-        }
+    /** store the id's of the color areas as bits in prevState */
+    private void makePrevState(final ColorAreaSet flooded) {
+        System.arraycopy(flooded.getArray(), 0, this.prevState, 0, this.prevState.length);
     }
-    /** copy thisState and store the id's of the color areas as bits in nextState */
-    private void makeNextState(final Collection<ColorArea> flooded) {
-        System.arraycopy(this.thisState, 0, this.nextState, 0, this.thisState.length);
-        for (final ColorArea ca : flooded) {
-            final int id = ca.getId();
-            this.nextState[id >> 3] |= 1 << (id & 7);
+    /** copy prevState and store the id's of the color areas as bits in thisState */
+    private void makeThisState(final ColorAreaSet flooded) {
+        System.arraycopy(this.prevState, 0, this.thisState, 0, this.thisState.length);
+        final byte[] src = flooded.getArray();
+        for (int i = 0;  i < src.length;  ++i) {
+            this.thisState[i] |= src[i];
         }
     }
 

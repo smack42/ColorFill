@@ -18,10 +18,8 @@
 package colorfill.solver;
 
 import it.unimi.dsi.fastutil.bytes.ByteList;
-import it.unimi.dsi.fastutil.objects.ReferenceSet;
 
 import colorfill.model.Board;
-import colorfill.model.ColorArea;
 
 /**
  * this strategy results in an incomplete search.
@@ -45,29 +43,13 @@ public class DeeperDfsStrategy implements DfsStrategy {
     public ByteList selectColors(final int depth,
             final byte thisColor,
             final byte[] solution,
-            final ReferenceSet<ColorArea> flooded,
+            final ColorAreaSet flooded,
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
         ByteList result = neighbors.getColorsCompleted(notFlooded);
         if (result.size() > 0) {
             return result;
         }
-
-        // slow. score(100)=2082  score(1000)=20815   164 seconds
         return neighbors.getColorsDepthOrLower(Math.min(depth + 1, this.maxDepth));
-
-        // very slow! score(100)=2071  score(1000)=???
-//        if (depth < this.maxDepth) {
-//            for (int i = depth + 1;  i > 0;  --i) {
-//                result = neighbors.getColorsDepth(i);
-//                if (result.size() > 0) {
-//                    return result;
-//                }
-//            }
-//            return result;
-//        } else {
-//            return neighbors.getColorsNotEmpty();
-//        }
-
     }
 }

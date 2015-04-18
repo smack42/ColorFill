@@ -18,11 +18,8 @@
 package colorfill.solver;
 
 import it.unimi.dsi.fastutil.bytes.ByteList;
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ReferenceSet;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 
 import colorfill.model.Board;
@@ -48,7 +45,7 @@ public class DfsSolver extends AbstractSolver {
     private DfsStrategy strategy;
 
     private byte[] solution;
-    private ReferenceSet<ColorArea> allFlooded;
+    private ColorAreaSet allFlooded;
     private ColorAreaGroup notFlooded;
 
     /**
@@ -120,8 +117,8 @@ public class DfsSolver extends AbstractSolver {
     protected void executeInternal(final int startPos) throws InterruptedException {
         this.strategy = this.makeStrategy(startPos);
 
-        final ColorArea startCa = this.board.getColorArea(startPos);
-        this.allFlooded = new ReferenceOpenHashSet<ColorArea>();
+        final ColorArea startCa = this.board.getColorArea4Cell(startPos);
+        this.allFlooded = new ColorAreaSet(this.board);
         this.notFlooded = new ColorAreaGroup(this.board);
         notFlooded.addAll(this.board.getColorAreas(), this.allFlooded);
         final ColorAreaGroup neighbors = new ColorAreaGroup(this.board);
@@ -144,7 +141,7 @@ public class DfsSolver extends AbstractSolver {
             final boolean saveNeighbors
             ) throws InterruptedException {
 
-        final Collection<ColorArea> thisFlooded = neighbors.getColor(thisColor);
+        final ColorAreaSet thisFlooded = neighbors.getColor(thisColor);
         int colorsNotFlooded = this.notFlooded.countColorsNotEmpty();
         if (thisFlooded.size() == this.notFlooded.getColor(thisColor).size()) {
             --colorsNotFlooded;

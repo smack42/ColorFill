@@ -86,9 +86,9 @@ public class GameProgress {
         this.stepColor.clear();
         this.stepColor.add(Integer.valueOf(this.board.getColor(startPos)));
         this.stepFlooded.clear();
-        this.stepFlooded.add(new HashSet<ColorArea>(Collections.singleton(this.board.getColorArea(startPos))));
+        this.stepFlooded.add(new HashSet<ColorArea>(Collections.singleton(this.board.getColorArea4Cell(startPos))));
         this.stepFloodNext.clear();
-        this.stepFloodNext.add(new HashSet<ColorArea>(this.board.getColorArea(startPos).getNeighbors()));
+        this.stepFloodNext.add(new HashSet<ColorArea>(this.board.getColorArea4Cell(startPos).getNeighbors()));
     }
 
     /**

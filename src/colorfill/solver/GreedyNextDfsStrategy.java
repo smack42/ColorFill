@@ -18,9 +18,6 @@
 package colorfill.solver;
 
 import it.unimi.dsi.fastutil.bytes.ByteList;
-import it.unimi.dsi.fastutil.objects.ReferenceSet;
-
-import colorfill.model.ColorArea;
 
 /**
  * this strategy results in an incomplete search.
@@ -40,7 +37,7 @@ public class GreedyNextDfsStrategy implements DfsStrategy {
     public ByteList selectColors(final int depth,
             final byte thisColor,
             final byte[] solution,
-            final ReferenceSet<ColorArea> flooded,
+            final ColorAreaSet flooded,
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
         ByteList result = neighbors.getColorsCompleted(notFlooded);

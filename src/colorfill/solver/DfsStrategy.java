@@ -18,9 +18,6 @@
 package colorfill.solver;
 
 import it.unimi.dsi.fastutil.bytes.ByteList;
-import it.unimi.dsi.fastutil.objects.ReferenceSet;
-
-import colorfill.model.ColorArea;
 
 /**
  * a strategy for the depth-first search (DFS) solver.
@@ -41,7 +38,7 @@ public interface DfsStrategy extends Strategy {
     public ByteList selectColors(int depth,
             byte thisColor,
             byte[] solution,
-            ReferenceSet<ColorArea> flooded,
+            ColorAreaSet flooded,
             ColorAreaGroup notFlooded,
             ColorAreaGroup neighbors);
 }

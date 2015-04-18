@@ -41,6 +41,7 @@ public class Board {
     private final SortedSet<ColorArea> colorAreas;
     private int startPos = -1; // -1 == none
     private int depth = -1; // -1 == not yet set
+    private ColorArea[] idsColorAreas;
 
     /**
      * construct a new Board using the specified parameters.
@@ -178,10 +179,12 @@ public class Board {
                 ca1.addNeighbor(ca2);
             }
         }
-        // set cellsColorAreas
+        // set cellsColorAreas and idsColorAreas
         int id = 0;
+        this.idsColorAreas = new ColorArea[result.size()];
         for (final ColorArea ca : result) {
             ca.setId(id++);
+            this.idsColorAreas[ca.getId()] = ca;
             for (final int member : ca.getMembers()) {
                 this.cellsColorAreas[member] = ca;
             }
@@ -211,7 +214,7 @@ public class Board {
         final Set<ColorArea> floodNeighbors = new ObjectRBTreeSet<ColorArea>();
         int floodColor = 0;
         // start with the ColorArea that contains cell startPos
-        final ColorArea startCa = this.getColorArea(startPos);
+        final ColorArea startCa = this.getColorArea4Cell(startPos);
         floodColor = startCa.getColor();
         floodAreas.add(startCa);
         floodNeighbors.addAll(startCa.getNeighbors());
@@ -276,7 +279,7 @@ public class Board {
         int depth = 0, result = 0;
         Collection<ColorArea> nextLevel = new ArrayList<ColorArea>();
         // find the ColorArea that contains cell startPos
-        final ColorArea startCa = this.getColorArea(startPos);
+        final ColorArea startCa = this.getColorArea4Cell(startPos);
         startCa.setDepth(depth);
         nextLevel.addAll(startCa.getNeighbors());
         // visit all ColorAreas and mark them with their depth
@@ -347,8 +350,12 @@ public class Board {
         return this.colorAreas;
     }
 
-    public ColorArea getColorArea(int cell) {
+    public ColorArea getColorArea4Cell(int cell) {
         return this.cellsColorAreas[cell];
+    }
+
+    public ColorArea getColorArea4Id(int id) {
+        return this.idsColorAreas[id];
     }
 
     public int getColor(int cell) {
