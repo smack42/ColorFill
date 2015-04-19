@@ -46,7 +46,7 @@ public class ExhaustiveDfsStrategy implements DfsStrategy {
     private final StateMap stateMap;
 
     public ExhaustiveDfsStrategy(final Board board) {
-        final int stateBytes = (board.getColorAreas().size() + 7) >> 3;
+        final int stateBytes = board.getSizeColorAreas8();
         this.prevState = new byte[stateBytes];
         this.thisState = new byte[stateBytes];
         this.stateMap = new StateMap(stateBytes);

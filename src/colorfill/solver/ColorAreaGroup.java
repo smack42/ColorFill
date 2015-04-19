@@ -21,8 +21,6 @@ import it.unimi.dsi.fastutil.bytes.ByteArrayList;
 import it.unimi.dsi.fastutil.bytes.ByteList;
 import it.unimi.dsi.fastutil.bytes.ByteLists;
 
-import java.util.Collection;
-
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
 
@@ -62,7 +60,7 @@ public class ColorAreaGroup {
      * @param addColorAreas the color areas to be added
      * @param excludeColorAreas color areas that are also members of this set will not be added
      */
-    public void addAll(final Collection<ColorArea> addColorAreas, final ColorAreaSet excludeColorAreas) {
+    public void addAll(final ColorArea[] addColorAreas, final ColorAreaSet excludeColorAreas) {
         for (final ColorArea ca : addColorAreas) {
             if (false == excludeColorAreas.contains(ca)) {
                 this.theArray[ca.getColor()].add(ca);
@@ -228,7 +226,7 @@ public class ColorAreaGroup {
         for (byte color = 0;  color < this.theArray.length;  ++color) {
             int count = 0;
             for (final ColorArea ca : this.theArray[color]) {
-                if (false == excludeNeighbors.containsAll(ca.getNeighbors())) {
+                if (false == excludeNeighbors.containsAll(ca.getNeighborsArray())) {
                     count += ca.getMembers().size();
                 }
             }
@@ -255,9 +253,9 @@ public class ColorAreaGroup {
         for (byte color = 0;  color < this.theArray.length;  ++color) {
             int count = 0;
             for (final ColorArea ca : this.theArray[color]) {
-                for (final ColorArea caNext : ca.getNeighbors()) {
+                for (final ColorArea caNext : ca.getNeighborsArray()) {
                     if ((false == excludeNeighbors.contains(caNext))
-                            && excludeNeighbors.containsNone(caNext.getNeighbors())) {
+                            && excludeNeighbors.containsNone(caNext.getNeighborsArray())) {
                         count += caNext.getMembers().size();
                     }
                 }

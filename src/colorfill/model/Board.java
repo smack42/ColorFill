@@ -19,8 +19,6 @@ package colorfill.model;
 
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
-import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
-import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,6 +26,7 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * The Board class represents the board (or game problem)
@@ -42,6 +41,7 @@ public class Board {
     private int startPos = -1; // -1 == none
     private int depth = -1; // -1 == not yet set
     private ColorArea[] idsColorAreas;
+    private int sizeColorAreas8;
 
     /**
      * construct a new Board using the specified parameters.
@@ -58,7 +58,7 @@ public class Board {
         this.colors = colors;
         this.cells = new byte[len];
         this.cellsColorAreas = new ColorArea[len];
-        this.colorAreas = new ObjectAVLTreeSet<ColorArea>();
+        this.colorAreas = new TreeSet<ColorArea>();
         this.randomCellColors();
         this.startPos = this.depth = -1;
     }
@@ -97,7 +97,7 @@ public class Board {
             this.cells[i] = (byte)(Byte.parseByte(String.valueOf(c)) - 1);
         }
         this.cellsColorAreas = new ColorArea[len];
-        this.colorAreas = new ObjectAVLTreeSet<ColorArea>();
+        this.colorAreas = new TreeSet<ColorArea>();
         this.colorAreas.addAll(this.createColorAreas());
         final IntSortedSet colors = new IntAVLTreeSet();
         for (final byte color : this.cells) {
@@ -182,7 +182,9 @@ public class Board {
         // set cellsColorAreas and idsColorAreas
         int id = 0;
         this.idsColorAreas = new ColorArea[result.size()];
+        this.sizeColorAreas8 = (result.size() + 7) >> 3; // how many bytes are needed to store them as bits?
         for (final ColorArea ca : result) {
+            ca.makeNeighborsArray();
             ca.setId(id++);
             this.idsColorAreas[ca.getId()] = ca;
             for (final int member : ca.getMembers()) {
@@ -210,8 +212,8 @@ public class Board {
             final char c = str.charAt(i);
             solution[i] = (byte)(Byte.parseByte(String.valueOf(c)) - 1);
         }
-        final Set<ColorArea> floodAreas = new ObjectRBTreeSet<ColorArea>();
-        final Set<ColorArea> floodNeighbors = new ObjectRBTreeSet<ColorArea>();
+        final Set<ColorArea> floodAreas = new TreeSet<ColorArea>();
+        final Set<ColorArea> floodNeighbors = new TreeSet<ColorArea>();
         int floodColor = 0;
         // start with the ColorArea that contains cell startPos
         final ColorArea startCa = this.getColorArea4Cell(startPos);
@@ -225,7 +227,7 @@ public class Board {
             }
             floodColor = solutionColor;
             // add all floodNeighbors of matching color to floodAreas
-            final Set<ColorArea> newFloodAreas = new ObjectRBTreeSet<ColorArea>();
+            final Set<ColorArea> newFloodAreas = new TreeSet<ColorArea>();
             for (final ColorArea ca : floodNeighbors) {
                 if (ca.getColor() == floodColor) {
                     newFloodAreas.add(ca);
@@ -239,7 +241,7 @@ public class Board {
             floodNeighbors.removeAll(newFloodAreas);
             // add new neighbors to floodNeighbors
             for (final ColorArea ca : newFloodAreas) {
-                for (final ColorArea caN : ca.getNeighbors()) {
+                for (final ColorArea caN : ca.getNeighborsArray()) {
                     if (false == floodAreas.contains(caN)) {
                         floodNeighbors.add(caN);
                     }
@@ -384,5 +386,9 @@ public class Board {
 
     public int getSize() {
         return this.cells.length;
+    }
+
+    public int getSizeColorAreas8() {
+        return this.sizeColorAreas8;
     }
 }

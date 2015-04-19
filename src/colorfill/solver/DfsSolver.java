@@ -20,7 +20,6 @@ package colorfill.solver;
 import it.unimi.dsi.fastutil.bytes.ByteList;
 
 import java.util.Arrays;
-import java.util.Collections;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
@@ -120,9 +119,9 @@ public class DfsSolver extends AbstractSolver {
         final ColorArea startCa = this.board.getColorArea4Cell(startPos);
         this.allFlooded = new ColorAreaSet(this.board);
         this.notFlooded = new ColorAreaGroup(this.board);
-        notFlooded.addAll(this.board.getColorAreas(), this.allFlooded);
+        notFlooded.addAll(this.board.getColorAreas().toArray(new ColorArea[0]), this.allFlooded);
         final ColorAreaGroup neighbors = new ColorAreaGroup(this.board);
-        neighbors.addAll(Collections.singleton(startCa), this.allFlooded);
+        neighbors.addAll(new ColorArea[]{startCa}, this.allFlooded);
         this.solution = new byte[MAX_SEARCH_DEPTH];
 
         this.doRecursion(0, startCa.getColor(), neighbors, true);
@@ -167,7 +166,7 @@ public class DfsSolver extends AbstractSolver {
             neighbors.removeColor(thisColor);
             // add new neighbors
             for (final ColorArea ca : thisFlooded) {
-                neighbors.addAll(ca.getNeighbors(), this.allFlooded);
+                neighbors.addAll(ca.getNeighborsArray(), this.allFlooded);
             }
             // pick the "best" neighbor colors to go on
             final ByteList nextColors = this.strategy.selectColors(depth, thisColor, this.solution, this.allFlooded, this.notFlooded, neighbors);

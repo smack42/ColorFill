@@ -17,7 +17,6 @@
 
 package colorfill.solver;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -40,7 +39,7 @@ public class ColorAreaSet implements Iterable<ColorArea> {
      */
     public ColorAreaSet(final Board board) {
         this.board = board;
-        this.array = new byte[(board.getColorAreas().size() + 7) >> 3];
+        this.array = new byte[board.getSizeColorAreas8()];
         this.size = 0;
     }
 
@@ -93,11 +92,11 @@ public class ColorAreaSet implements Iterable<ColorArea> {
     }
 
     /**
-     * return true if this set contains all ColorAreas in the other collection
+     * return true if this set contains all ColorAreas in the array
      */
-    public boolean containsAll(final Collection<ColorArea> other) {
-        for (final ColorArea ca : other) {
-            if (false == this.contains(ca)) {
+    public boolean containsAll(final ColorArea[] others) {
+        for (final ColorArea other : others) {
+            if (false == this.contains(other)) {
                 return false;
             }
         }
@@ -105,11 +104,11 @@ public class ColorAreaSet implements Iterable<ColorArea> {
     }
 
     /**
-     * return true if this set contains none of the ColorAreas in the other collection
+     * return true if this set contains none of the ColorAreas in the array
      */
-    public boolean containsNone(final Collection<ColorArea> other) {
-        for (final ColorArea ca : other) {
-            if (true == this.contains(ca)) {
+    public boolean containsNone(final ColorArea[] others) {
+        for (final ColorArea other : others) {
+            if (true == this.contains(other)) {
                 return false;
             }
         }

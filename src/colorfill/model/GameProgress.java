@@ -142,7 +142,7 @@ public class GameProgress {
         final HashSet<ColorArea> floodNext = (HashSet<ColorArea>) this.stepFloodNext.get(this.numSteps).clone();
         floodNext.removeAll(newFlood);
         for (final ColorArea ca : newFlood) {
-            for (final ColorArea caN : ca.getNeighbors()) {
+            for (final ColorArea caN : ca.getNeighborsArray()) {
                 if (false == flooded.contains(caN)) {
                     floodNext.add(caN);
                 }
