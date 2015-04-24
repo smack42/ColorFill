@@ -47,9 +47,9 @@ public class DeeperDfsStrategy implements DfsStrategy {
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
         ByteList result = neighbors.getColorsCompleted(notFlooded);
-        if (result.size() > 0) {
-            return result;
+        if (null == result) {
+            result = neighbors.getColorsDepthOrLower(Math.min(depth + 1, this.maxDepth));
         }
-        return neighbors.getColorsDepthOrLower(Math.min(depth + 1, this.maxDepth));
+        return result;
     }
 }

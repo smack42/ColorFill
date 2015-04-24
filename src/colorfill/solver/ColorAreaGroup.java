@@ -172,23 +172,19 @@ public class ColorAreaGroup {
     /**
      * get the colors that are contained completely in other.
      * @param other
-     * @return list of completed colors, may be empty
+     * @return list of completed colors or null
      */
     public ByteList getColorsCompleted(final ColorAreaGroup other) {
-        ByteList result = ByteLists.EMPTY_LIST;
         for (byte color = 0;  color < this.theArray.length;  ++color) {
             final ColorAreaSet thisSet = this.theArray[color];
             if (thisSet.size() > 0) {
                 final ColorAreaSet otherSet = other.theArray[color];
                 if ((thisSet.size() == otherSet.size()) && (thisSet.containsAll(otherSet))) {
-                    if (false == result instanceof ByteArrayList) {
-                        result = new ByteArrayList();
-                    }
-                    result.add(color);
+                    return ByteLists.singleton(color);
                 }
             }
         }
-        return result;
+        return null;
     }
 
     /**

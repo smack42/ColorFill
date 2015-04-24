@@ -41,13 +41,11 @@ import colorfill.model.Board;
  */
 public class ExhaustiveDfsStrategy implements DfsStrategy {
 
-    private final byte[] prevState;
     private final byte[] thisState;
     private final StateMap stateMap;
 
     public ExhaustiveDfsStrategy(final Board board) {
         final int stateBytes = board.getSizeColorAreas8();
-        this.prevState = new byte[stateBytes];
         this.thisState = new byte[stateBytes];
         this.stateMap = new StateMap(stateBytes);
     }
@@ -60,15 +58,14 @@ public class ExhaustiveDfsStrategy implements DfsStrategy {
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
         ByteList result = neighbors.getColorsCompleted(notFlooded);
-        if (result.isEmpty()) {
+        if (null == result) {
             result = neighbors.getColorsNotEmpty();
 
             // filter the result: remove colors which result in already known states
-            this.makePrevState(flooded);
             final ByteListIterator it = result.iterator();
             while (it.hasNext()) {
                 final byte nextColor = it.nextByte();
-                this.makeThisState(neighbors.getColor(nextColor));
+                this.makeThisState(flooded, neighbors.getColor(nextColor));
                 if (false == this.stateMap.put(this.thisState, depth + 1)) {
                     it.remove();
                 }
@@ -77,16 +74,12 @@ public class ExhaustiveDfsStrategy implements DfsStrategy {
         return result;
     }
 
-    /** store the id's of the color areas as bits in prevState */
-    private void makePrevState(final ColorAreaSet flooded) {
-        System.arraycopy(flooded.getArray(), 0, this.prevState, 0, this.prevState.length);
-    }
-    /** copy prevState and store the id's of the color areas as bits in thisState */
-    private void makeThisState(final ColorAreaSet flooded) {
-        System.arraycopy(this.prevState, 0, this.thisState, 0, this.thisState.length);
-        final byte[] src = flooded.getArray();
-        for (int i = 0;  i < src.length;  ++i) {
-            this.thisState[i] |= src[i];
+    /** store the id's of the color areas as bits in thisState */
+    private void makeThisState(final ColorAreaSet set1, final ColorAreaSet set2) {
+        System.arraycopy(set1.getArray(), 0, this.thisState, 0, this.thisState.length);
+        final byte[] arr2 = set2.getArray();
+        for (int i = 0;  i < arr2.length;  ++i) {
+            this.thisState[i] |= arr2[i];
         }
     }
 
