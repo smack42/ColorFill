@@ -1,11 +1,11 @@
 time nice java -Xmx8G -jar colorfill.jar pc19/tiles.txt > results_details.txt
 
-real	405m46.433s
-user	407m14.774s
-sys	2m33.320s
+real	351m27.948s
+user	353m56.464s
+sys	0m27.674s
 
 
-ColorFill __DEV__ 0.1.10 (2015-04-18)
+ColorFill __DEV__ 0.1.10 (2015-04-24)
 Copyright (C) 2015 Michael Henke <smack42@gmail.com>
 running Programming Challenge 19
 reading  input file: pc19/tiles.txt
@@ -1010,10 +1010,10 @@ writing output file: results.txt
 998  62613245412516412356____________20                     4_ExhaustiveDfsStrategy
 999  41624253145324156____________17                        3_DeeperDfsStrategy
 1000 51325151434531624315____________20                     3_DeeperDfsStrategy
-0_GreedyDfsStrategy      steps=22833  steps25=22761  best=17    checkOK=1000  checkFAIL=0     milliSeconds=1035   
-1_GreedyNextDfsStrategy  steps=22033  steps25=22012  best=67    checkOK=1000  checkFAIL=0     milliSeconds=323    
-2_DeepDfsStrategy        steps=21409  steps25=21404  best=159   checkOK=1000  checkFAIL=0     milliSeconds=11743  
-3_DeeperDfsStrategy      steps=20815  steps25=20815  best=399   checkOK=1000  checkFAIL=0     milliSeconds=65563  
-4_ExhaustiveDfsStrategy  steps=20086  steps25=20086  best=1000  checkOK=1000  checkFAIL=0     milliSeconds=24262935
+0_GreedyDfsStrategy      steps=22833  steps25=22761  best=17    checkOK=1000  checkFAIL=0     milliSeconds=704    
+1_GreedyNextDfsStrategy  steps=22033  steps25=22012  best=67    checkOK=1000  checkFAIL=0     milliSeconds=202    
+2_DeepDfsStrategy        steps=21409  steps25=21404  best=159   checkOK=1000  checkFAIL=0     milliSeconds=8110   
+3_DeeperDfsStrategy      steps=20815  steps25=20815  best=399   checkOK=1000  checkFAIL=0     milliSeconds=49704  
+4_ExhaustiveDfsStrategy  steps=20086  steps25=20086  best=1000  checkOK=1000  checkFAIL=0     milliSeconds=21024567
 total steps:   20086
 total steps25: 20086  (Programming Challenge 19 score)
