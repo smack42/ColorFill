@@ -17,6 +17,7 @@
 
 package colorfill.solver;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -44,12 +45,19 @@ public class ColorAreaSet implements Iterable<ColorArea> {
     }
 
     /**
-     * the copy constructor
+     * copy the contents of the other set into this set
      */
-    public ColorAreaSet(final ColorAreaSet other) {
-        this.board = other.board;
-        this.array = other.array.clone();
+    public void copyFrom(final ColorAreaSet other) {
+        System.arraycopy(other.array, 0, this.array, 0, this.array.length);
         this.size = other.size;
+    }
+
+    /**
+     * remove all ColorAreas from this set
+     */
+    public void clear() {
+        Arrays.fill(this.array, (byte)0);
+        this.size = 0;
     }
 
     /**

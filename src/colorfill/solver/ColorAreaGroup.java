@@ -45,13 +45,16 @@ public class ColorAreaGroup {
     }
 
     /**
-     * the copy constructor
+     * copy the contents of the other color area group into this one,
+     * except for the specified color which will be empty.
      */
-    public ColorAreaGroup(final ColorAreaGroup other) {
-        this.board = other.board;
-        this.theArray = new ColorAreaSet[this.board.getNumColors()];
+    public void copyFrom(final ColorAreaGroup other, final int exceptColor) {
         for (int color = 0;  color < this.theArray.length;  ++color) {
-            this.theArray[color] = new ColorAreaSet(other.theArray[color]);
+            if (color != exceptColor) {
+                this.theArray[color].copyFrom(other.theArray[color]);
+            } else {
+                this.theArray[color].clear();
+            }
         }
     }
 
@@ -274,13 +277,5 @@ public class ColorAreaGroup {
      */
     public ColorAreaSet getColor(final byte color) {
         return this.theArray[color];
-    }
-
-    /**
-     * remove from this object the areas of this color.
-     * @param color
-     */
-    public ColorAreaSet removeColor(final byte color) {
-        return this.theArray[color] = new ColorAreaSet(this.board);
     }
 }

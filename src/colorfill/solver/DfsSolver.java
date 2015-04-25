@@ -29,7 +29,7 @@ import colorfill.model.ColorArea;
  */
 public class DfsSolver extends AbstractSolver {
 
-    private static final int MAX_SEARCH_DEPTH = 500; // arbitrary limit
+    private static final int MAX_SEARCH_DEPTH = 150; // arbitrary limit
 
     @SuppressWarnings("rawtypes")
     private static final Class[] SUPPORTED_STRATEGIES = {
@@ -46,6 +46,7 @@ public class DfsSolver extends AbstractSolver {
     private byte[] solution;
     private ColorAreaSet allFlooded;
     private ColorAreaGroup notFlooded;
+    private ColorAreaGroup[] neighbors;
 
     /**
      * construct a new solver for this Board.
@@ -120,27 +121,27 @@ public class DfsSolver extends AbstractSolver {
         this.allFlooded = new ColorAreaSet(this.board);
         this.notFlooded = new ColorAreaGroup(this.board);
         notFlooded.addAll(this.board.getColorAreas().toArray(new ColorArea[0]), this.allFlooded);
-        final ColorAreaGroup neighbors = new ColorAreaGroup(this.board);
-        neighbors.addAll(new ColorArea[]{startCa}, this.allFlooded);
         this.solution = new byte[MAX_SEARCH_DEPTH];
+        this.neighbors = new ColorAreaGroup[MAX_SEARCH_DEPTH];
+        for (int i = 0;  i < this.neighbors.length;  ++i) {
+            this.neighbors[i] = new ColorAreaGroup(this.board);
+        }
+        this.neighbors[0].addAll(new ColorArea[]{startCa}, this.allFlooded);
 
-        this.doRecursion(0, startCa.getColor(), neighbors, true);
+        this.doRecursion(0, startCa.getColor());
     }
 
     /**
      * the recursion used in this depth-first search.
      * @param depth
      * @param thisColor
-     * @param neighbors
      * @throws InterruptedException
      */
     private void doRecursion(final int depth,
-            final byte thisColor,
-            ColorAreaGroup neighbors,
-            final boolean saveNeighbors
+            final byte thisColor
             ) throws InterruptedException {
-
-        final ColorAreaSet thisFlooded = neighbors.getColor(thisColor);
+        final ColorAreaGroup theseNeighbors = this.neighbors[depth];
+        final ColorAreaSet thisFlooded = theseNeighbors.getColor(thisColor);
         int colorsNotFlooded = this.notFlooded.countColorsNotEmpty();
         if (thisFlooded.size() == this.notFlooded.getColor(thisColor).size()) {
             --colorsNotFlooded;
@@ -160,20 +161,17 @@ public class DfsSolver extends AbstractSolver {
             this.solution[depth] = thisColor;
             this.notFlooded.removeAllColor(thisFlooded, thisColor);
             this.allFlooded.addAll(thisFlooded);
-            if (saveNeighbors) {
-                neighbors = new ColorAreaGroup(neighbors); // clone for backtracking
-            }
-            neighbors.removeColor(thisColor);
+            final ColorAreaGroup nextNeighbors = this.neighbors[depth + 1];
+            nextNeighbors.copyFrom(theseNeighbors, thisColor);
             // add new neighbors
             for (final ColorArea ca : thisFlooded) {
-                neighbors.addAll(ca.getNeighborsArray(), this.allFlooded);
+                nextNeighbors.addAll(ca.getNeighborsArray(), this.allFlooded);
             }
             // pick the "best" neighbor colors to go on
-            final ByteList nextColors = this.strategy.selectColors(depth, thisColor, this.solution, this.allFlooded, this.notFlooded, neighbors);
+            final ByteList nextColors = this.strategy.selectColors(depth, thisColor, this.solution, this.allFlooded, this.notFlooded, nextNeighbors);
             // go to next recursion level
-            final boolean nextSaveNeighbors = (nextColors.size() > 1);
             for (final byte nextColor : nextColors) {
-                doRecursion(depth + 1, nextColor, neighbors, nextSaveNeighbors);
+                doRecursion(depth + 1, nextColor);
             }
             this.allFlooded.removeAll(thisFlooded); // restore for backtracking
             this.notFlooded.addAllColor(thisFlooded, thisColor); // restore for backtracking
