@@ -20,6 +20,7 @@ package colorfill.ui;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.util.ResourceBundle;
 
 import javax.swing.AbstractAction;
@@ -122,6 +123,7 @@ public class ControlPanel extends JPanel {
 
     private JButton makeButtonNew() {
         this.buttonNew.setText(L10N.getString("ctrl.btn.New.txt"));
+        this.buttonNew.setMnemonic(KeyEvent.VK_N);
         this.buttonNew.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ControlPanel.this.controller.userButtonNew();
