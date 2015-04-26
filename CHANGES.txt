@@ -2,6 +2,13 @@ ColorFill  CHANGES
 
 
 
+0.1.10 (2015-04-26)
+
+- added shortcut key Alt-N to button New
+- solver algorithm speedup
+
+
+
 0.1.9 (2015-04-04)
 
 - added ExhaustiveDfsStrategy
