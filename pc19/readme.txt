@@ -22,7 +22,7 @@ Its ExhaustiveDfsStrategy scores 20086, which is the same score as the
 winning program by Aliaksei Sanko.
 
 20086 has to be the optimal (lowest possible) result, because it was found by
-an exhaustive search. That run took 6 CPU hours. (see details file)
+an exhaustive search. That run took 5 CPU hours. (see details file)
 
 The other DFS strategies of ColorFill are weaker but much faster, achieving
 a score of 20708 using only 1 CPU minute.
