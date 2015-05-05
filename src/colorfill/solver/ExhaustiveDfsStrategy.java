@@ -22,9 +22,9 @@ import java.util.Arrays;
 import net.jpountz.xxhash.XXHash32;
 import net.jpountz.xxhash.XXHashFactory;
 
+import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.bytes.ByteList;
 import it.unimi.dsi.fastutil.bytes.ByteListIterator;
-import it.unimi.dsi.fastutil.ints.Int2ByteOpenCustomHashMap;
 import it.unimi.dsi.fastutil.ints.IntHash;
 
 import colorfill.model.Board;
@@ -91,11 +91,11 @@ public class ExhaustiveDfsStrategy implements DfsStrategy {
         private static final int MEMORY_BLOCK_SHIFT = 20; // 20 == 1 MiB
         private static final int MEMORY_BLOCK_SIZE = 1 << MEMORY_BLOCK_SHIFT;
         private static final int MEMORY_BLOCK_MASK = MEMORY_BLOCK_SIZE - 1;
-        private byte[][] memoryBlocks = new byte[100][];
-        private int numMemoryBlocks = 0, nextState = 0, nextMemoryBlock = 0;
+        private byte[][] memoryBlocks = new byte[100][]; // constructor allocates first block
+        private int numMemoryBlocks = 1, nextState = 1, nextMemoryBlock = MEMORY_BLOCK_SIZE;
 
         private final int stateSize;
-        private final Int2ByteOpenCustomHashMap theMap = new Int2ByteOpenCustomHashMap(new HashStrategy());
+        private final Int2ByteOpenCustomHashMapPutIfLess theMap = new Int2ByteOpenCustomHashMapPutIfLess(100000000, Hash.FAST_LOAD_FACTOR, new HashStrategy());
 
         /** this hash strategy accesses the data in the StateMap memory arrays */
         private class HashStrategy implements IntHash.Strategy {
@@ -130,6 +130,7 @@ public class ExhaustiveDfsStrategy implements DfsStrategy {
          */
         public StateMap(final int stateSize) {
             this.stateSize = stateSize;
+            this.memoryBlocks[0] = new byte[MEMORY_BLOCK_SIZE];
         }
 
         /** add state to this map, assign depth to it and return true
@@ -155,15 +156,10 @@ public class ExhaustiveDfsStrategy implements DfsStrategy {
             final int offset = this.nextState & MEMORY_BLOCK_MASK;
             System.arraycopy(state, 0, memory, offset, this.stateSize);
             // add to theMap, increment nextState only if we want to accept the new state/depth pair
-            final int oldDepth = 0xff & this.theMap.put(this.nextState, (byte)depth);
-            if ((0 == oldDepth) || (depth < oldDepth)) { // not found or larger depth
+            if (this.theMap.putIfLess(this.nextState, (byte)depth)) {
                 this.nextState += this.stateSize;
                 return true; // added
             } else {
-                // restore previous depth value
-                if (depth > oldDepth) {
-                    this.theMap.put(this.nextState, (byte)oldDepth);
-                }
                 return false; // not added
             }
         }
