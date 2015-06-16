@@ -29,6 +29,7 @@ public class GamePreferences {
     private static final String PREFS_NUMCOLORS = "numColors";
     private static final String PREFS_STARTPOS  = "startPos";
     private static final String PREFS_GRIDLINES = "gridLines";
+    private static final String PREFS_BOARD_COLOR_NUMBERS = "boardColorNumbers";
     private static final String PREFS_CELLSIZE  = "cellSize";
     private static final String PREFS_COLSCHEME = "colorScheme";
     private static final String PREFS_GAMESTATE_BOARD    = "gameStateBoard";
@@ -43,6 +44,7 @@ public class GamePreferences {
     public static final int DEFAULT_BOARD_NUM_COLORS = 6;
     public static final StartPositionEnum DEFAULT_BOARD_STARTPOS = StartPositionEnum.TOP_LEFT;
     public static final GridLinesEnum DEFAULT_UI_GRIDLINES = GridLinesEnum.NONE;
+    public static final BoardColorNumbersEnum DEFAULT_UI_BOARD_COLOR_NUMBERS = BoardColorNumbersEnum.NONE;
     public static final int DEFAULT_UI_CELLSIZE = 32;
     public static final int DEFAULT_UI_COLSCHEME = 0;
     private static final Color[][] DEFAULT_UI_COLORS = {
@@ -110,6 +112,7 @@ public class GamePreferences {
     private int startPos;
     private int uiColors;
     private int gridLines;
+    private int uiBoardColorNumbers;
     private int cellSize;
 
     public GamePreferences() {
@@ -120,6 +123,7 @@ public class GamePreferences {
         this.uiColors = DEFAULT_UI_COLSCHEME;
         this.gridLines = DEFAULT_UI_GRIDLINES.intValue;
         this.cellSize = DEFAULT_UI_CELLSIZE;
+        this.uiBoardColorNumbers = DEFAULT_UI_BOARD_COLOR_NUMBERS.intValue;
         this.loadPrefs();
         this.savePrefs();
     }
@@ -211,6 +215,21 @@ public class GamePreferences {
         this.gridLines = gle.intValue;
     }
 
+    public int getBoardColorNumbers() {
+        return this.uiBoardColorNumbers;
+    }
+    public BoardColorNumbersEnum getBoardColorNumbersEnum() {
+        return BoardColorNumbersEnum.valueOf(this.uiBoardColorNumbers);
+    }
+    public void setBoardColorNumbers(final int uiBoardColorNumbers) {
+        if (null != BoardColorNumbersEnum.valueOf(uiBoardColorNumbers)) {
+            this.uiBoardColorNumbers = uiBoardColorNumbers;
+        }
+    }
+    public void setBoardColorNumbers(final BoardColorNumbersEnum bcne) {
+        this.uiBoardColorNumbers = bcne.intValue;
+    }
+
     public int getCellSize() {
         return this.cellSize;
     }
@@ -223,23 +242,25 @@ public class GamePreferences {
     }
 
     private void loadPrefs() {
-        this.setWidth(PREFS.getInt(PREFS_WIDTH, DEFAULT_BOARD_WIDTH));
-        this.setHeight(PREFS.getInt(PREFS_HEIGHT, DEFAULT_BOARD_HEIGHT));
-        this.setNumColors(PREFS.getInt(PREFS_NUMCOLORS, DEFAULT_BOARD_NUM_COLORS));
-        this.setStartPos(PREFS.getInt(PREFS_STARTPOS, DEFAULT_BOARD_STARTPOS.intValue));
-        this.setUiColorsNumber(PREFS.getInt(PREFS_COLSCHEME, DEFAULT_UI_COLSCHEME));
-        this.setGridLines(PREFS.getInt(PREFS_GRIDLINES, DEFAULT_UI_GRIDLINES.intValue));
-        this.setCellSize(PREFS.getInt(PREFS_CELLSIZE, DEFAULT_UI_CELLSIZE));
+        this.setWidth            (PREFS.getInt(PREFS_WIDTH,              DEFAULT_BOARD_WIDTH));
+        this.setHeight           (PREFS.getInt(PREFS_HEIGHT,             DEFAULT_BOARD_HEIGHT));
+        this.setNumColors        (PREFS.getInt(PREFS_NUMCOLORS,          DEFAULT_BOARD_NUM_COLORS));
+        this.setStartPos         (PREFS.getInt(PREFS_STARTPOS,           DEFAULT_BOARD_STARTPOS.intValue));
+        this.setUiColorsNumber   (PREFS.getInt(PREFS_COLSCHEME,          DEFAULT_UI_COLSCHEME));
+        this.setGridLines        (PREFS.getInt(PREFS_GRIDLINES,          DEFAULT_UI_GRIDLINES.intValue));
+        this.setBoardColorNumbers(PREFS.getInt(PREFS_BOARD_COLOR_NUMBERS,DEFAULT_UI_BOARD_COLOR_NUMBERS.intValue));
+        this.setCellSize         (PREFS.getInt(PREFS_CELLSIZE,           DEFAULT_UI_CELLSIZE));
     }
 
     public void savePrefs() {
-        PREFS.putInt(PREFS_WIDTH, this.getWidth());
-        PREFS.putInt(PREFS_HEIGHT, this.getHeight());
-        PREFS.putInt(PREFS_NUMCOLORS, this.getNumColors());
-        PREFS.putInt(PREFS_STARTPOS, this.getStartPos());
-        PREFS.putInt(PREFS_COLSCHEME, this.getUiColorsNumber());
-        PREFS.putInt(PREFS_GRIDLINES, this.getGridLines());
-        PREFS.putInt(PREFS_CELLSIZE, this.getCellSize());
+        PREFS.putInt(PREFS_WIDTH,              this.getWidth());
+        PREFS.putInt(PREFS_HEIGHT,             this.getHeight());
+        PREFS.putInt(PREFS_NUMCOLORS,          this.getNumColors());
+        PREFS.putInt(PREFS_STARTPOS,           this.getStartPos());
+        PREFS.putInt(PREFS_COLSCHEME,          this.getUiColorsNumber());
+        PREFS.putInt(PREFS_GRIDLINES,          this.getGridLines());
+        PREFS.putInt(PREFS_BOARD_COLOR_NUMBERS,this.getBoardColorNumbers());
+        PREFS.putInt(PREFS_CELLSIZE,           this.getCellSize());
     }
 
     public static void saveBoard(final Board board) {

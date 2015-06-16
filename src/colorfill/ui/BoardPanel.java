@@ -46,6 +46,7 @@ public class BoardPanel extends JPanel {
     private int columns, rows, startPos;
     private int[] cellColors = new int[0];
     private boolean[] cellHighlights = new boolean[0];
+    private boolean[] cellColorNumbers = new boolean[0];
     private GridLinesEnum gridLines;
 
     /**
@@ -109,16 +110,21 @@ public class BoardPanel extends JPanel {
         this.startPos = startPos;
         this.cellColors = new int[columns * rows];
         this.cellHighlights = new boolean[this.cellColors.length];
+        this.cellColorNumbers = new boolean[this.cellColors.length];
         this.setPreferredSize(new Dimension(columns * cellSize, rows * cellSize));
     }
 
     /**
      * set the colors of all cells.
      */
-    protected void setCellColors(final int[] cellColors, final GridLinesEnum gle) {
+    protected void setCellColors(final int[] cellColors, final GridLinesEnum gle, final Collection<Integer> collectionColorNumbers) {
         this.cellColors = cellColors;
         this.cellHighlights = new boolean[this.cellColors.length];
         this.gridLines = gle;
+        this.cellColorNumbers = new boolean[this.cellColors.length];
+        for (final Integer cell : collectionColorNumbers) {
+            this.cellColorNumbers[cell.intValue()] = true;
+        }
         this.repaint();
     }
 
@@ -129,6 +135,7 @@ public class BoardPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         final Graphics2D g2d = (Graphics2D) g.create();
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         final Dimension size = this.getSize();
         final int cellWidth = size.width / this.columns;
         final int cellHeight = size.height / this.rows;
@@ -140,27 +147,27 @@ public class BoardPanel extends JPanel {
         final int chHighlight = cellHeight - ch4 - ch4;
         for (int index = 0, y = 0, row = 0;  row < this.rows;  y += cellHeight, ++row) {
             for (int x = 0, column = 0;  column < this.columns;  x += cellWidth, ++column, ++index) {
-                final boolean highlight = this.cellHighlights[index];
                 final int color = this.cellColors[index];
                 g2d.setColor(this.uiColors[color]);
                 g2d.fillRect(x, y, cellWidth, cellHeight);
-                if (highlight) {
-                    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    g2d.setColor(Color.WHITE);
+                g2d.setColor(Color.WHITE);
+                if (this.cellHighlights[index]) {
                     g2d.fillOval(x + cw4, y + ch4, cwHighlight, chHighlight);
                 }
                 if (index == this.startPos) {
-                    g2d.setColor(Color.WHITE);
                     g2d.fillRect(x + cellWidth * 3/8, y + cellHeight * 3/8, cw4, ch4);
                 }
                 if (GridLinesEnum.NONE != this.gridLines) {
-                    g2d.setColor(Color.WHITE);
                     if ((column < this.columns - 1) && ((GridLinesEnum.ALL == this.gridLines) || (color != this.cellColors[index + 1]))) {
                         g2d.drawLine(x + cw1, y, x + cw1, y + ch1);
                     }
                     if ((row < this.rows - 1) && ((GridLinesEnum.ALL == this.gridLines) || (color != this.cellColors[index + this.columns]))) {
                         g2d.drawLine(x, y + ch1, x + cw1, y + ch1);
                     }
+                }
+                if (this.cellColorNumbers[index]) {
+                    final char[] text = { (char)('1' + color) };
+                    g2d.drawChars(text, 0, 1, x + 2, y + ch1 - 2);
                 }
             }
         }
@@ -179,9 +186,13 @@ public class BoardPanel extends JPanel {
         this.repaint();
     }
 
-    public void applyColorScheme(final Color[] uiColors, final GridLinesEnum gle) {
+    public void applyColorScheme(final Color[] uiColors, final GridLinesEnum gle, final Collection<Integer> collectionColorNumbers) {
         this.uiColors = uiColors;
         this.gridLines = gle;
+        this.cellColorNumbers = new boolean[this.cellColors.length];
+        for (final Integer cell : collectionColorNumbers) {
+            this.cellColorNumbers[cell.intValue()] = true;
+        }
         this.repaint();
     }
 }

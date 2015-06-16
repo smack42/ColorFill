@@ -24,6 +24,7 @@ import java.beans.PropertyChangeListener;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import colorfill.model.BoardColorNumbersEnum;
 import colorfill.model.GameProgress;
 import colorfill.model.GameState;
 import colorfill.model.GridLinesEnum;
@@ -145,8 +146,8 @@ public class MainController {
     /**
      * repaint board using this UI color scheme.
      */
-    protected void actionRepaintBoardUiColors(final Color[] uiColors, final GridLinesEnum gle) {
-        this.boardController.actionRepaintBoardUiColors(uiColors, gle);
+    protected void actionRepaintBoardUiColors(final Color[] uiColors, final GridLinesEnum gle, final BoardColorNumbersEnum bcne) {
+        this.boardController.actionRepaintBoardUiColors(uiColors, gle, bcne);
     }
 
     /**

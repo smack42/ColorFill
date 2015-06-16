@@ -257,6 +257,49 @@ public class GameProgress {
     }
 
     /**
+     * return the collection of cells matching the specified BoardColorNumbersEnum.
+     * @param bcne
+     * @return collection of board cells
+     */
+    public Collection<Integer> getBoardColorNumbers(final BoardColorNumbersEnum bcne) {
+        final Collection<Integer> collectionColorNumbers;
+        if (BoardColorNumbersEnum.ALL == bcne) {
+            collectionColorNumbers = this.getNonFloodedCells();
+        } else if (BoardColorNumbersEnum.NEXT == bcne) {
+            collectionColorNumbers = this.getFloodNeighborCells();
+        } else {
+            collectionColorNumbers = Collections.emptyList();
+        }
+        return collectionColorNumbers;
+    }
+
+    /**
+     * return a collection of all cells that belong to a neighbor area of the flooded area.
+     * @return collection of board cells
+     */
+    public Collection<Integer> getFloodNeighborCells() {
+        final ArrayList<Integer> result = new ArrayList<Integer>();
+        for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
+            result.addAll(ca.getMembers());
+        }
+        return result;
+    }
+
+    /**
+     * return a collection of all cells that don't belong to the flooded area.
+     * @return collection of board cells
+     */
+    public Collection<Integer> getNonFloodedCells() {
+        final ArrayList<Integer> result = new ArrayList<Integer>();
+        for (final ColorArea ca : this.board.getColorAreas()) {
+            if (false == this.stepFlooded.get(this.numSteps).contains(ca)) {
+                result.addAll(ca.getMembers());
+            }
+        }
+        return result;
+    }
+
+    /**
      * return the current step number in this game progress.
      * @return current step
      */
