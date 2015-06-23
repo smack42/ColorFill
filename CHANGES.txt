@@ -2,6 +2,13 @@ ColorFill  CHANGES
 
 
 
+0.1.11 (2015-06-23)
+
+- added "Color Numbers visible" option
+- solver algorithm speedup (ExhaustiveDfsStrategy for PC19 mode)
+
+
+
 0.1.10 (2015-04-26)
 
 - added shortcut key Alt-N to button New
