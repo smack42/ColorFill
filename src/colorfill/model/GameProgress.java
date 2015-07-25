@@ -351,4 +351,8 @@ public class GameProgress {
         }
         return sb.toString();
     }
+
+    public Board getBoard() {
+        return this.board;
+    }
 }

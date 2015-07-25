@@ -80,6 +80,21 @@ public class ControlController {
     }
 
     /**
+     * called by ControlPanel when user clicks on button "Hint"
+     */
+    public void userButtonHint() {
+        this.mainController.actionCalculateHint();
+    }
+
+    /**
+     * called by ControlPanel when mouse pointer enters or leaves "Color Hint" button.
+     * @param hintColor
+     */
+    public void userHintColor(int hintColor) {
+       this.mainController.actionHighlightColor(hintColor);
+    }
+
+    /**
      * called by ControlPanel when user clicks on one of the solution RadioButtons.
      * @param numSolution number of the selected solution (0 == user solution, other = solver solutions)
      */
@@ -112,5 +127,21 @@ public class ControlController {
     protected void actionAddSolverResult(final GameProgress gameProgress) {
 //        System.out.println("ControlController.actionAddSolverResult " + gameProgress);
         this.controlPanel.addSolverResult(gameProgress.getTotalSteps() + " " + gameProgress.getName());
+    }
+
+    /**
+     * show the hint in control panel.
+     * @param color
+     * @param estimatedSteps
+     */
+    public void actionShowHint(final Integer color, final Integer estimatedSteps) {
+        this.controlPanel.showHint(color, estimatedSteps);
+    }
+
+    /**
+     * hide the hint in control panel.
+     */
+    public void actionHideHint() {
+        this.controlPanel.hideHint();
     }
 }

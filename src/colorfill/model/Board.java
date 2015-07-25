@@ -138,6 +138,23 @@ public class Board {
         this.determineColorAreasDepth(startPos);
     }
 
+    /**
+     * construct a new from the values of the specified GameProgress.
+     * it copies the Board and then applies the steps already done in the user's solution.
+     * @param gp
+     * @return
+     */
+    public Board(final GameProgress gp) {
+        this(gp.getBoard().getWidth(), gp.getBoard().getHeight(), gp.getBoard().getNumColors());
+        final int[] otherCells = gp.getColors();
+        for (int i = 0;  i < this.cells.length;  ++i) {
+            this.cells[i] = (byte)(otherCells[i]);
+        }
+        this.colorAreas.clear();
+        this.colorAreas.addAll(this.createColorAreas());
+        this.determineColorAreasDepth(gp.getBoard().getStartPos());
+    }
+
     private Set<ColorArea> createColorAreas() {
         final Set<ColorArea> result = new HashSet<ColorArea>();
         // build ColorAreas, fill with them with members: adjacent cells of the same color

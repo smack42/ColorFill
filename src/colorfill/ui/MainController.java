@@ -90,6 +90,7 @@ public class MainController {
     protected void actionAddStep(final int color) {
         final boolean isAdded = this.gameState.getSelectedProgress().addStep(color);
         if (isAdded) {
+            this.hideHint();
             this.internalUpdateBoardColors();
         }
     }
@@ -100,6 +101,9 @@ public class MainController {
     protected void actionUndoStep() {
         final boolean isDone = this.gameState.getSelectedProgress().undoStep();
         if (isDone) {
+            if (this.gameState.isUserProgress()) {
+                this.hideHint();
+            }
             this.internalUpdateBoardColors();
         }
     }
@@ -110,6 +114,9 @@ public class MainController {
     protected void actionRedoStep() {
         final boolean isDone = this.gameState.getSelectedProgress().redoStep();
         if (isDone) {
+            if (this.gameState.isUserProgress()) {
+                this.hideHint();
+            }
             this.internalUpdateBoardColors();
         }
     }
@@ -119,6 +126,7 @@ public class MainController {
      */
     protected void actionNewBoard() {
         this.gameState.setNewRandomBoard();
+        this.hideHint();
         this.internalUpdateBoardColors();
     }
 
@@ -135,6 +143,7 @@ public class MainController {
     protected void actionUpdatedPrefs(final boolean isNewBoard, final boolean isNewSize) {
         if (isNewBoard) {
             this.gameState.setNewRandomBoard();
+            this.hideHint();
         }
         this.boardController.initBoardPanel();
         if (isNewSize) {
@@ -177,7 +186,35 @@ public class MainController {
 //                    System.out.println("propertyChange add " + (newValue.length - oldValue.length));
                     MainController.this.controlController.actionAddSolverResult(newValue[newValue.length - 1]);
                 }
+            } else if (GameState.PROPERTY_HINT.equals(evt.getPropertyName())) {
+                if ((null != evt.getOldValue()) && (null != evt.getNewValue())) {
+                    final Integer color = (Integer)evt.getOldValue();
+                    final Integer estimatedSteps = (Integer)evt.getNewValue();
+                    System.out.println("hint: color=" + color + " estimatedSteps=" + estimatedSteps); System.out.println();
+                    MainController.this.controlController.actionShowHint(color, estimatedSteps);
+                }
             }
         }
+    }
+
+    /**
+     * run the solver to calculate a hint for the user's next step.
+     */
+    public void actionCalculateHint() {
+        if (this.gameState.isUserProgress()) {
+            this.gameState.calculateHint();
+        }
+    }
+
+    private void hideHint() {
+        this.gameState.removeHint();
+        this.controlController.actionHideHint();
+    }
+
+    /**
+     * @param hintColor
+     */
+    public void actionHighlightColor(int hintColor) {
+        this.boardController.actionHightlightFloodNeighborCells(hintColor);
     }
 }

@@ -17,6 +17,7 @@
 
 package colorfill.model;
 
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
@@ -52,6 +53,9 @@ public class GameState {
     private final List<GameProgress> progressSolutions = new ArrayList<GameProgress>();
     public static final String PROPERTY_PROGRESS_SOLUTIONS = "progressSolutions";
 
+    private final AtomicReference<GameState> hintGameState = new AtomicReference<GameState>();
+    public static final String PROPERTY_HINT = "hint";
+
     private static final int NUMBER_OF_SOLVER_THREADS = 4;
 
 
@@ -59,6 +63,12 @@ public class GameState {
         this.pref = new GamePreferences();
         this.setAutoRunSolver(false);
         this.initBoard(true);
+    }
+
+    private GameState(final GameState other) { // "hint" constructor
+        this.pref = other.pref;
+        this.startPos = other.startPos;
+        this.board = new Board(other.progressUser); // copy Board and apply the steps from progressUser
     }
 
     private void initBoard(final boolean initialLoad) {
@@ -82,7 +92,7 @@ public class GameState {
         }
         this.progressSelected = this.progressUser;
         if (this.isAutoRunSolver) {
-            new SolverRun();
+            new SolverRun(Integer.MAX_VALUE); // use all available solver strategies
         }
     }
 
@@ -90,7 +100,7 @@ public class GameState {
         final boolean oldValue = this.isAutoRunSolver;
         this.isAutoRunSolver = isAutoRunSolver;
         if ((false == oldValue) && (true == isAutoRunSolver)) {
-            new SolverRun();
+            new SolverRun(Integer.MAX_VALUE); // use all available solver strategies
         }
     }
 
@@ -148,12 +158,13 @@ public class GameState {
 
     private class SolverRun extends Thread {
         private final Board board;
-        private final int startPos;
+        private final int startPos, numberOfSolverStrategies;
 
-        private SolverRun() {
+        private SolverRun(final int numberOfSolverStrategies) {
             super();
             this.board = GameState.this.board;
             this.startPos = GameState.this.startPos;
+            this.numberOfSolverStrategies = numberOfSolverStrategies;
             final SolverRun other = GameState.this.activeSolverRun.getAndSet(this);
             if ((null != other) && (this != other)) {
                 other.interrupt();
@@ -167,7 +178,11 @@ public class GameState {
             final ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_SOLVER_THREADS);
             final List<Future<Solution>> futureSolutions = new ArrayList<Future<Solution>>();
             final Class<Strategy>[] strategies = new DfsSolver(this.board).getSupportedStrategies();
+            int i = 0;
             for (final Class<Strategy> strategy : strategies) {
+                if (++i > this.numberOfSolverStrategies) {
+                    break; // for()
+                }
                 final Solver solver = new DfsSolver(this.board);
                 solver.setStrategy(strategy);
                 futureSolutions.add(executor.submit(new Callable<Solution>() {
@@ -202,6 +217,7 @@ public class GameState {
             executor.shutdown();
             System.out.println();
             GameState.this.activeSolverRun.compareAndSet(this, null);
+            GameState.this.firePropertyChange(GameState.PROPERTY_HINT, null, null); // callback to the "main" GameState.calculateHint()
         }
     }
 
@@ -238,6 +254,51 @@ public class GameState {
             newValue = this.progressSolutions.toArray(EMPTY_ARRAY_GAME_PROGRESS);
         }
         this.firePropertyChange(PROPERTY_PROGRESS_SOLUTIONS, oldValue, newValue);
+    }
+
+
+
+    public void calculateHint() {
+        final GameState newHint = new GameState(this);
+        newHint.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (GameState.PROPERTY_HINT.equals(evt.getPropertyName())) {
+                    Integer color = null, stepsToDo = Integer.valueOf(Integer.MAX_VALUE);
+                    for (final GameProgress gp : newHint.progressSolutions) {
+                        if (stepsToDo.intValue() > gp.getTotalSteps()) {
+                            stepsToDo = Integer.valueOf(gp.getTotalSteps());
+                            color = gp.getNextColor();
+                        }
+                    }
+                    if (null != color) {
+                        final Integer estimatedSteps = Integer.valueOf(GameState.this.progressUser.getCurrentStep() + stepsToDo.intValue());
+                        GameState.this.firePropertyChange(GameState.PROPERTY_HINT, color, estimatedSteps); // notify GUI controller
+                    }
+                }
+            }
+        });
+        this.setHint(newHint);
+        newHint.calculateHintSolver();
+    }
+
+    public void removeHint() {
+        this.setHint(null);
+    }
+
+    private void setHint(final GameState newHint) {
+        final GameState oldHint = this.hintGameState.getAndSet(newHint);
+        if (null != oldHint) {
+            final SolverRun oldSolver = oldHint.activeSolverRun.getAndSet(null);
+            if (null != oldSolver) {
+                oldSolver.interrupt();
+            }
+        }
+    }
+
+    private void calculateHintSolver() {
+        System.out.println("calculateHintSolver");
+        new SolverRun(2); // use only the 2 fastest solver strategies
     }
 
 

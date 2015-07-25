@@ -21,6 +21,8 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ResourceBundle;
 
 import javax.swing.AbstractAction;
@@ -61,6 +63,12 @@ public class ControlPanel extends JPanel {
     private final JButton[] buttonColors = new JButton[MAX_NUMBER_COLOR_BUTTONS];
     private int numColors = MAX_NUMBER_COLOR_BUTTONS;
 
+    private final JSeparator sepHint = new JSeparator();
+    private final JButton buttonHint = new JButton();
+    private final JButton buttonHintColor = new JButton();
+    private final JLabel  hintEstimatedSteps = new JLabel();
+    private boolean showHint = false;
+
     private static final int MAX_NUMBER_SOLVER_SOLUTIONS = 4; // TODO dynamically handle max. number of solver solutions visible
     private final IRow[]                solverRows1         = new IRow[MAX_NUMBER_SOLVER_SOLUTIONS];
     private final JRadioButton[]        solverRButtons      = new JRadioButton[MAX_NUMBER_SOLVER_SOLUTIONS];
@@ -93,6 +101,15 @@ public class ControlPanel extends JPanel {
             ControlPanel.this.controller.userButtonRedo();
         }
     };
+    private final Action actionHint = new AbstractAction() {
+        private static final long serialVersionUID = -6622821528552016995L;
+        public void actionPerformed(ActionEvent e) {
+            if (0 == ControlPanel.this.selectedSolution) {
+                ControlPanel.this.buttonHint.requestFocusInWindow();
+                ControlPanel.this.controller.userButtonHint();
+            }
+        }
+    };
 
     /**
      * constructor
@@ -107,14 +124,16 @@ public class ControlPanel extends JPanel {
 
         final JPanel panel = new JPanel();
         final DesignGridLayout layout = new DesignGridLayout(panel);
-        layout.row().left().add(this.makeButtonNew()).add(this.makeButtonPrefs());
+        layout.row().grid().add(this.makeButtonNew(), 3).add(this.makeButtonPrefs(), 3);
         layout.row().grid().add(new JSeparator());
-        layout.row().grid().add(this.makeRButtonUser(bgroup)).add(this.makeLabelMove());
+        layout.row().grid().add(this.makeRButtonUser(bgroup), 4).add(this.makeLabelMove()).empty();
         final IRow rowButtonColors = layout.row().grid();
         for (final JButton button : this.makeButtonColors(colors)) {
             rowButtonColors.add(button);
         }
-        layout.row().left().add(this.makeButtonUndo()).add(this.makeButtonRedo());
+        layout.row().grid().add(this.makeButtonUndo(), 3).add(this.makeButtonRedo(), 3);
+        layout.row().grid().add(this.sepHint);
+        layout.row().grid().add(this.makeButtonHint(), 3).empty().add(this.makeHintEstimatedSteps()).add(this.makeButtonHintColor());
         layout.row().grid().add(new JSeparator());
         layout.row().grid().add(new JLabel(L10N.getString("ctrl.lbl.SolverResults.txt")));
         this.makeSolverRows(bgroup, layout);
@@ -207,6 +226,50 @@ public class ControlPanel extends JPanel {
         return this.buttonRedo;
     }
 
+    private JButton makeButtonHint() {
+        this.buttonHint.setText(L10N.getString("ctrl.btn.Hint.txt"));
+        this.buttonHint.addActionListener(this.actionHint);
+        final String actionName = "ACTION_HINT";
+        this.getActionMap().put(actionName, this.actionHint);
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("H"), actionName);
+        return this.buttonHint;
+    }
+
+    private JButton makeButtonHintColor() {
+        this.buttonHintColor.setText("1");
+        this.buttonHintColor.setVisible(this.showHint);
+        this.buttonHintColor.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    final int hintColor = Integer.parseInt(ControlPanel.this.buttonHintColor.getText()) - 1;
+                    ControlPanel.this.buttonColors[hintColor].doClick();
+                } catch (Exception ignored) {}
+            }
+        });
+        this.buttonHintColor.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                super.mouseEntered(e);
+                try {
+                    final int hintColor = Integer.parseInt(ControlPanel.this.buttonHintColor.getText()) - 1;
+                    ControlPanel.this.controller.userHintColor(hintColor);
+                } catch (Exception ignored) {}
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                super.mouseExited(e);
+                ControlPanel.this.controller.userHintColor(-1);
+            }
+        });
+        return this.buttonHintColor;
+    }
+
+    private JLabel makeHintEstimatedSteps() {
+        this.hintEstimatedSteps.setText("99");
+        this.hintEstimatedSteps.setVisible(this.showHint);
+        return this.hintEstimatedSteps;
+    }
+
     private void makeSolverRows(final ButtonGroup bgroup, final DesignGridLayout layout) {
         for (int i = 0;  i < MAX_NUMBER_SOLVER_SOLUTIONS;  ++i) {
             this.solverRButtons[i] = new JRadioButton();
@@ -242,6 +305,10 @@ public class ControlPanel extends JPanel {
         for (int i = 0;  i < this.buttonColors.length;  ++i) {
             this.buttonColors[i].setVisible((0 == sel) && (i < this.numColors));
         }
+        this.sepHint.setVisible(0 == sel);
+        this.buttonHint.setVisible(0 == sel);
+        this.buttonHintColor.setVisible((0 == sel) && this.showHint);
+        this.hintEstimatedSteps.setVisible((0 == sel) && this.showHint);
         for (int i = 1;  i <= this.numVisibleSolverSolutions;  ++i) {
             this.solverMoves[i - 1].setVisible(i == sel);
             if (i == sel) {
@@ -345,5 +412,40 @@ public class ControlPanel extends JPanel {
                 this.buttonColors[i].setVisible(false);
             }
         }
+        try {
+            final int hintColor = Integer.parseInt(this.buttonHintColor.getText()) - 1;
+            this.buttonHintColor.setBackground(this.buttonColors[hintColor].getBackground());
+        } catch (Exception ignored) {}
+    }
+
+    /**
+     * show the hint.
+     * @param color
+     * @param stepsToDo
+     */
+    protected void showHint(final Integer color, final Integer estimatedSteps) {
+        if (SwingUtilities.isEventDispatchThread()) {                        showHintInternal(color, estimatedSteps); }
+        else SwingUtilities.invokeLater(new Runnable() { public void run() { showHintInternal(color, estimatedSteps); } });
+    }
+    private void showHintInternal(final Integer color, final Integer estimatedSteps) {
+        if ((null != color) && (null != estimatedSteps)) {
+            this.buttonHintColor.setText(String.valueOf(color.intValue() + 1));
+            this.buttonHintColor.setBackground(this.buttonColors[color.intValue()].getBackground());
+            this.hintEstimatedSteps.setText(estimatedSteps.toString());
+            this.showHint = true;
+            this.setVisibleUserOrSolver();
+        }
+    }
+
+    /**
+     * hide the hint.
+     */
+    protected void hideHint() {
+        if (SwingUtilities.isEventDispatchThread()) {                        hideHintInternal(); }
+        else SwingUtilities.invokeLater(new Runnable() { public void run() { hideHintInternal(); } });
+    }
+    private void hideHintInternal() {
+        this.showHint = false;
+        this.setVisibleUserOrSolver();
     }
 }

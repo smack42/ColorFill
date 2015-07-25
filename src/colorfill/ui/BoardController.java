@@ -122,7 +122,12 @@ public class BoardController {
      * @param color
      */
     protected void actionHightlightFloodNeighborCells(final int color) {
-        final Collection<Integer> neighborCells = this.gameState.getSelectedProgress().getFloodNeighborCells(color);
+        final Collection<Integer> neighborCells;
+        if (color < 0) {
+            neighborCells = Collections.emptyList();
+        } else {
+            neighborCells = this.gameState.getSelectedProgress().getFloodNeighborCells(color);
+        }
         this.boardPanel.highlightCells(neighborCells);
     }
 }
