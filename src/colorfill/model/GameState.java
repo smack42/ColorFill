@@ -82,7 +82,7 @@ public class GameState {
         }
         this.progressSelected = this.progressUser;
         if (this.isAutoRunSolver) {
-            new SolverRun(this.board, this.startPos);
+            new SolverRun();
         }
     }
 
@@ -90,7 +90,7 @@ public class GameState {
         final boolean oldValue = this.isAutoRunSolver;
         this.isAutoRunSolver = isAutoRunSolver;
         if ((false == oldValue) && (true == isAutoRunSolver)) {
-            new SolverRun(this.board, this.startPos);
+            new SolverRun();
         }
     }
 
@@ -150,10 +150,10 @@ public class GameState {
         private final Board board;
         private final int startPos;
 
-        private SolverRun(final Board board, final int startPos) {
+        private SolverRun() {
             super();
-            this.board = board;
-            this.startPos = startPos;
+            this.board = GameState.this.board;
+            this.startPos = GameState.this.startPos;
             final SolverRun other = GameState.this.activeSolverRun.getAndSet(this);
             if ((null != other) && (this != other)) {
                 other.interrupt();

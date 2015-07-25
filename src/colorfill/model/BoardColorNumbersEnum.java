@@ -32,16 +32,16 @@ public enum BoardColorNumbersEnum {
     }
 
     /**
-     * get the GridLinesEnum for the specified intValue,
+     * get the BoardColorNumbersEnum for the specified intValue,
      * or null if none was found.
      * @param intValue
      * @return
      */
     public static BoardColorNumbersEnum valueOf(final int intValue) {
         BoardColorNumbersEnum result = null;
-        for (final BoardColorNumbersEnum gle : values()) {
-            if (gle.intValue == intValue) {
-                result = gle;
+        for (final BoardColorNumbersEnum bcne : values()) {
+            if (bcne.intValue == intValue) {
+                result = bcne;
                 break;
             }
         }
