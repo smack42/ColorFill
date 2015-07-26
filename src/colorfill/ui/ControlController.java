@@ -17,6 +17,8 @@
 
 package colorfill.ui;
 
+import java.awt.Color;
+
 import javax.swing.JPanel;
 
 import colorfill.model.GameProgress;
@@ -49,6 +51,15 @@ public class ControlController {
         this.controlPanel.setLabelMove(this.gameState.getSelectedProgress().getCurrentStep(), this.gameState.getSelectedProgress().isFinished());
         this.controlPanel.setButtons(this.gameState.getSelectedProgress().canUndoStep(), this.gameState.getSelectedProgress().canRedoStep());
         this.controlPanel.setButtonColors(this.gameState.getPreferences().getUiColors(), this.gameState.getPreferences().getNumColors());
+    }
+
+    /**
+     * called when the colors and number of the buttons changed. (preferences preview)
+     * @param uiColors
+     * @param numColors
+     */
+    protected void actionSetButtonColors(final Color[] uiColors, final int numColors) {
+        this.controlPanel.setButtonColors(uiColors, numColors);
     }
 
     /**

@@ -85,8 +85,8 @@ public class PreferencesController {
     /**
      * called by PreferencesDialog when user selects a color scheme or grid line option.
      */
-    protected void userPreviewUiColors(final int colorSchemeNumber, final GridLinesEnum gle, final BoardColorNumbersEnum bcne) {
-        this.mainController.actionRepaintBoardUiColors(this.getAllUiColors()[colorSchemeNumber], gle, bcne);
+    protected void userPreviewUiColors(final int colorSchemeNumber, final GridLinesEnum gle, final BoardColorNumbersEnum bcne, final int numColors) {
+        this.mainController.actionRepaintBoardUiColors(this.getAllUiColors()[colorSchemeNumber], gle, bcne, numColors);
     }
 
     protected int getWidth() {

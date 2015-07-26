@@ -408,10 +408,8 @@ public class ControlPanel extends JPanel {
         for (int i = 0;  i < this.buttonColors.length;  ++i) {
             final Color color = (i < colors.length ? colors[i] : Color.WHITE);
             this.buttonColors[i].setBackground(color);
-            if (i >= numColors) {
-                this.buttonColors[i].setVisible(false);
-            }
         }
+        this.setVisibleUserOrSolver();
         try {
             final int hintColor = Integer.parseInt(this.buttonHintColor.getText()) - 1;
             this.buttonHintColor.setBackground(this.buttonColors[hintColor].getBackground());

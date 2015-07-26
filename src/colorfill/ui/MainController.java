@@ -155,8 +155,9 @@ public class MainController {
     /**
      * repaint board using this UI color scheme.
      */
-    protected void actionRepaintBoardUiColors(final Color[] uiColors, final GridLinesEnum gle, final BoardColorNumbersEnum bcne) {
+    protected void actionRepaintBoardUiColors(final Color[] uiColors, final GridLinesEnum gle, final BoardColorNumbersEnum bcne, final int numColors) {
         this.boardController.actionRepaintBoardUiColors(uiColors, gle, bcne);
+        this.controlController.actionSetButtonColors(uiColors, numColors);
     }
 
     /**
