@@ -63,7 +63,6 @@ public class ControlPanel extends JPanel {
     private final JButton[] buttonColors = new JButton[MAX_NUMBER_COLOR_BUTTONS];
     private int numColors = MAX_NUMBER_COLOR_BUTTONS;
 
-    private final JSeparator sepHint = new JSeparator();
     private final JButton buttonHint = new JButton();
     private final JButton buttonHintColor = new JButton();
     private final JLabel  hintEstimatedSteps = new JLabel();
@@ -132,7 +131,6 @@ public class ControlPanel extends JPanel {
             rowButtonColors.add(button);
         }
         layout.row().grid().add(this.makeButtonUndo(), 3).add(this.makeButtonRedo(), 3);
-        layout.row().grid().add(this.sepHint);
         layout.row().grid().add(this.makeButtonHint(), 3).empty().add(this.makeHintEstimatedSteps()).add(this.makeButtonHintColor());
         layout.row().grid().add(new JSeparator());
         layout.row().grid().add(new JLabel(L10N.getString("ctrl.lbl.SolverResults.txt")));
@@ -305,7 +303,6 @@ public class ControlPanel extends JPanel {
         for (int i = 0;  i < this.buttonColors.length;  ++i) {
             this.buttonColors[i].setVisible((0 == sel) && (i < this.numColors));
         }
-        this.sepHint.setVisible(0 == sel);
         this.buttonHint.setVisible(0 == sel);
         this.buttonHintColor.setVisible((0 == sel) && this.showHint);
         this.hintEstimatedSteps.setVisible((0 == sel) && this.showHint);
