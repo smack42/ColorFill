@@ -30,6 +30,7 @@ public class GamePreferences {
     private static final String PREFS_STARTPOS  = "startPos";
     private static final String PREFS_GRIDLINES = "gridLines";
     private static final String PREFS_BOARD_COLOR_NUMBERS = "boardColorNumbers";
+    private static final String PREFS_HIGHLIGHT_COLOR = "highlightColor";
     private static final String PREFS_CELLSIZE  = "cellSize";
     private static final String PREFS_COLSCHEME = "colorScheme";
     private static final String PREFS_GAMESTATE_BOARD    = "gameStateBoard";
@@ -45,6 +46,7 @@ public class GamePreferences {
     public static final StartPositionEnum DEFAULT_BOARD_STARTPOS = StartPositionEnum.TOP_LEFT;
     public static final GridLinesEnum DEFAULT_UI_GRIDLINES = GridLinesEnum.NONE;
     public static final BoardColorNumbersEnum DEFAULT_UI_BOARD_COLOR_NUMBERS = BoardColorNumbersEnum.NONE;
+    public static final HighlightColorEnum DEFAULT_UI_HIGHLIGHT_COLOR = HighlightColorEnum.WHITE;
     public static final int DEFAULT_UI_CELLSIZE = 32;
     public static final int DEFAULT_UI_COLSCHEME = 0;
     private static final Color[][] DEFAULT_UI_COLORS = {
@@ -113,6 +115,7 @@ public class GamePreferences {
     private int uiColors;
     private int gridLines;
     private int uiBoardColorNumbers;
+    private int highlightColor;
     private int cellSize;
 
     public GamePreferences() {
@@ -124,6 +127,7 @@ public class GamePreferences {
         this.gridLines = DEFAULT_UI_GRIDLINES.intValue;
         this.cellSize = DEFAULT_UI_CELLSIZE;
         this.uiBoardColorNumbers = DEFAULT_UI_BOARD_COLOR_NUMBERS.intValue;
+        this.highlightColor = DEFAULT_UI_HIGHLIGHT_COLOR.intValue;
         this.loadPrefs();
         this.savePrefs();
     }
@@ -230,6 +234,21 @@ public class GamePreferences {
         this.uiBoardColorNumbers = bcne.intValue;
     }
 
+    public int getHighlightColor() {
+        return this.highlightColor;
+    }
+    public HighlightColorEnum getHighlightColorEnum() {
+        return HighlightColorEnum.valueOf(this.highlightColor);
+    }
+    public void setHighlightColor(final int highlightColor) {
+        if (null != HighlightColorEnum.valueOf(highlightColor)) {
+            this.highlightColor = highlightColor;
+        }
+    }
+    public void setHighlightColor(final HighlightColorEnum hce) {
+        this.highlightColor = hce.intValue;
+    }
+
     public int getCellSize() {
         return this.cellSize;
     }
@@ -249,6 +268,7 @@ public class GamePreferences {
         this.setUiColorsNumber   (PREFS.getInt(PREFS_COLSCHEME,          DEFAULT_UI_COLSCHEME));
         this.setGridLines        (PREFS.getInt(PREFS_GRIDLINES,          DEFAULT_UI_GRIDLINES.intValue));
         this.setBoardColorNumbers(PREFS.getInt(PREFS_BOARD_COLOR_NUMBERS,DEFAULT_UI_BOARD_COLOR_NUMBERS.intValue));
+        this.setHighlightColor   (PREFS.getInt(PREFS_HIGHLIGHT_COLOR,    DEFAULT_UI_HIGHLIGHT_COLOR.intValue));
         this.setCellSize         (PREFS.getInt(PREFS_CELLSIZE,           DEFAULT_UI_CELLSIZE));
     }
 
@@ -260,6 +280,7 @@ public class GamePreferences {
         PREFS.putInt(PREFS_COLSCHEME,          this.getUiColorsNumber());
         PREFS.putInt(PREFS_GRIDLINES,          this.getGridLines());
         PREFS.putInt(PREFS_BOARD_COLOR_NUMBERS,this.getBoardColorNumbers());
+        PREFS.putInt(PREFS_HIGHLIGHT_COLOR,    this.getHighlightColor());
         PREFS.putInt(PREFS_CELLSIZE,           this.getCellSize());
     }
 

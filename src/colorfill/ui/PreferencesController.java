@@ -23,6 +23,7 @@ import colorfill.model.BoardColorNumbersEnum;
 import colorfill.model.GamePreferences;
 import colorfill.model.GameState;
 import colorfill.model.GridLinesEnum;
+import colorfill.model.HighlightColorEnum;
 import colorfill.model.StartPositionEnum;
 
 public class PreferencesController {
@@ -53,7 +54,8 @@ public class PreferencesController {
             final GridLinesEnum gle,
             final BoardColorNumbersEnum bcne,
             final int uiColorsNumber,
-            final int cellSize) {
+            final int cellSize,
+            final HighlightColorEnum hce) {
         boolean isNewBoard = this.gameState.getPreferences().setWidth(width);
         isNewBoard |= this.gameState.getPreferences().setHeight(height);
         boolean isNewSize = isNewBoard;
@@ -63,6 +65,7 @@ public class PreferencesController {
         this.gameState.getPreferences().setGridLines(gle);
         this.gameState.getPreferences().setBoardColorNumbers(bcne);
         this.gameState.getPreferences().setUiColorsNumber(uiColorsNumber);
+        this.gameState.getPreferences().setHighlightColor(hce);
         this.gameState.getPreferences().savePrefs();
         this.mainController.actionUpdatedPrefs(isNewBoard, isNewSize);
     }
@@ -78,6 +81,7 @@ public class PreferencesController {
                 GamePreferences.DEFAULT_BOARD_STARTPOS,
                 GamePreferences.DEFAULT_UI_GRIDLINES,
                 GamePreferences.DEFAULT_UI_BOARD_COLOR_NUMBERS,
+                GamePreferences.DEFAULT_UI_HIGHLIGHT_COLOR,
                 GamePreferences.DEFAULT_UI_COLSCHEME,
                 GamePreferences.DEFAULT_UI_CELLSIZE);
     }
@@ -85,8 +89,8 @@ public class PreferencesController {
     /**
      * called by PreferencesDialog when user selects a color scheme or grid line option.
      */
-    protected void userPreviewUiColors(final int colorSchemeNumber, final GridLinesEnum gle, final BoardColorNumbersEnum bcne, final int numColors) {
-        this.mainController.actionRepaintBoardUiColors(this.getAllUiColors()[colorSchemeNumber], gle, bcne, numColors);
+    protected void userPreviewUiColors(final int colorSchemeNumber, final GridLinesEnum gle, final BoardColorNumbersEnum bcne, final int numColors, final HighlightColorEnum hce) {
+        this.mainController.actionRepaintBoardUiColors(this.getAllUiColors()[colorSchemeNumber], gle, bcne, numColors, hce);
     }
 
     protected int getWidth() {
@@ -112,6 +116,9 @@ public class PreferencesController {
     }
     protected BoardColorNumbersEnum getBoardColorNumbers() {
         return this.gameState.getPreferences().getBoardColorNumbersEnum();
+    }
+    protected HighlightColorEnum getHighlightColor() {
+        return this.gameState.getPreferences().getHighlightColorEnum();
     }
     protected int getCellSize() {
         return this.gameState.getPreferences().getCellSize();

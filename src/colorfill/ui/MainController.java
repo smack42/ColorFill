@@ -28,6 +28,7 @@ import colorfill.model.BoardColorNumbersEnum;
 import colorfill.model.GameProgress;
 import colorfill.model.GameState;
 import colorfill.model.GridLinesEnum;
+import colorfill.model.HighlightColorEnum;
 
 /**
  * the main controller of the GUI, coordinates the control flows
@@ -155,8 +156,8 @@ public class MainController {
     /**
      * repaint board using this UI color scheme.
      */
-    protected void actionRepaintBoardUiColors(final Color[] uiColors, final GridLinesEnum gle, final BoardColorNumbersEnum bcne, final int numColors) {
-        this.boardController.actionRepaintBoardUiColors(uiColors, gle, bcne);
+    protected void actionRepaintBoardUiColors(final Color[] uiColors, final GridLinesEnum gle, final BoardColorNumbersEnum bcne, final int numColors, final HighlightColorEnum hce) {
+        this.boardController.actionRepaintBoardUiColors(uiColors, gle, bcne, hce);
         this.controlController.actionSetButtonColors(uiColors, numColors);
     }
 

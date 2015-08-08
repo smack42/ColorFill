@@ -33,6 +33,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import colorfill.model.GridLinesEnum;
+import colorfill.model.HighlightColorEnum;
 
 /**
  * representation of the board with its colored cells.
@@ -48,6 +49,7 @@ public class BoardPanel extends JPanel {
     private boolean[] cellHighlights = new boolean[0];
     private boolean[] cellColorNumbers = new boolean[0];
     private GridLinesEnum gridLines;
+    private HighlightColorEnum highlightColor;
 
     /**
      * constructor
@@ -117,10 +119,11 @@ public class BoardPanel extends JPanel {
     /**
      * set the colors of all cells.
      */
-    protected void setCellColors(final int[] cellColors, final GridLinesEnum gle, final Collection<Integer> collectionColorNumbers) {
+    protected void setCellColors(final int[] cellColors, final GridLinesEnum gle, final Collection<Integer> collectionColorNumbers, final HighlightColorEnum hce) {
         this.cellColors = cellColors;
         this.cellHighlights = new boolean[this.cellColors.length];
         this.gridLines = gle;
+        this.highlightColor = hce;
         this.cellColorNumbers = new boolean[this.cellColors.length];
         for (final Integer cell : collectionColorNumbers) {
             this.cellColorNumbers[cell.intValue()] = true;
@@ -145,12 +148,20 @@ public class BoardPanel extends JPanel {
         final int ch4 = cellHeight / 4;
         final int cwHighlight = cellWidth - cw4 - cw4;
         final int chHighlight = cellHeight - ch4 - ch4;
+        final Color highlight;
+        if (HighlightColorEnum.WHITE == this.highlightColor) {
+            highlight = Color.WHITE;
+        } else if (HighlightColorEnum.BLACK == this.highlightColor) {
+            highlight = Color.BLACK;
+        } else {
+            highlight = Color.WHITE;
+        }
         for (int index = 0, y = 0, row = 0;  row < this.rows;  y += cellHeight, ++row) {
             for (int x = 0, column = 0;  column < this.columns;  x += cellWidth, ++column, ++index) {
                 final int color = this.cellColors[index];
                 g2d.setColor(this.uiColors[color]);
                 g2d.fillRect(x, y, cellWidth, cellHeight);
-                g2d.setColor(Color.WHITE);
+                g2d.setColor(highlight);
                 if (this.cellHighlights[index]) {
                     g2d.fillOval(x + cw4, y + ch4, cwHighlight, chHighlight);
                 }
@@ -186,9 +197,10 @@ public class BoardPanel extends JPanel {
         this.repaint();
     }
 
-    public void applyColorScheme(final Color[] uiColors, final GridLinesEnum gle, final Collection<Integer> collectionColorNumbers) {
+    public void applyColorScheme(final Color[] uiColors, final GridLinesEnum gle, final Collection<Integer> collectionColorNumbers, final HighlightColorEnum hce) {
         this.uiColors = uiColors;
         this.gridLines = gle;
+        this.highlightColor = hce;
         this.cellColorNumbers = new boolean[this.cellColors.length];
         for (final Integer cell : collectionColorNumbers) {
             this.cellColorNumbers[cell.intValue()] = true;

@@ -27,6 +27,7 @@ import javax.swing.JPanel;
 import colorfill.model.BoardColorNumbersEnum;
 import colorfill.model.GameState;
 import colorfill.model.GridLinesEnum;
+import colorfill.model.HighlightColorEnum;
 
 /**
  * this controller handles the control flows of BoardPanel.
@@ -62,7 +63,8 @@ public class BoardController {
         this.boardPanel.setCellColors(
                 this.gameState.getSelectedProgress().getColors(),
                 this.gameState.getPreferences().getGridLinesEnum(),
-                this.gameState.getSelectedProgress().getBoardColorNumbers(bcne));
+                this.gameState.getSelectedProgress().getBoardColorNumbers(bcne),
+                this.gameState.getPreferences().getHighlightColorEnum());
     }
 
     protected JPanel getPanel() {
@@ -95,8 +97,8 @@ public class BoardController {
     /**
      * repaint board using this UI color scheme.
      */
-    protected void actionRepaintBoardUiColors(final Color[] uiColors, final GridLinesEnum gle, final BoardColorNumbersEnum bcne) {
-        this.boardPanel.applyColorScheme(uiColors, gle, this.gameState.getSelectedProgress().getBoardColorNumbers(bcne));
+    protected void actionRepaintBoardUiColors(final Color[] uiColors, final GridLinesEnum gle, final BoardColorNumbersEnum bcne, final HighlightColorEnum hce) {
+        this.boardPanel.applyColorScheme(uiColors, gle, this.gameState.getSelectedProgress().getBoardColorNumbers(bcne), hce);
     }
 
     /**
