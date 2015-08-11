@@ -22,12 +22,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import colorfill.model.Board;
 import colorfill.solver.DeepDfsStrategy;
@@ -44,22 +38,29 @@ import colorfill.solver.Strategy;
 public class Starter {
 
     public static void main(String[] args) throws Exception {
-        final String progname = "ColorFill";
-        final String version  = "0.1.12 (2015-08-09)";
+        final String progname = "ColorFill __DEV__";
+        final String version  = "0.1.13 (2015-08-11)";
         final String author   = "Copyright (C) 2015 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
 
-        if (0 == args.length) {
+        switch (args.length) {
+        case 0:
             new MainController(progname, version, author);
-        } else {
-            testSolverPc19(args[0]);
-            //runSolverPc19(args[0]);
+            break;
+        case 1:
+            runSolver(args[0]);
+            break;
+        case 2:
+            runValidator(args[0], args[1]);
+            break;
+        default:
+            // print command line help?
         }
 
 //      testCheckOne();
-//      testCheckPc19();
     }
+
 
 
     /**
@@ -70,12 +71,13 @@ public class Starter {
 //        final String s = "6345215456513263145";
         final String b = "1464232256454151265361121333134355423464254633453256562522536212626562361214311523421215254461265111331145426131342543161111561256314564465566551321526616635335534461614344546336223551453241656312";
         final String s = "46465321364162543614523";
+        final int startPos = 0;
 
         final Board board = new Board(b);
-        final String solutionResult = board.checkSolution(s, 0); // startPos=0
+        final String solutionResult = board.checkSolution(s, startPos);
 
         System.out.println(board);
-        System.out.println(board.toStringColorDepth(0)); // startPos=0
+        System.out.println(board.toStringColorDepth(startPos));
         System.out.println(s + "_" + s.length());
         if (solutionResult.isEmpty()) {
             System.out.println("solution check OK");
@@ -86,53 +88,63 @@ public class Starter {
     }
 
 
-    /**
-     * test class Board using some results of
-     * Programming Challenge 19 - Fill a Grid of Tiles
-     * http://cplus.about.com/od/programmingchallenges/a/challenge19.htm
-     * 
-     * @throws IOException
-     */
-    private static void testCheckPc19() throws IOException {
-        final BufferedReader brTiles = new BufferedReader(new FileReader("pc19/tiles.txt"));
-        final String resultsFileName = "results_1.txt"; // results_1.txt  results_5_1.txt  results_5_2_7.txt  results_6.txt
-        final BufferedReader brResults = new BufferedReader(new FileReader("pc19/" + resultsFileName));
-        int numTotal = 0, numFailed = 0, numFailed25 = 0, numOK = 0;
-        System.out.println(resultsFileName);
-        for (String lineTiles = brTiles.readLine();  lineTiles != null;  lineTiles = brTiles.readLine()) {
-            ++numTotal;
-            final String lineResults = brResults.readLine().replaceAll("\\s", ""); // remove whitespace;
-            final Board board = new Board(lineTiles);
-            final String solutionResult = board.checkSolution(lineResults, 0); // startPos=0
-            if (solutionResult.isEmpty()) {
-//                System.out.println(numTotal + " solution check OK");
-                ++numOK;
-            } else {
-                System.out.println(numTotal + " " + solutionResult);
-                ++numFailed;
-                if (25 > lineResults.length()) {
-                    ++numFailed25;
+
+    private static void runSolver(final String fileNameTestData) throws Exception {
+        final String firstLine;
+        {
+            final BufferedReader br = new BufferedReader(new FileReader(fileNameTestData));
+            firstLine = br.readLine();
+            br.close();
+        }
+        if (firstLine.length() == 19) {
+            runSolverCg26232(fileNameTestData);
+        } else {
+            runSolverPc19(fileNameTestData);
+        }
+    }
+
+
+
+    private static Board makeBoard(final BufferedReader br) throws Exception {
+        Board result = null;
+        final String firstLine = br.readLine();
+        if (null == firstLine) {
+            // nothing to do
+        } else if (14*14 == firstLine.length()) {
+            // Programming Challenge 19
+            final int startPos = 0;
+            result = new Board(firstLine, startPos);
+        } else if (19 == firstLine.length()) {
+            // Code Golf 26232
+            final StringBuilder sb = new StringBuilder(19*19);
+            sb.append(firstLine);
+            for (;;) {
+                final String line = br.readLine();
+                if ((null == line) || (19 != line.length())) {
+                    break;
+                } else {
+                    sb.append(line);
                 }
             }
+            if (19*19 == sb.length()) {
+                final int startPos = (19*19-1)/2;
+                result = new Board(sb.toString(), startPos);
+            }
+        } else {
+            // nothing to do
         }
-        System.out.println("check OK:     " + numOK);
-        System.out.println("check failed: " + numFailed + "     at less than 25 moves: " + numFailed25);
-        System.out.println();
-        brTiles.close();
-        brResults.close();
+        return result;
     }
+
 
 
     /**
      * test a solver implementation using the "tiles.txt" from
      * Programming Challenge 19 - Fill a Grid of Tiles
      * http://cplus.about.com/od/programmingchallenges/a/challenge19.htm
-     * 
-     * @throws IOException 
-     * @throws InterruptedException
      */
     @SuppressWarnings("unchecked")
-    private static void testSolverPc19(final String inputFileName) throws IOException, InterruptedException {
+    private static void runSolverPc19(final String inputFileName) throws Exception {
         // which strategies to run
         final Class<?>[] STRATEGIES = {
             GreedyDfsStrategy.class,
@@ -141,7 +153,6 @@ public class Starter {
             DeeperDfsStrategy.class,
             ExhaustiveDfsStrategy.class
         };
-        final int startPos = 0;
 
         final String outputFileName = "results.txt";
         System.out.println("running Programming Challenge 19");
@@ -160,25 +171,28 @@ public class Starter {
         final PrintWriter pwResults = new PrintWriter(new FileWriter(outputFileName));
 
         int count = 0;
-        for (String lineTiles = brTiles.readLine();  lineTiles != null;  lineTiles = brTiles.readLine()) {
+        for (;;) {
+            final Board board = makeBoard(brTiles);
+            if (null == board) {
+                break; // end of input file !?
+            }
             ++count;
-            final Board board = new Board(lineTiles);
             final Solver solver = new DfsSolver(board);
             // run each of the strategies
             for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
                 solver.setStrategy((Class<Strategy>) STRATEGIES[strategy]);
                 final long nanoStart = System.nanoTime();
-                final int numSteps = solver.execute(startPos);
+                final int numSteps = solver.execute(board.getStartPos());
                 final long nanoEnd = System.nanoTime();
                 stNanoTime[strategy] += nanoEnd - nanoStart;
                 stSolution[strategy] = solver.getSolution();
                 stCountSteps[strategy] += numSteps;
                 stCountSteps25[strategy] += (numSteps > 25 ? 25 : numSteps);
-                final String solutionCheckResult = board.checkSolution(solver.getSolution().toString(), startPos);
+                final String solutionCheckResult = board.checkSolution(solver.getSolution().toString(), board.getStartPos());
                 if (solutionCheckResult.isEmpty()) {
                     stCountCheckOK[strategy] += 1;
                 } else {
-                    System.out.println(lineTiles);
+                    System.out.println(board.toStringCells());
                     System.out.println(board);
                     System.out.println(STRATEGIES[strategy].getName());
                     System.out.println(solutionCheckResult);
@@ -231,63 +245,144 @@ public class Starter {
 
 
 
-    private static void runSolverPc19(final String inputFileName) throws Exception {
-        final int startPos = 0;
-        final String outputFileName = "results.txt";
-        System.out.println("running Programming Challenge 19");
+    /**
+     * test a solver implementation using the "floodtest" file from
+     * Code Golf 26232: Create a Flood Paint AI
+     * https://codegolf.stackexchange.com/questions/26232/create-a-flood-paint-ai
+     */
+    @SuppressWarnings("unchecked")
+    private static void runSolverCg26232(final String inputFileName) throws Exception {
+        // which strategies to run
+        final Class<?>[] STRATEGIES = {
+            GreedyDfsStrategy.class,
+            GreedyNextDfsStrategy.class,
+            DeepDfsStrategy.class,
+            DeeperDfsStrategy.class,
+//            ExhaustiveDfsStrategy.class
+        };
+
+        final String outputFileName = "steps.txt";
+        System.out.println("running Code Golf 26232: Create a Flood Paint AI");
         System.out.println("reading  input file: " + inputFileName);
         System.out.println("writing output file: " + outputFileName);
+
+        // some counters
+        int countStepsBest = 0;
+        final Solution[] stSolution = new Solution[STRATEGIES.length];
+        final int[] stCountSteps = new int[STRATEGIES.length], stCountBest = new int[STRATEGIES.length];
+        final int[] stCountCheckFailed = new int[STRATEGIES.length], stCountCheckOK = new int[STRATEGIES.length];
+        final long[] stNanoTime = new long[STRATEGIES.length];
+
+        // read lines from the input file
         final BufferedReader brTiles = new BufferedReader(new FileReader(inputFileName));
         final PrintWriter pwResults = new PrintWriter(new FileWriter(outputFileName));
 
-        final List<Board> boards = new ArrayList<Board>();
-        String inputLine;
-        while ((inputLine = brTiles.readLine()) != null) {
-            boards.add(new Board(inputLine, startPos));
-        }
-        brTiles.close();
-        System.out.println("input lines read:    " + boards.size());
-
-        final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
-        final List<Future<List<Solution>>> futureSolutions = new ArrayList<Future<List<Solution>>>();
-        for (final Class<Strategy> strategy : new DfsSolver(boards.get(0)).getSupportedStrategies()) {
-            futureSolutions.add(executor.submit(new Callable<List<Solution>>() {
-                public List<Solution> call() throws Exception {
-                    final List<Solution> result = new ArrayList<Solution>();
-                    for (final Board board : boards) {
-                        final Solver solver = new DfsSolver(board);
-                        solver.setStrategy(strategy);
-                        solver.execute(startPos);
-                        result.add(solver.getSolution());
-                    }
-                    return result;
-                }
-            }));
-        }
-        executor.shutdown();
-
-        final Solution[] bestSolutions = new Solution[boards.size()];
-        for (final Future<List<Solution>> future : futureSolutions) {
-            final List<Solution> solutions = future.get();
-            int moves = 0;
-            for (int i = 0;  i < solutions.size();  ++i) {
-                final Solution solution = solutions.get(i);
-                if ((null == bestSolutions[i]) || (solution.getNumSteps() < bestSolutions[i].getNumSteps())) {
-                    bestSolutions[i] = solution;
-                }
-                moves += solution.getNumSteps();
+        int count = 0;
+        for (;;) {
+            final Board board = makeBoard(brTiles);
+            if (null == board) {
+                break; // end of input file !?
             }
-            System.out.println("finished " + padRight(solutions.get(0).getSolverName(), 21 + 1) + moves);
+            ++count;
+            final Solver solver = new DfsSolver(board);
+            // run each of the strategies
+            for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
+                solver.setStrategy((Class<Strategy>) STRATEGIES[strategy]);
+                final long nanoStart = System.nanoTime();
+                final int numSteps = solver.execute(board.getStartPos());
+                final long nanoEnd = System.nanoTime();
+                stNanoTime[strategy] += nanoEnd - nanoStart;
+                stSolution[strategy] = solver.getSolution();
+                stCountSteps[strategy] += numSteps;
+                final String solutionCheckResult = board.checkSolution(solver.getSolution().toString(), board.getStartPos());
+                if (solutionCheckResult.isEmpty()) {
+                    stCountCheckOK[strategy] += 1;
+                } else {
+                    System.out.println(board.toStringCells());
+                    System.out.println(board);
+                    System.out.println(STRATEGIES[strategy].getName());
+                    System.out.println(solutionCheckResult);
+                    stCountCheckFailed[strategy] += 1;
+                }
+            }
+            // which strategy was best for this board?
+            int minSteps = Integer.MAX_VALUE;
+            for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
+                if (minSteps > stSolution[strategy].getNumSteps()) {
+                    minSteps = stSolution[strategy].getNumSteps();
+                }
+            }
+            int minStrategy = Integer.MAX_VALUE;
+            for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
+                if (minSteps == stSolution[strategy].getNumSteps()) {
+                    stCountBest[strategy] += 1;
+                    minStrategy = (strategy < minStrategy ? strategy : minStrategy);
+                }
+            }
+            countStepsBest += minSteps;
+            // print one line per board
+            System.out.println(
+                    padRight("" + count, 7 + 1) +
+                    padRight(stSolution[minStrategy] + "____________" + minSteps, 40 + 12 + 2 + 2)  +
+                    minStrategy + "_" + stSolution[minStrategy].getSolverName());
+            pwResults.println(stSolution[minStrategy].toString());
+//            if (1000 == count) break; // for ()
         }
-
-        int totalMoves = 0;
-        for (final Solution solution : bestSolutions) {
-            pwResults.println(solution.toString());
-            totalMoves += solution.getNumSteps();
+        // print summary
+        for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
+            System.out.println(
+                    padRight(strategy + "_" + STRATEGIES[strategy].getSimpleName(), 2 + 21 + 2) +
+                    padRight("steps=" + stCountSteps[strategy], 6 + 7 + 2) +
+                    padRight("best=" + stCountBest[strategy], 5 + 6 + 2) +
+                    padRight("checkOK=" + stCountCheckOK[strategy], 8 + 6 + 2) +
+                    padRight("checkFAIL=" + stCountCheckFailed[strategy], 10 + 6 + 2) +
+                    padRight("milliSeconds=" + ((stNanoTime[strategy] + 999999L) / 1000000L), 13 + 5 + 2)
+                    );
         }
-        System.out.println("total moves = " + totalMoves);
-        pwResults.println("Total Moves = " + totalMoves);
+        System.out.println("total steps: " + countStepsBest + (100000 == count ? "  (Code Golf 26232: Create a Flood Paint AI)" : ""));
         pwResults.close();
+        brTiles.close();
+    }
+
+
+
+    /**
+     * read the two files and check if the boards in the first file are solved
+     * by the solutions in the second file.
+     * works for both: Programming Challenge 19 and Code Golf 26232
+     * 
+     * @param inputFileNameBoards
+     * @param inputFileNameSolutions
+     * @throws Exception
+     */
+    private static void runValidator(final String inputFileNameBoards, final String inputFileNameSolutions) throws Exception {
+        System.out.println("running solution validator");
+        System.out.println("reading input file    Boards: " + inputFileNameBoards);
+        System.out.println("reading input file Solutions: " + inputFileNameSolutions);
+        final BufferedReader brBoards = new BufferedReader(new FileReader(inputFileNameBoards));
+        final BufferedReader brSolutions= new BufferedReader(new FileReader(inputFileNameSolutions));
+        int countOK = 0, countFAIL = 0;
+        for (;;) {
+            final Board board = makeBoard(brBoards);
+            final String solutionStr = brSolutions.readLine();
+            if ((null == board) || (null == solutionStr)) {
+                break;
+            }
+            final String checkResult = board.checkSolution(solutionStr, board.getStartPos());
+            if (checkResult.isEmpty()) {
+                ++countOK;
+            } else {
+                ++countFAIL;
+                System.out.println(countOK + countFAIL);
+                System.out.println(board.toStringCells());
+                System.out.println(board);
+                System.out.println(checkResult);
+                System.out.println();
+            }
+        }
+        System.out.println("check finished:  total=" + (countOK + countFAIL) + " checkOK=" + countOK + " checkFAIL=" + countFAIL);
+        brBoards.close();
+        brSolutions.close();
     }
 
 
