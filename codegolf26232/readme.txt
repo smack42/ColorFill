@@ -36,3 +36,19 @@ results:
 13. 2,979,145 - Teun Pronk, Delphi XE3
 14. 4,780,841 - BurntPizza, Java
 15. 10,800,000 - Joe Z., Python
+
+
+----
+
+the files:
+
+floodtest           = input file, contains the 100,000 test cases
+01_tigrou.cs        = winning program by tigrou
+steps_01_tigrou.txt = output of winning program by tigrou: 2,098,382 steps
+
+
+output of this program, ColorFill: 2,116,152 steps (would have been 2nd place)
+
+steps_ColorFill_DFS.txt         = output of ColorFill using its 4 DFS strategies
+steps_ColorFill_DFS_details.txt = detailed output (5887 CPU minutes!)
+

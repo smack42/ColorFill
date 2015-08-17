@@ -20,8 +20,13 @@ package colorfill.ui;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import colorfill.model.Board;
 import colorfill.solver.DeepDfsStrategy;
@@ -39,7 +44,7 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill __DEV__";
-        final String version  = "0.1.13 (2015-08-11)";
+        final String version  = "0.1.13 (2015-08-14)";
         final String author   = "Copyright (C) 2015 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
@@ -250,98 +255,106 @@ public class Starter {
      * Code Golf 26232: Create a Flood Paint AI
      * https://codegolf.stackexchange.com/questions/26232/create-a-flood-paint-ai
      */
-    @SuppressWarnings("unchecked")
     private static void runSolverCg26232(final String inputFileName) throws Exception {
         // which strategies to run
-        final Class<?>[] STRATEGIES = {
+        final Class[] STRATEGIES = {
             GreedyDfsStrategy.class,
             GreedyNextDfsStrategy.class,
             DeepDfsStrategy.class,
             DeeperDfsStrategy.class,
 //            ExhaustiveDfsStrategy.class
         };
+        final int BOARDS_PER_LOOP = 500;
 
-        final String outputFileName = "steps.txt";
         System.out.println("running Code Golf 26232: Create a Flood Paint AI");
         System.out.println("reading  input file: " + inputFileName);
+        final BufferedReader brBoards = new BufferedReader(new FileReader(inputFileName));
+        final String outputFileName = "steps.txt";
         System.out.println("writing output file: " + outputFileName);
+        final PrintWriter pwSteps = new PrintWriter(new FileWriter(outputFileName));
 
-        // some counters
-        int countStepsBest = 0;
-        final Solution[] stSolution = new Solution[STRATEGIES.length];
-        final int[] stCountSteps = new int[STRATEGIES.length], stCountBest = new int[STRATEGIES.length];
-        final int[] stCountCheckFailed = new int[STRATEGIES.length], stCountCheckOK = new int[STRATEGIES.length];
-        final long[] stNanoTime = new long[STRATEGIES.length];
+        final int stCountSteps[] = new int[STRATEGIES.length], stCountBest[] = new int[STRATEGIES.length];
+        int count = 0, countSteps = 0;
+        final List<Future<Solution>> futureSolutions = new ArrayList<Future<Solution>>(BOARDS_PER_LOOP * STRATEGIES.length);
+        final ExecutorService exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
 
-        // read lines from the input file
-        final BufferedReader brTiles = new BufferedReader(new FileReader(inputFileName));
-        final PrintWriter pwResults = new PrintWriter(new FileWriter(outputFileName));
-
-        int count = 0;
         for (;;) {
-            final Board board = makeBoard(brTiles);
-            if (null == board) {
-                break; // end of input file !?
-            }
-            ++count;
-            final Solver solver = new DfsSolver(board);
-            // run each of the strategies
-            for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
-                solver.setStrategy((Class<Strategy>) STRATEGIES[strategy]);
-                final long nanoStart = System.nanoTime();
-                final int numSteps = solver.execute(board.getStartPos());
-                final long nanoEnd = System.nanoTime();
-                stNanoTime[strategy] += nanoEnd - nanoStart;
-                stSolution[strategy] = solver.getSolution();
-                stCountSteps[strategy] += numSteps;
-                final String solutionCheckResult = board.checkSolution(solver.getSolution().toString(), board.getStartPos());
-                if (solutionCheckResult.isEmpty()) {
-                    stCountCheckOK[strategy] += 1;
-                } else {
-                    System.out.println(board.toStringCells());
-                    System.out.println(board);
-                    System.out.println(STRATEGIES[strategy].getName());
-                    System.out.println(solutionCheckResult);
-                    stCountCheckFailed[strategy] += 1;
+            // read boards and start solver threads using all the strategies
+            for (int loop = 0;  loop < BOARDS_PER_LOOP;  ++loop) {
+                final Board board = makeBoard(brBoards);
+                if (null == board) {
+                    break; // end of input file
+                }
+                for (final Class strategy : STRATEGIES) {
+                    final Solver solver = new DfsSolver(board);
+                    solver.setStrategy(strategy);
+                    futureSolutions.add(exec.submit(new Callable<Solution>() {
+                        public Solution call() throws Exception {
+                            solver.execute(board.getStartPos());
+                            return solver.getSolution();
+                        }
+                    }));
                 }
             }
-            // which strategy was best for this board?
-            int minSteps = Integer.MAX_VALUE;
-            for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
-                if (minSteps > stSolution[strategy].getNumSteps()) {
-                    minSteps = stSolution[strategy].getNumSteps();
+            // are we finished yet?
+            if (futureSolutions.isEmpty()) {
+                break; // end of input file
+            }
+            // collect the solutions from the solver threads
+            int strategyIndex = 0;
+            final String strategySolutions[] = new String[STRATEGIES.length];
+            for (final Future<Solution> futureSolution : futureSolutions) {
+                Solution solution = null;
+                try {
+                    solution = futureSolution.get();
+                } catch (Exception e) {
+                        e.printStackTrace();
+                }
+                if (null != solution) {
+                    strategySolutions[strategyIndex++] = solution.toString();
+                }
+                if (STRATEGIES.length == strategyIndex) {
+                    ++count;
+                    strategyIndex = 0;
+                    // which strategies are best for this board?
+                    int minSteps = Integer.MAX_VALUE;
+                    for (int i = 0;  i < STRATEGIES.length;  ++i) {
+                        final int steps = strategySolutions[i].length();
+                        stCountSteps[i] += steps;
+                        if (minSteps > steps) {
+                            minSteps = steps;
+                        }
+                    }
+                    int minStrategy = Integer.MAX_VALUE;
+                    for (int i = 0;  i < STRATEGIES.length;  ++i) {
+                        if (minSteps == strategySolutions[i].length()) {
+                            stCountBest[i] += 1;
+                            minStrategy = (i < minStrategy ? i : minStrategy);
+                        }
+                    }
+                    countSteps += minSteps;
+                    System.out.println(
+                            padRight("" + count, 7 + 1) +
+                            padRight(strategySolutions[minStrategy] + "____________" + minSteps, 40 + 12 + 2 + 2)  +
+                            minStrategy + "_" + STRATEGIES[minStrategy].getSimpleName());
+                    pwSteps.println(strategySolutions[minStrategy]);
                 }
             }
-            int minStrategy = Integer.MAX_VALUE;
-            for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
-                if (minSteps == stSolution[strategy].getNumSteps()) {
-                    stCountBest[strategy] += 1;
-                    minStrategy = (strategy < minStrategy ? strategy : minStrategy);
-                }
-            }
-            countStepsBest += minSteps;
-            // print one line per board
-            System.out.println(
-                    padRight("" + count, 7 + 1) +
-                    padRight(stSolution[minStrategy] + "____________" + minSteps, 40 + 12 + 2 + 2)  +
-                    minStrategy + "_" + stSolution[minStrategy].getSolverName());
-            pwResults.println(stSolution[minStrategy].toString());
-//            if (1000 == count) break; // for ()
+            futureSolutions.clear();
+            //if (count >= 1000) break;
         }
         // print summary
         for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
             System.out.println(
                     padRight(strategy + "_" + STRATEGIES[strategy].getSimpleName(), 2 + 21 + 2) +
-                    padRight("steps=" + stCountSteps[strategy], 6 + 7 + 2) +
-                    padRight("best=" + stCountBest[strategy], 5 + 6 + 2) +
-                    padRight("checkOK=" + stCountCheckOK[strategy], 8 + 6 + 2) +
-                    padRight("checkFAIL=" + stCountCheckFailed[strategy], 10 + 6 + 2) +
-                    padRight("milliSeconds=" + ((stNanoTime[strategy] + 999999L) / 1000000L), 13 + 5 + 2)
+                    padRight("steps=" + stCountSteps[strategy], 6 + 8 + 2) +
+                    padRight("best=" + stCountBest[strategy], 5 + 7 + 2)
                     );
         }
-        System.out.println("total steps: " + countStepsBest + (100000 == count ? "  (Code Golf 26232: Create a Flood Paint AI)" : ""));
-        pwResults.close();
-        brTiles.close();
+        System.out.println("total steps: " + countSteps + (100000 == count ? "  (Code Golf 26232: Create a Flood Paint AI)" : ""));
+        exec.shutdown();
+        pwSteps.close();
+        brBoards.close();
     }
 
 
