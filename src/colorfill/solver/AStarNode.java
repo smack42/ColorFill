@@ -17,7 +17,6 @@
 
 package colorfill.solver;
 
-import java.util.ArrayDeque;
 import java.util.Queue;
 
 import it.unimi.dsi.fastutil.bytes.ByteArrayList;
@@ -127,21 +126,22 @@ public class AStarNode implements Comparable<AStarNode> {
 
     /**
      * calculate the sum of distances from current flooded area to all remaining areas.
+     * @param queue an empty Queue; used inside this function; will be empty on return.
      * @return
      */
-    public int getSumDistances() {
+    public int getSumDistances(final Queue<ColorArea> queue) {
         final int NO_DEPTH = -1;
         for (final ColorArea ca : this.flooded.getBoard().getColorAreasArray()) {
-            ca.dynamicDepth = NO_DEPTH;  // reset
-        }
-        final Queue<ColorArea> queue = new ArrayDeque<ColorArea>();
-        for (final ColorArea ca : this.flooded) {
-            ca.dynamicDepth = 0;  // start
-            queue.offer(ca);
+            if (this.flooded.contains(ca)) {
+                ca.dynamicDepth = 0;  // start
+                queue.offer(ca);
+            } else {
+                ca.dynamicDepth = NO_DEPTH;  // reset
+            }
         }
         int sumDistances = 0;
-        while (false == queue.isEmpty()) {
-            final ColorArea current = queue.poll();
+        ColorArea current;
+        while (null != (current = queue.poll())) { // while queue is not empty
             final int nextDepth = current.dynamicDepth + 1;
             for (final ColorArea next : current.getNeighborsArray()) {
                 if (next.dynamicDepth == NO_DEPTH) {
@@ -151,6 +151,7 @@ public class AStarNode implements Comparable<AStarNode> {
                 }
             }
         }
+        // queue is empty now
         return sumDistances;
     }
 }

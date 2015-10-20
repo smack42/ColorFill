@@ -17,6 +17,11 @@
 
 package colorfill.solver;
 
+import java.util.ArrayDeque;
+import java.util.Queue;
+
+import colorfill.model.ColorArea;
+
 /**
  * a specific strategy for the AStar (A*) solver.
  * <p>
@@ -24,6 +29,11 @@ package colorfill.solver;
  * <a href="https://codegolf.stackexchange.com/questions/26232/create-a-flood-paint-ai/#26917">codegolf26232 competition</a>
  */
 public class AStarTigrouStrategy implements AStarStrategy {
+
+    // queue is used in AStarNode.getSumDistances().
+    // it exists here only for performance improvement.
+    // (avoid construction / garbage collection inside that function)
+    private final Queue<ColorArea> queue = new ArrayDeque<ColorArea>();
 
     /* (non-Javadoc)
      * @see colorfill.solver.AStarStrategy#setEstimatedCost(colorfill.solver.AStarNode)
@@ -41,7 +51,7 @@ public class AStarTigrouStrategy implements AStarStrategy {
             for (final byte nextColor : currentNode.getNeighborColors()) {
                 final AStarNode nextNode = new AStarNode(currentNode);
                 nextNode.play(nextColor);
-                final int nextDistance = nextNode.getSumDistances();
+                final int nextDistance = nextNode.getSumDistances(this.queue);
                 if (minDistance > nextDistance) {
                     minDistance = nextDistance;
                     minNode = nextNode;
