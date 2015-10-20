@@ -43,13 +43,6 @@ public interface Solver {
     public void setStrategy(Class<Strategy> strategyClass);
 
     /**
-     * get the strategies supported by this solver.
-     * they should be sorted from fastest to slowest.
-     * @return array of strategy classes
-     */
-    public Class<Strategy>[] getSupportedStrategies();
-
-    /**
      * get the name of the solver and / or the strategy.
      * @return the name
      */

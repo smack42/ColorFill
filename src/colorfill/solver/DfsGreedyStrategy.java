@@ -19,8 +19,6 @@ package colorfill.solver;
 
 import it.unimi.dsi.fastutil.bytes.ByteList;
 
-import colorfill.model.Board;
-
 /**
  * this strategy results in an incomplete search.
  * it chooses the colors in two steps:
@@ -28,16 +26,10 @@ import colorfill.model.Board;
  * 1) colors that can be completely flooded in the next step.
  * (these are always optimal moves!?)
  * <p>
- * 2 a) if 1) gives no result then the colors that are situated at depth + 1
- * or lower. (hence the name "deeper")
+ * 2) if 1) gives no result then the colors that contain
+ * the maximum number of member cells. (hence the name "greedy")
  */
-public class DeeperDfsStrategy implements DfsStrategy {
-
-    private final int maxDepth;
-
-    public DeeperDfsStrategy(final Board board, final int startPos) {
-        this.maxDepth = board.getDepth(startPos);
-    }
+public class DfsGreedyStrategy implements DfsStrategy {
 
     @Override
     public ByteList selectColors(final int depth,
@@ -48,7 +40,7 @@ public class DeeperDfsStrategy implements DfsStrategy {
             final ColorAreaGroup neighbors) {
         ByteList result = neighbors.getColorsCompleted(notFlooded);
         if (null == result) {
-            result = neighbors.getColorsDepthOrLower(Math.min(depth + 1, this.maxDepth));
+            result = neighbors.getColorsMaxMembers(flooded);
         }
         return result;
     }

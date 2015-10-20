@@ -45,6 +45,18 @@ public class ColorAreaGroup {
     }
 
     /**
+     * copy constructor
+     * @param other
+     */
+    public ColorAreaGroup(final ColorAreaGroup other) {
+        this.board = other.board;
+        this.theArray = other.theArray.clone();
+        for (int color = 0;  color < this.theArray.length;  ++color) {
+            this.theArray[color] = new ColorAreaSet(this.theArray[color]);
+        }
+    }
+
+    /**
      * copy the contents of the other color area group into this one,
      * except for the specified color which will be empty.
      */
@@ -89,6 +101,19 @@ public class ColorAreaGroup {
      */
     public void removeAllColor(final ColorAreaSet removeColorAreas, final byte color) {
         this.theArray[color].removeAll(removeColorAreas);
+    }
+
+    /**
+     * return "true" if there are no color areas stored here.
+     * @return
+     */
+    public boolean isEmpty() {
+        for (final ColorAreaSet caSet : this.theArray) {
+            if (false == caSet.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -277,5 +302,13 @@ public class ColorAreaGroup {
      */
     public ColorAreaSet getColor(final byte color) {
         return this.theArray[color];
+    }
+
+    /**
+     * remove the areas of this color.
+     * @param color
+     */
+    public void clearColor(final byte color) {
+        this.theArray[color].clear();
     }
 }

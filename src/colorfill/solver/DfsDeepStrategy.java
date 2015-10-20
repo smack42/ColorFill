@@ -19,19 +19,30 @@ package colorfill.solver;
 
 import it.unimi.dsi.fastutil.bytes.ByteList;
 
+import colorfill.model.Board;
+
 /**
  * this strategy results in an incomplete search.
- * it chooses the colors in two steps:
+ * it chooses the colors in three steps:
  * <p>
  * 1) colors that can be completely flooded in the next step.
  * (these are always optimal moves!?)
  * <p>
- * 2) if 1) gives no result then the colors that have the maximum number
- * of new neighbor member cells, that means neighbors that are not yet flooded
- * and not yet known as neighbors of the flooded area.
- * (hence the name "greedy next")
+ * 2 a) if 1) gives no result and current depth is less than maxDepth
+ * then the colors that are situated at depth + 1.
+ * (hence the name "deep")
+ * <p>
+ * 2 b) if 1) gives no result and current depth is equal or larger than maxDepth
+ * then all available colors.
+ * (complete coverage of the outer branches of the search tree)
  */
-public class GreedyNextDfsStrategy implements DfsStrategy {
+public class DfsDeepStrategy implements DfsStrategy {
+
+    private final int maxDepth;
+
+    public DfsDeepStrategy(final Board board, final int startPos) {
+        this.maxDepth = board.getDepth(startPos);
+    }
 
     @Override
     public ByteList selectColors(final int depth,
@@ -42,7 +53,11 @@ public class GreedyNextDfsStrategy implements DfsStrategy {
             final ColorAreaGroup neighbors) {
         ByteList result = neighbors.getColorsCompleted(notFlooded);
         if (null == result) {
-            result = neighbors.getColorsMaxNextNeighbors(flooded);
+            if (depth < this.maxDepth) {
+                result = neighbors.getColorsDepth(depth + 1);
+            } else  {
+                result = neighbors.getColorsNotEmpty();
+            }
         }
         return result;
     }

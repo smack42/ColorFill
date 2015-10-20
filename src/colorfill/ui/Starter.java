@@ -29,12 +29,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import colorfill.model.Board;
-import colorfill.solver.DeepDfsStrategy;
-import colorfill.solver.DeeperDfsStrategy;
+import colorfill.solver.AStarTigrouStrategy;
+import colorfill.solver.AbstractSolver;
+import colorfill.solver.DfsDeepStrategy;
+import colorfill.solver.DfsDeeperStrategy;
 import colorfill.solver.DfsSolver;
-import colorfill.solver.ExhaustiveDfsStrategy;
-import colorfill.solver.GreedyDfsStrategy;
-import colorfill.solver.GreedyNextDfsStrategy;
+import colorfill.solver.DfsExhaustiveStrategy;
+import colorfill.solver.DfsGreedyStrategy;
+import colorfill.solver.DfsGreedyNextStrategy;
 import colorfill.solver.Solution;
 import colorfill.solver.Solver;
 import colorfill.solver.Strategy;
@@ -44,7 +46,7 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill __DEV__";
-        final String version  = "0.1.13 (2015-08-14)";
+        final String version  = "0.1.13 (2015-10-20)";
         final String author   = "Copyright (C) 2015 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
@@ -152,11 +154,11 @@ public class Starter {
     private static void runSolverPc19(final String inputFileName) throws Exception {
         // which strategies to run
         final Class<?>[] STRATEGIES = {
-            GreedyDfsStrategy.class,
-            GreedyNextDfsStrategy.class,
-            DeepDfsStrategy.class,
-            DeeperDfsStrategy.class,
-            ExhaustiveDfsStrategy.class
+            DfsGreedyStrategy.class,
+            DfsGreedyNextStrategy.class,
+            DfsDeepStrategy.class,
+            DfsDeeperStrategy.class,
+            DfsExhaustiveStrategy.class
         };
 
         final String outputFileName = "results.txt";
@@ -258,11 +260,12 @@ public class Starter {
     private static void runSolverCg26232(final String inputFileName) throws Exception {
         // which strategies to run
         final Class[] STRATEGIES = {
-            GreedyDfsStrategy.class,
-            GreedyNextDfsStrategy.class,
-            DeepDfsStrategy.class,
-            DeeperDfsStrategy.class,
+//            DfsGreedyStrategy.class,
+//            DfsGreedyNextStrategy.class,
+//            DeepDfsStrategy.class,
+//            DeeperDfsStrategy.class,
 //            ExhaustiveDfsStrategy.class
+            AStarTigrouStrategy.class
         };
         final int BOARDS_PER_LOOP = 500;
 
@@ -286,8 +289,7 @@ public class Starter {
                     break; // end of input file
                 }
                 for (final Class strategy : STRATEGIES) {
-                    final Solver solver = new DfsSolver(board);
-                    solver.setStrategy(strategy);
+                    final Solver solver = AbstractSolver.createSolver(strategy, board);
                     futureSolutions.add(exec.submit(new Callable<Solution>() {
                         public Solution call() throws Exception {
                             solver.execute(board.getStartPos());
@@ -341,7 +343,7 @@ public class Starter {
                 }
             }
             futureSolutions.clear();
-            //if (count >= 1000) break;
+            if (count >= 10000) break;
         }
         // print summary
         for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {

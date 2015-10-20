@@ -45,6 +45,20 @@ public class ColorAreaSet implements Iterable<ColorArea> {
     }
 
     /**
+     * copy constructor
+     * @param other
+     */
+    public ColorAreaSet(final ColorAreaSet other) {
+        this.board = other.board;
+        this.array = other.array.clone();
+        this.size = other.size;
+    }
+
+    public Board getBoard() {
+        return this.board;
+    }
+
+    /**
      * copy the contents of the other set into this set
      */
     public void copyFrom(final ColorAreaSet other) {

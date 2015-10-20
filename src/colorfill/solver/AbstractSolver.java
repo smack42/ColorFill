@@ -32,6 +32,25 @@ public abstract class AbstractSolver implements Solver {
     protected int solutionSize = 0;
 
     /**
+     * create a new solver.
+     * @param strategyClass strategy to be used
+     * @param board to be solved
+     * @return
+     */
+    public static Solver createSolver(final Class<Strategy> strategyClass, final Board board) {
+        final Solver solver;
+        if (DfsStrategy.class.isAssignableFrom(strategyClass)) {
+            solver = new DfsSolver(board);
+        } else if (AStarStrategy.class.isAssignableFrom(strategyClass)) {
+            solver = new AStarSolver(board);
+        } else {
+            throw new IllegalArgumentException("unsupported strategy class " + strategyClass.getName());
+        }
+        solver.setStrategy(strategyClass);
+        return solver;
+    }
+
+    /**
      * store the Board reference.
      * @param board to be solved
      */

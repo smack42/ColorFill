@@ -23,24 +23,19 @@ import colorfill.model.Board;
 
 /**
  * this strategy results in an incomplete search.
- * it chooses the colors in three steps:
+ * it chooses the colors in two steps:
  * <p>
  * 1) colors that can be completely flooded in the next step.
  * (these are always optimal moves!?)
  * <p>
- * 2 a) if 1) gives no result and current depth is less than maxDepth
- * then the colors that are situated at depth + 1.
- * (hence the name "deep")
- * <p>
- * 2 b) if 1) gives no result and current depth is equal or larger than maxDepth
- * then all available colors.
- * (complete coverage of the outer branches of the search tree)
+ * 2 a) if 1) gives no result then the colors that are situated at depth + 1
+ * or lower. (hence the name "deeper")
  */
-public class DeepDfsStrategy implements DfsStrategy {
+public class DfsDeeperStrategy implements DfsStrategy {
 
     private final int maxDepth;
 
-    public DeepDfsStrategy(final Board board, final int startPos) {
+    public DfsDeeperStrategy(final Board board, final int startPos) {
         this.maxDepth = board.getDepth(startPos);
     }
 
@@ -53,11 +48,7 @@ public class DeepDfsStrategy implements DfsStrategy {
             final ColorAreaGroup neighbors) {
         ByteList result = neighbors.getColorsCompleted(notFlooded);
         if (null == result) {
-            if (depth < this.maxDepth) {
-                result = neighbors.getColorsDepth(depth + 1);
-            } else  {
-                result = neighbors.getColorsNotEmpty();
-            }
+            result = neighbors.getColorsDepthOrLower(Math.min(depth + 1, this.maxDepth));
         }
         return result;
     }

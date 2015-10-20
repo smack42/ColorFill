@@ -68,7 +68,7 @@ public class ControlPanel extends JPanel {
     private final JLabel  hintEstimatedSteps = new JLabel();
     private boolean showHint = false;
 
-    private static final int MAX_NUMBER_SOLVER_SOLUTIONS = 4; // TODO dynamically handle max. number of solver solutions visible
+    private static final int MAX_NUMBER_SOLVER_SOLUTIONS = 5; // TODO dynamically handle max. number of solver solutions visible
     private final IRow[]                solverRows1         = new IRow[MAX_NUMBER_SOLVER_SOLUTIONS];
     private final JRadioButton[]        solverRButtons      = new JRadioButton[MAX_NUMBER_SOLVER_SOLUTIONS];
     private final IRow[]                solverRows2         = new IRow[MAX_NUMBER_SOLVER_SOLUTIONS];

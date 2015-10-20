@@ -377,6 +377,10 @@ public class Board {
         return this.idsColorAreas[id];
     }
 
+    public ColorArea[] getColorAreasArray() {
+        return this.idsColorAreas;
+    }
+
     public int getColor(int cell) {
         return this.cells[cell];
     }

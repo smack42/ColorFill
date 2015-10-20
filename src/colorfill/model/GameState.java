@@ -30,7 +30,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 
-import colorfill.solver.DfsSolver;
+import colorfill.solver.AStarTigrouStrategy;
+import colorfill.solver.AbstractSolver;
+import colorfill.solver.DfsDeepStrategy;
+import colorfill.solver.DfsDeeperStrategy;
+import colorfill.solver.DfsGreedyNextStrategy;
+import colorfill.solver.DfsGreedyStrategy;
 import colorfill.solver.Solution;
 import colorfill.solver.Solver;
 import colorfill.solver.Strategy;
@@ -57,6 +62,15 @@ public class GameState {
     public static final String PROPERTY_HINT = "hint";
 
     private static final int NUMBER_OF_SOLVER_THREADS = 4;
+
+    private static final Class<?>[] STRATEGIES = { // all solver strategies, sorted by average speed (fastest first)
+            DfsGreedyStrategy.class
+            ,DfsGreedyNextStrategy.class
+            ,DfsDeepStrategy.class
+            ,DfsDeeperStrategy.class
+            //,DfsExhaustiveStrategy.class // too slow and needs too much memory
+            ,AStarTigrouStrategy.class
+    };
 
 
     public GameState() {
@@ -172,19 +186,18 @@ public class GameState {
             this.start();
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public void run() {
             GameState.this.clearProgressSolutions();
             final ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_SOLVER_THREADS);
             final List<Future<Solution>> futureSolutions = new ArrayList<Future<Solution>>();
-            final Class<Strategy>[] strategies = new DfsSolver(this.board).getSupportedStrategies();
             int i = 0;
-            for (final Class<Strategy> strategy : strategies) {
+            for (final Class<?> strategy : STRATEGIES) {
                 if (++i > this.numberOfSolverStrategies) {
                     break; // for()
                 }
-                final Solver solver = new DfsSolver(this.board);
-                solver.setStrategy(strategy);
+                final Solver solver = AbstractSolver.createSolver((Class<Strategy>)strategy, this.board);
                 futureSolutions.add(executor.submit(new Callable<Solution>() {
                     public Solution call() throws Exception {
                         solver.execute(SolverRun.this.startPos);

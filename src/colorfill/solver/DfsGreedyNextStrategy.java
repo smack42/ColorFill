@@ -26,10 +26,12 @@ import it.unimi.dsi.fastutil.bytes.ByteList;
  * 1) colors that can be completely flooded in the next step.
  * (these are always optimal moves!?)
  * <p>
- * 2) if 1) gives no result then the colors that contain
- * the maximum number of member cells. (hence the name "greedy")
+ * 2) if 1) gives no result then the colors that have the maximum number
+ * of new neighbor member cells, that means neighbors that are not yet flooded
+ * and not yet known as neighbors of the flooded area.
+ * (hence the name "greedy next")
  */
-public class GreedyDfsStrategy implements DfsStrategy {
+public class DfsGreedyNextStrategy implements DfsStrategy {
 
     @Override
     public ByteList selectColors(final int depth,
@@ -40,7 +42,7 @@ public class GreedyDfsStrategy implements DfsStrategy {
             final ColorAreaGroup neighbors) {
         ByteList result = neighbors.getColorsCompleted(notFlooded);
         if (null == result) {
-            result = neighbors.getColorsMaxMembers(flooded);
+            result = neighbors.getColorsMaxNextNeighbors(flooded);
         }
         return result;
     }

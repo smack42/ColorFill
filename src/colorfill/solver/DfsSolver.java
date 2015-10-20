@@ -31,16 +31,7 @@ public class DfsSolver extends AbstractSolver {
 
     private static final int MAX_SEARCH_DEPTH = 150; // arbitrary limit
 
-    @SuppressWarnings("rawtypes")
-    private static final Class[] SUPPORTED_STRATEGIES = {
-        GreedyDfsStrategy.class,
-        GreedyNextDfsStrategy.class,
-        DeepDfsStrategy.class,
-        DeeperDfsStrategy.class
-        //,ExhaustiveDfsStrategy.class // this one is very slow and needs very much RAM!
-    };
-
-    private Class<? extends DfsStrategy> strategyClass;
+    private Class<? extends DfsStrategy> strategyClass = DfsGreedyStrategy.class; // default
     private DfsStrategy strategy;
 
     private byte[] solution;
@@ -65,39 +56,26 @@ public class DfsSolver extends AbstractSolver {
         if (false == DfsStrategy.class.isAssignableFrom(strategyClass)) {
             throw new IllegalArgumentException(
                     "unsupported strategy class " + strategyClass.getName()
-                    + "  " + this.getClass().getSimpleName() + " supports " + DfsStrategy.class.getSimpleName() + " only.");
+                    + "! " + this.getClass().getSimpleName() + " supports " + DfsStrategy.class.getSimpleName() + " only.");
         }
         this.strategyClass = (Class<? extends DfsStrategy>) strategyClass;
     }
 
-    /* (non-Javadoc)
-     * @see colorfill.solver.Solver#getSupportedStrategies()
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public Class<Strategy>[] getSupportedStrategies() {
-        return Arrays.copyOf(SUPPORTED_STRATEGIES, SUPPORTED_STRATEGIES.length);
-    }
-
-    @SuppressWarnings("unchecked")
     private DfsStrategy makeStrategy(final int startPos) {
         final DfsStrategy result;
-        if (null == this.strategyClass) {
-            this.strategyClass = SUPPORTED_STRATEGIES[0];
-        }
-        if (GreedyDfsStrategy.class.equals(this.strategyClass)) {
-            result = new GreedyDfsStrategy();
-        } else if (GreedyNextDfsStrategy.class.equals(this.strategyClass)) {
-            result = new GreedyNextDfsStrategy();
-        } else if (DeepDfsStrategy.class.equals(this.strategyClass)) {
-            result = new DeepDfsStrategy(this.board, startPos);
-        } else if (DeeperDfsStrategy.class.equals(this.strategyClass)) {
-            result = new DeeperDfsStrategy(this.board, startPos);
-        } else if (ExhaustiveDfsStrategy.class.equals(this.strategyClass)) {
-            result = new ExhaustiveDfsStrategy(this.board);
+        if (DfsGreedyStrategy.class.equals(this.strategyClass)) {
+            result = new DfsGreedyStrategy();
+        } else if (DfsGreedyNextStrategy.class.equals(this.strategyClass)) {
+            result = new DfsGreedyNextStrategy();
+        } else if (DfsDeepStrategy.class.equals(this.strategyClass)) {
+            result = new DfsDeepStrategy(this.board, startPos);
+        } else if (DfsDeeperStrategy.class.equals(this.strategyClass)) {
+            result = new DfsDeeperStrategy(this.board, startPos);
+        } else if (DfsExhaustiveStrategy.class.equals(this.strategyClass)) {
+            result = new DfsExhaustiveStrategy(this.board);
         } else {
             throw new IllegalArgumentException(
-                    "DfsSolver.makeStrategy() - unsupported strategy class " + this.strategyClass.getName());
+                    "unsupported strategy class " + this.strategyClass.getName());
         }
         return result;
     }
@@ -107,7 +85,7 @@ public class DfsSolver extends AbstractSolver {
      */
     @Override
     public String getSolverName() {
-        return this.strategy.getClass().getSimpleName();
+        return this.strategyClass.getSimpleName();
     }
 
     /* (non-Javadoc)

@@ -39,12 +39,12 @@ import colorfill.model.Board;
  * 2) all colors that are possible in the next step.
  * (hence the name "exhaustive")
  */
-public class ExhaustiveDfsStrategy implements DfsStrategy {
+public class DfsExhaustiveStrategy implements DfsStrategy {
 
     private final byte[] thisState;
     private final StateMap stateMap;
 
-    public ExhaustiveDfsStrategy(final Board board) {
+    public DfsExhaustiveStrategy(final Board board) {
         final int stateBytes = board.getSizeColorAreas8();
         this.thisState = new byte[stateBytes];
         this.stateMap = new StateMap(stateBytes);
