@@ -52,3 +52,10 @@ output of this program, ColorFill: 2,116,152 steps (would have been 2nd place)
 steps_ColorFill_DFS.txt         = output of ColorFill using its 4 DFS strategies
 steps_ColorFill_DFS_details.txt = detailed output (5887 CPU minutes!)
 
+
+added 2015-10-20:
+output of this program, ColorFill: 2,095,015 steps (would have been 1st place!)
+
+steps_ColorFill_AStar_DFS.txt         = A* (tigrou) + 2 fast DFS strategies
+steps_ColorFill_AStar_DFS_details.txt = detailed output (199 CPU minutes)
+

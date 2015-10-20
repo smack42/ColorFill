@@ -260,8 +260,8 @@ public class Starter {
     private static void runSolverCg26232(final String inputFileName) throws Exception {
         // which strategies to run
         final Class[] STRATEGIES = {
-//            DfsGreedyStrategy.class,
-//            DfsGreedyNextStrategy.class,
+            DfsGreedyStrategy.class,
+            DfsGreedyNextStrategy.class,
 //            DeepDfsStrategy.class,
 //            DeeperDfsStrategy.class,
 //            ExhaustiveDfsStrategy.class
@@ -343,7 +343,7 @@ public class Starter {
                 }
             }
             futureSolutions.clear();
-            if (count >= 10000) break;
+//            if (count >= 10000) break;
         }
         // print summary
         for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
