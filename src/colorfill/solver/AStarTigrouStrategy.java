@@ -20,6 +20,7 @@ package colorfill.solver;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
+import colorfill.model.Board;
 import colorfill.model.ColorArea;
 
 /**
@@ -34,6 +35,19 @@ public class AStarTigrouStrategy implements AStarStrategy {
     // it exists here only for performance improvement.
     // (avoid construction / garbage collection inside that function)
     private final Queue<ColorArea> queue = new ArrayDeque<ColorArea>();
+
+    // depths is used in AStarNode.getSumDistances().
+    // it exists here only for performance improvement.
+    // (avoid construction / garbage collection inside that function)
+    private final int[] depths;
+
+    /**
+     * the constructor
+     * @param board
+     */
+    public AStarTigrouStrategy(final Board board) {
+        this.depths = new int[board.getColorAreasArray().length];
+    }
 
     /* (non-Javadoc)
      * @see colorfill.solver.AStarStrategy#setEstimatedCost(colorfill.solver.AStarNode)
@@ -51,7 +65,7 @@ public class AStarTigrouStrategy implements AStarStrategy {
             for (final byte nextColor : currentNode.getNeighborColors()) {
                 final AStarNode nextNode = new AStarNode(currentNode);
                 nextNode.play(nextColor);
-                final int nextDistance = nextNode.getSumDistances(this.queue);
+                final int nextDistance = nextNode.getSumDistances(this.queue, this.depths);
                 if (minDistance > nextDistance) {
                     minDistance = nextDistance;
                     minNode = nextNode;

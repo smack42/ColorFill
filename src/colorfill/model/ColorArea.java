@@ -39,11 +39,6 @@ public class ColorArea implements Comparable<ColorArea> {
     private ColorArea[] neighborsArray = null; // will be created by makeNeighborsArray()
     private int depth = 0;
 
-    /**
-     * can be used by search algorithms to erase / re-calculate "dynamic depth" info
-     */
-    public int dynamicDepth;
-
     protected ColorArea(final byte color, final int boardWidth) {
         this.color = (byte)color;
         this.boardWidth = boardWidth;

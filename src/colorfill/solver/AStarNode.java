@@ -127,27 +127,28 @@ public class AStarNode implements Comparable<AStarNode> {
     /**
      * calculate the sum of distances from current flooded area to all remaining areas.
      * @param queue an empty Queue; used inside this function; will be empty on return.
+     * @param depths an array of int; must be large enough to store a value for each ColorArea on the Board.
      * @return
      */
-    public int getSumDistances(final Queue<ColorArea> queue) {
+    public int getSumDistances(final Queue<ColorArea> queue, final int[] depths) {
         final int NO_DEPTH = -1;
         for (final ColorArea ca : this.flooded.getBoard().getColorAreasArray()) {
             if (this.flooded.contains(ca)) {
-                ca.dynamicDepth = 0;  // start
+                depths[ca.getId()] = 0;  // start
                 queue.offer(ca);
             } else {
-                ca.dynamicDepth = NO_DEPTH;  // reset
+                depths[ca.getId()] = NO_DEPTH;  // reset
             }
         }
         int sumDistances = 0;
-        ColorArea current;
-        while (null != (current = queue.poll())) { // while queue is not empty
-            final int nextDepth = current.dynamicDepth + 1;
-            for (final ColorArea next : current.getNeighborsArray()) {
-                if (next.dynamicDepth == NO_DEPTH) {
-                    next.dynamicDepth = nextDepth;
+        ColorArea currentCa;
+        while (null != (currentCa = queue.poll())) { // while queue is not empty
+            final int nextDepth = depths[currentCa.getId()] + 1;
+            for (final ColorArea nextCa : currentCa.getNeighborsArray()) {
+                if (depths[nextCa.getId()] == NO_DEPTH) {
+                    depths[nextCa.getId()] = nextDepth;
                     sumDistances += nextDepth;
-                    queue.offer(next);
+                    queue.offer(nextCa);
                 }
             }
         }
