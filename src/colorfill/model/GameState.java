@@ -64,12 +64,12 @@ public class GameState {
     private static final int NUMBER_OF_SOLVER_THREADS = 4;
 
     private static final Class<?>[] STRATEGIES = { // all solver strategies, sorted by average speed (fastest first)
-            DfsGreedyStrategy.class
+            AStarTigrouStrategy.class
+            ,DfsGreedyStrategy.class
             ,DfsGreedyNextStrategy.class
             ,DfsDeepStrategy.class
             ,DfsDeeperStrategy.class
             //,DfsExhaustiveStrategy.class // too slow and needs too much memory
-            ,AStarTigrouStrategy.class
     };
 
 
@@ -311,7 +311,7 @@ public class GameState {
 
     private void calculateHintSolver() {
         System.out.println("calculateHintSolver");
-        new SolverRun(2); // use only the 2 fastest solver strategies
+        new SolverRun(3); // use only the 3 fastest solver strategies
     }
 
 
