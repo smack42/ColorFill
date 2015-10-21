@@ -39,6 +39,11 @@ public class ColorArea implements Comparable<ColorArea> {
     private ColorArea[] neighborsArray = null; // will be created by makeNeighborsArray()
     private int depth = 0;
 
+    /**
+     * used by the AStar (A*) search algorithm to erase / re-calculate "dynamic depth" info
+     */
+    public int tmpAStarDepth;
+
     protected ColorArea(final byte color, final int boardWidth) {
         this.color = (byte)color;
         this.boardWidth = boardWidth;
@@ -148,7 +153,7 @@ public class ColorArea implements Comparable<ColorArea> {
         return this.neighborsUnmodifiable;
     }
 
-    void makeNeighborsArray() {
+    protected void makeNeighborsArray() {
         this.neighborsArray = this.neighbors.toArray(new ColorArea[0]);
     }
 
@@ -166,7 +171,7 @@ public class ColorArea implements Comparable<ColorArea> {
     public int getId() {
         return this.id;
     }
-    public void setId(final int id) {
+    protected void setId(final int id) {
         this.id = id;
     }
 }

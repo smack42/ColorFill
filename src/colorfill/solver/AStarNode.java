@@ -130,23 +130,23 @@ public class AStarNode implements Comparable<AStarNode> {
      * @param depths an array of int; must be large enough to store a value for each ColorArea on the Board.
      * @return
      */
-    public int getSumDistances(final Queue<ColorArea> queue, final int[] depths) {
+    public int getSumDistances(final Queue<ColorArea> queue) {
         final int NO_DEPTH = -1;
         for (final ColorArea ca : this.flooded.getBoard().getColorAreasArray()) {
             if (this.flooded.contains(ca)) {
-                depths[ca.getId()] = 0;  // start
+                ca.tmpAStarDepth = 0;  // start
                 queue.offer(ca);
             } else {
-                depths[ca.getId()] = NO_DEPTH;  // reset
+                ca.tmpAStarDepth = NO_DEPTH;  // reset
             }
         }
         int sumDistances = 0;
         ColorArea currentCa;
         while (null != (currentCa = queue.poll())) { // while queue is not empty
-            final int nextDepth = depths[currentCa.getId()] + 1;
+            final int nextDepth = currentCa.tmpAStarDepth + 1;
             for (final ColorArea nextCa : currentCa.getNeighborsArray()) {
-                if (depths[nextCa.getId()] == NO_DEPTH) {
-                    depths[nextCa.getId()] = nextDepth;
+                if (nextCa.tmpAStarDepth == NO_DEPTH) {
+                    nextCa.tmpAStarDepth = nextDepth;
                     sumDistances += nextDepth;
                     queue.offer(nextCa);
                 }

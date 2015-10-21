@@ -61,7 +61,7 @@ public class AStarSolver extends AbstractSolver {
     private AStarStrategy makeStrategy() {
         final AStarStrategy result;
         if (AStarTigrouStrategy.class.equals(this.strategyClass)) {
-            result = new AStarTigrouStrategy(this.board);
+            result = new AStarTigrouStrategy();
         } else {
             throw new IllegalArgumentException(
                     "unsupported strategy class " + this.strategyClass.getName());
