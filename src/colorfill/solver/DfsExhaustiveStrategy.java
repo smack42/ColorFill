@@ -46,7 +46,7 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
 
     public DfsExhaustiveStrategy(final Board board) {
         final int stateBytes = board.getSizeColorAreas8();
-        this.thisState = new byte[stateBytes];
+        this.thisState = new byte[(stateBytes + 3) & ~3];
         this.stateMap = new StateMap(stateBytes);
     }
 
@@ -76,10 +76,14 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
 
     /** store the id's of the color areas as bits in thisState */
     private void makeThisState(final ColorAreaSet set1, final ColorAreaSet set2) {
-        System.arraycopy(set1.getArray(), 0, this.thisState, 0, this.thisState.length);
-        final byte[] arr2 = set2.getArray();
-        for (int i = 0;  i < arr2.length;  ++i) {
-            this.thisState[i] |= arr2[i];
+        final int[] arr1 = set1.getArray();
+        final int[] arr2 = set2.getArray();
+        for (int b = -1, i = 0;  i < arr1.length;  ++i) {
+            final int v = arr1[i] | arr2[i];
+            this.thisState[++b] = (byte)(v);
+            this.thisState[++b] = (byte)(v >> 8);
+            this.thisState[++b] = (byte)(v >> 16);
+            this.thisState[++b] = (byte)(v >> 24);
         }
     }
 
@@ -141,7 +145,6 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
          * @return true if the state/depth pair was added.
          */
         public boolean put(final byte[] state, final int depth) {
-            assert this.stateSize == state.length;
             // ensure that nextState points to next available memory position
             if (this.nextState + this.stateSize > this.nextMemoryBlock) {
                 if (this.memoryBlocks.length <= this.numMemoryBlocks) {

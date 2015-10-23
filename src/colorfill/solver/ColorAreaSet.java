@@ -19,7 +19,6 @@ package colorfill.solver;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
@@ -32,7 +31,7 @@ public class ColorAreaSet implements Iterable<ColorArea> {
     private static final int SIZE_UNKNOWN = -1;
 
     private final Board board;
-    private final byte[] array;
+    private final int[] array;
     private int size;
 
     /**
@@ -40,7 +39,7 @@ public class ColorAreaSet implements Iterable<ColorArea> {
      */
     public ColorAreaSet(final Board board) {
         this.board = board;
-        this.array = new byte[board.getSizeColorAreas8()];
+        this.array = new int[(board.getSizeColorAreas8() + 3) >> 2];
         this.size = 0;
     }
 
@@ -70,14 +69,14 @@ public class ColorAreaSet implements Iterable<ColorArea> {
      * remove all ColorAreas from this set
      */
     public void clear() {
-        Arrays.fill(this.array, (byte)0);
+        Arrays.fill(this.array, 0);
         this.size = 0;
     }
 
     /**
-     * get the reference to the internal byte array
+     * get the reference of the internal array
      */
-    public byte[] getArray() {
+    public int[] getArray() {
         return this.array;
     }
 
@@ -86,7 +85,7 @@ public class ColorAreaSet implements Iterable<ColorArea> {
      */
     public void add(final ColorArea ca) {
         final int id = ca.getId();
-        this.array[id >> 3] |= 1 << (id & 7);
+        this.array[id >> 5] |= 1 << id;  // implicit shift distance (id & 0x1f)
         this.size = SIZE_UNKNOWN;
     }
 
@@ -95,7 +94,7 @@ public class ColorAreaSet implements Iterable<ColorArea> {
      */
     public boolean contains(final ColorArea ca) {
         final int id = ca.getId();
-        final int bit = this.array[id >> 3] & (1 << (id & 7));
+        final int bit = this.array[id >> 5] & (1 << id);  // implicit shift distance (id & 0x1f)
         return 0 != bit;
     }
 
@@ -104,9 +103,9 @@ public class ColorAreaSet implements Iterable<ColorArea> {
      */
     public boolean containsAll(final ColorAreaSet other) {
         for (int i = 0;  i < this.array.length;  ++i) {
-            final byte thisByte = this.array[i];
-            final byte otherByte = other.array[i];
-            if ((thisByte & otherByte) != otherByte) {
+            final int thisInt = this.array[i];
+            final int otherInt = other.array[i];
+            if ((thisInt & otherInt) != otherInt) {
                 return false;
             }
         }
@@ -143,8 +142,8 @@ public class ColorAreaSet implements Iterable<ColorArea> {
     public int size() {
         if (SIZE_UNKNOWN == this.size) {
             this.size = 0;
-            for (final byte b : this.array) {
-                this.size += Integer.bitCount(0xff & b);
+            for (final int i : this.array) {
+                this.size += Integer.bitCount(i); // hopefully an intrinsic function using instruction POPCNT
             }
         }
         return this.size;
@@ -155,8 +154,8 @@ public class ColorAreaSet implements Iterable<ColorArea> {
      */
     public boolean isEmpty() {
         if (SIZE_UNKNOWN == this.size) {
-            for (final byte b : this.array) {
-                if (0 != b) {
+            for (final int i : this.array) {
+                if (0 != i) {
                     return false;
                 }
             }
@@ -196,8 +195,8 @@ public class ColorAreaSet implements Iterable<ColorArea> {
     private class ColorAreaSetIterator implements Iterator<ColorArea> {
         private int count = 0;
         private final int countLimit = ColorAreaSet.this.size();
-        private int byteIdx = -1, bitIdx = 0;
-        private int buf = 0;
+        private int intIdx = 0;
+        private int buf = ColorAreaSet.this.array[0];
 
         /* (non-Javadoc)
          * @see java.util.Iterator#hasNext()
@@ -212,21 +211,17 @@ public class ColorAreaSet implements Iterable<ColorArea> {
          */
         @Override
         public ColorArea next() {
-            if (false == this.hasNext()) {
-                throw new NoSuchElementException();
-            }
+            // note: if (false == this.hasNext())
+            // then it throws ArrayIndexOutOfBoundsException
+            // instead of NoSuchElementException
             while (0 == this.buf) {
-                this.buf = 0xff & ColorAreaSet.this.array[++this.byteIdx];
-                this.bitIdx = 0;
+                this.buf = ColorAreaSet.this.array[++this.intIdx];
             }
-            while (0 == (1 & this.buf)) {
-                this.bitIdx += 1;
-                this.buf >>= 1;
-            }
-            final int caId = (this.byteIdx << 3) + this.bitIdx;
-            this.count += 1;
-            this.bitIdx += 1;
-            this.buf >>= 1;
+            final int l1b = this.buf & -this.buf; // Integer.lowestOneBit(this.buf)
+            ++this.count;
+            final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
+            final int caId = (this.intIdx << 5) + 31 - clz;
+            this.buf ^= l1b;
             return ColorAreaSet.this.board.getColorArea4Id(caId);
         }
 
