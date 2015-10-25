@@ -17,10 +17,6 @@
 
 package colorfill.solver;
 
-import it.unimi.dsi.fastutil.bytes.ByteArrayList;
-import it.unimi.dsi.fastutil.bytes.ByteList;
-import it.unimi.dsi.fastutil.bytes.ByteLists;
-
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
 
@@ -30,8 +26,11 @@ import colorfill.model.ColorArea;
  */
 public class ColorAreaGroup {
 
+    public static final byte NO_COLOR = Byte.MAX_VALUE;
+
     private final Board board;
     private final ColorAreaSet[] theArray;
+    private final int sizeColorArray;
 
     /**
      * the standard constructor
@@ -42,6 +41,7 @@ public class ColorAreaGroup {
         for (int color = 0;  color < this.theArray.length;  ++color) {
             this.theArray[color] = new ColorAreaSet(this.board);
         }
+        this.sizeColorArray = this.board.getNumColors() + 1;
     }
 
     /**
@@ -54,6 +54,7 @@ public class ColorAreaGroup {
         for (int color = 0;  color < this.theArray.length;  ++color) {
             this.theArray[color] = new ColorAreaSet(this.theArray[color]);
         }
+        this.sizeColorArray = other.sizeColorArray;
     }
 
     /**
@@ -134,13 +135,15 @@ public class ColorAreaGroup {
      * get the colors that have at least one color area.
      * @return list of occupied colors, not expected to be empty
      */
-    public ByteList getColorsNotEmpty() {
-        final ByteList result = new ByteArrayList();
+    public byte[] getColorsNotEmpty() {
+        final byte[] result = new byte[this.sizeColorArray];
+        int idx = 0;
         for (byte color = 0;  color < this.theArray.length;  ++color) {
             if (false == this.theArray[color].isEmpty()) {
-                result.add(color);
+                result[idx++] = color;
             }
         }
+        result[idx] = NO_COLOR;
         return result;
     }
 
@@ -148,19 +151,18 @@ public class ColorAreaGroup {
      * get the colors that are situated at the specified depth.
      * @return list of colors at depth, may be empty
      */
-    public ByteList getColorsDepth(final int depth) {
-        ByteList result = ByteLists.EMPTY_LIST;
+    public byte[] getColorsDepth(final int depth) {
+        final byte[] result = new byte[this.sizeColorArray];
+        int idx = 0;
         for (final ColorAreaSet caSet : this.theArray) {
             for (final ColorArea ca : caSet) {
                 if (ca.getDepth() == depth) {
-                    if (false == result instanceof ByteArrayList) {
-                        result = new ByteArrayList();
-                    }
-                    result.add(ca.getColor());
+                    result[idx++] = ca.getColor();
                     break; // for (ca)
                 }
             }
         }
+        result[idx] = NO_COLOR;
         return result;
     }
 
@@ -169,8 +171,9 @@ public class ColorAreaGroup {
      * but only the colors at the maximum depth level.
      * @return list of colors at depth or lower, not expected to be empty
      */
-    public ByteList getColorsDepthOrLower(final int depth) {
-        final ByteList result = new ByteArrayList();
+    public byte[] getColorsDepthOrLower(final int depth) {
+        final byte[] result = new byte[this.sizeColorArray];
+        int idx = 0;
         int depthMax = -1;
         for (final ColorAreaSet caSet : this.theArray) {
             byte color = Byte.MIN_VALUE;
@@ -188,12 +191,13 @@ public class ColorAreaGroup {
             }
             if (depthMax < depthColor) {
                 depthMax = depthColor;
-                result.clear();
-                result.add(color);
+                result[0] = color;
+                idx = 1;
             } else if (depthMax == depthColor) {
-                result.add(color);
+                result[idx++] = color;
             }
         }
+        result[idx] = NO_COLOR;
         return result;
     }
 
@@ -202,13 +206,14 @@ public class ColorAreaGroup {
      * @param other
      * @return list of completed colors or null
      */
-    public ByteList getColorsCompleted(final ColorAreaGroup other) {
+    public byte[] getColorsCompleted(final ColorAreaGroup other) {
         for (byte color = 0;  color < this.theArray.length;  ++color) {
             final ColorAreaSet thisSet = this.theArray[color];
             if (thisSet.size() > 0) {
                 final ColorAreaSet otherSet = other.theArray[color];
                 if ((thisSet.size() == otherSet.size()) && (thisSet.containsAll(otherSet))) {
-                    return ByteLists.singleton(color);
+                    final byte[] result = { color };
+                    return result;
                 }
             }
         }
@@ -219,8 +224,9 @@ public class ColorAreaGroup {
      * get the colors that have the maximum number of member cells.
      * @return list of colors, not expected to be empty
      */
-    public ByteList getColorsMaxMembers() {
-        final ByteList result = new ByteArrayList();
+    public byte[] getColorsMaxMembers() {
+        final byte[] result = new byte[this.sizeColorArray];
+        int idx = 0;
         int maxCount = 1; // return empty collection if all colors are empty. not expected!
         for (byte color = 0;  color < this.theArray.length;  ++color) {
             int count = 0;
@@ -229,12 +235,13 @@ public class ColorAreaGroup {
             }
             if (maxCount < count) {
                 maxCount = count;
-                result.clear();
-            }
-            if (maxCount == count) {
-                result.add(color);
+                result[0] = color;
+                idx = 1;
+            } else if (maxCount == count) {
+                result[idx++] = color;
             }
         }
+        result[idx] = NO_COLOR;
         return result;
     }
 
@@ -244,8 +251,9 @@ public class ColorAreaGroup {
      * @param excludeNeighbors exclude color areas if their neighbors are contained here
      * @return list of colors, not expected to be empty
      */
-    public ByteList getColorsMaxMembers(final ColorAreaSet excludeNeighbors) {
-        final ByteList result = new ByteArrayList();
+    public byte[] getColorsMaxMembers(final ColorAreaSet excludeNeighbors) {
+        final byte[] result = new byte[this.sizeColorArray];
+        int idx = 0;
         int maxCount = 1; // return empty collection if all colors are empty. not expected!
         for (byte color = 0;  color < this.theArray.length;  ++color) {
             int count = 0;
@@ -256,12 +264,13 @@ public class ColorAreaGroup {
             }
             if (maxCount < count) {
                 maxCount = count;
-                result.clear();
-            }
-            if (maxCount == count) {
-                result.add(color);
+                result[0] = color;
+                idx = 1;
+            } else if (maxCount == count) {
+                result[idx++] = color;
             }
         }
+        result[idx] = NO_COLOR;
         return result;
     }
 
@@ -271,8 +280,9 @@ public class ColorAreaGroup {
      * @param excludeNeighbors exclude color areas if their neighbors or their next neighbors are contained here
      * @return list of colors, not expected to be empty
      */
-    public ByteList getColorsMaxNextNeighbors(final ColorAreaSet excludeNeighbors) {
-        final ByteList result = new ByteArrayList();
+    public byte[] getColorsMaxNextNeighbors(final ColorAreaSet excludeNeighbors) {
+        final byte[] result = new byte[this.sizeColorArray];
+        int idx = 0;
         int maxCount = -1; // include colors that have zero or more next new neighbors
         for (byte color = 0;  color < this.theArray.length;  ++color) {
             int count = 0;
@@ -286,12 +296,13 @@ public class ColorAreaGroup {
             }
             if (maxCount < count) {
                 maxCount = count;
-                result.clear();
-            }
-            if (maxCount == count) {
-                result.add(color);
+                result[0] = color;
+                idx = 1;
+            } else if (maxCount == count) {
+                result[idx++] = color;
             }
         }
+        result[idx] = NO_COLOR;
         return result;
     }
 

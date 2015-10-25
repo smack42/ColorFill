@@ -46,7 +46,7 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill __DEV__";
-        final String version  = "0.1.13 (2015-10-22)";
+        final String version  = "0.1.13 (2015-10-25)";
         final String author   = "Copyright (C) 2015 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
@@ -158,7 +158,8 @@ public class Starter {
             DfsGreedyNextStrategy.class,
             DfsDeepStrategy.class,
             DfsDeeperStrategy.class,
-            DfsExhaustiveStrategy.class
+            DfsExhaustiveStrategy.class,
+            AStarTigrouStrategy.class
         };
 
         final String outputFileName = "results.txt";
@@ -184,10 +185,9 @@ public class Starter {
                 break; // end of input file !?
             }
             ++count;
-            final Solver solver = new DfsSolver(board);
             // run each of the strategies
             for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
-                solver.setStrategy((Class<Strategy>) STRATEGIES[strategy]);
+                final Solver solver = AbstractSolver.createSolver((Class<Strategy>) STRATEGIES[strategy], board);
                 final long nanoStart = System.nanoTime();
                 final int numSteps = solver.execute(board.getStartPos());
                 final long nanoEnd = System.nanoTime();

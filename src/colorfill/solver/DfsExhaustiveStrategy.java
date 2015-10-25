@@ -23,11 +23,10 @@ import net.jpountz.xxhash.XXHash32;
 import net.jpountz.xxhash.XXHashFactory;
 
 import it.unimi.dsi.fastutil.Hash;
-import it.unimi.dsi.fastutil.bytes.ByteList;
-import it.unimi.dsi.fastutil.bytes.ByteListIterator;
 import it.unimi.dsi.fastutil.ints.IntHash;
 
 import colorfill.model.Board;
+import static colorfill.solver.ColorAreaGroup.NO_COLOR;
 
 /**
  * this strategy results in a complete search.
@@ -51,25 +50,27 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
     }
 
     @Override
-    public ByteList selectColors(final int depth,
+    public byte[] selectColors(final int depth,
             final byte thisColor,
             final byte[] solution,
             final ColorAreaSet flooded,
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
-        ByteList result = neighbors.getColorsCompleted(notFlooded);
+        byte[] result = neighbors.getColorsCompleted(notFlooded);
         if (null == result) {
-            result = neighbors.getColorsNotEmpty();
+            final byte[] tmpColors = neighbors.getColorsNotEmpty();
+            result = new byte[tmpColors.length];
+            int idx = 0;
 
             // filter the result: remove colors which result in already known states
-            final ByteListIterator it = result.iterator();
-            while (it.hasNext()) {
-                final byte nextColor = it.nextByte();
+            for (final byte nextColor : tmpColors) {
+                if (NO_COLOR == nextColor) break;
                 this.makeThisState(flooded, neighbors.getColor(nextColor));
-                if (false == this.stateMap.put(this.thisState, depth + 1)) {
-                    it.remove();
+                if (true == this.stateMap.put(this.thisState, depth + 1)) {
+                    result[idx++] = nextColor;
                 }
             }
+            result[idx] = NO_COLOR;
         }
         return result;
     }

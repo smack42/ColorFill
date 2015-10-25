@@ -17,8 +17,6 @@
 
 package colorfill.solver;
 
-import it.unimi.dsi.fastutil.bytes.ByteList;
-
 import colorfill.model.Board;
 
 /**
@@ -40,13 +38,13 @@ public class DfsDeeperStrategy implements DfsStrategy {
     }
 
     @Override
-    public ByteList selectColors(final int depth,
+    public byte[] selectColors(final int depth,
             final byte thisColor,
             final byte[] solution,
             final ColorAreaSet flooded,
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
-        ByteList result = neighbors.getColorsCompleted(notFlooded);
+        byte[] result = neighbors.getColorsCompleted(notFlooded);
         if (null == result) {
             result = neighbors.getColorsDepthOrLower(Math.min(depth + 1, this.maxDepth));
         }

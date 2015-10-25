@@ -21,6 +21,7 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 
 import colorfill.model.ColorArea;
+import static colorfill.solver.ColorAreaGroup.NO_COLOR;
 
 /**
  * a specific strategy for the AStar (A*) solver.
@@ -49,6 +50,7 @@ public class AStarTigrouStrategy implements AStarStrategy {
             AStarNode minNode = null;
             //find color which give the minimum sum of distance from root to each other node
             for (final byte nextColor : currentNode.getNeighborColors()) {
+                if (NO_COLOR == nextColor) break;
                 final AStarNode nextNode = new AStarNode(currentNode);
                 nextNode.play(nextColor);
                 final int nextDistance = nextNode.getSumDistances(this.queue);

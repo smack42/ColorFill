@@ -17,12 +17,11 @@
 
 package colorfill.solver;
 
-import it.unimi.dsi.fastutil.bytes.ByteList;
-
 import java.util.Arrays;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
+import static colorfill.solver.ColorAreaGroup.NO_COLOR;
 
 /**
  * a solver implementation that performs a depth-first search using recursion.
@@ -146,9 +145,10 @@ public class DfsSolver extends AbstractSolver {
                 nextNeighbors.addAll(ca.getNeighborsArray(), this.allFlooded);
             }
             // pick the "best" neighbor colors to go on
-            final ByteList nextColors = this.strategy.selectColors(depth, thisColor, this.solution, this.allFlooded, this.notFlooded, nextNeighbors);
+            final byte[] nextColors = this.strategy.selectColors(depth, thisColor, this.solution, this.allFlooded, this.notFlooded, nextNeighbors);
             // go to next recursion level
             for (final byte nextColor : nextColors) {
+                if (NO_COLOR == nextColor) break;
                 doRecursion(depth + 1, nextColor);
             }
             this.allFlooded.removeAll(thisFlooded); // restore for backtracking

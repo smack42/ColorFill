@@ -87,7 +87,7 @@ public class AStarNode implements Comparable<AStarNode> {
      * get the list of neighbor colors.
      * @return
      */
-    public ByteList getNeighborColors() {
+    public byte[] getNeighborColors() {
         return this.neighbors.getColorsNotEmpty();
     }
 
