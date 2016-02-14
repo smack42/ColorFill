@@ -36,7 +36,7 @@ public class ControlController {
     protected ControlController(final MainController mainController, final GameState gameState) {
         this.mainController = mainController;
         this.gameState = gameState;
-        this.controlPanel = new ControlPanel(this, this.gameState.getPreferences().getUiColors(), this.gameState.getPreferences().getNumColors());
+        this.controlPanel = new ControlPanel(this, gameState.getPreferences().getUiColors(), gameState.getPreferences().getNumColors(), gameState.getSolverNames());
     }
 
     protected JPanel getPanel() {
@@ -137,7 +137,7 @@ public class ControlController {
      */
     protected void actionAddSolverResult(final GameProgress gameProgress) {
 //        System.out.println("ControlController.actionAddSolverResult " + gameProgress);
-        this.controlPanel.addSolverResult(gameProgress.getTotalSteps() + " " + gameProgress.getName());
+        this.controlPanel.addSolverResult(gameProgress.getTotalSteps(), gameProgress.getName());
     }
 
     /**

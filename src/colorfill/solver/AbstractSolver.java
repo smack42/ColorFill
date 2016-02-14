@@ -51,6 +51,16 @@ public abstract class AbstractSolver implements Solver {
     }
 
     /**
+     * get the name of the solver.
+     * @param strategyClass strategy to be used
+     * @return
+     */
+    public static String getSolverName(final Class<Strategy> strategyClass) {
+        final Solver solver = createSolver(strategyClass, new Board(2, 2, 2));
+        return solver.getSolverName();
+    }
+
+    /**
      * store the Board reference.
      * @param board to be solved
      */

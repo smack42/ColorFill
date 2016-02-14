@@ -34,6 +34,7 @@ import colorfill.solver.AStarTigrouStrategy;
 import colorfill.solver.AbstractSolver;
 import colorfill.solver.DfsDeepStrategy;
 import colorfill.solver.DfsDeeperStrategy;
+import colorfill.solver.DfsExhaustiveStrategy;
 import colorfill.solver.DfsGreedyNextStrategy;
 import colorfill.solver.DfsGreedyStrategy;
 import colorfill.solver.Solution;
@@ -61,17 +62,21 @@ public class GameState {
     private final AtomicReference<GameState> hintGameState = new AtomicReference<GameState>();
     public static final String PROPERTY_HINT = "hint";
 
-    private static final int NUMBER_OF_SOLVER_THREADS = 4;
-
     private static final Class<?>[] STRATEGIES = { // all solver strategies, sorted by average speed (fastest first)
             AStarTigrouStrategy.class
             ,DfsGreedyStrategy.class
             ,DfsGreedyNextStrategy.class
             ,DfsDeepStrategy.class
             ,DfsDeeperStrategy.class
-            //,DfsExhaustiveStrategy.class // too slow and needs too much memory
+            ,DfsExhaustiveStrategy.class // too slow and needs too much memory
     };
 
+    private static final String[] SOLVER_NAMES = new String[STRATEGIES.length];
+    static {
+        for (int i = 0;  i < SOLVER_NAMES.length;  ++i) {
+            SOLVER_NAMES[i] = AbstractSolver.getSolverName((Class<Strategy>) STRATEGIES[i]);
+        }
+    }
 
     public GameState() {
         this.pref = new GamePreferences();
@@ -134,6 +139,10 @@ public class GameState {
         return this.pref;
     }
 
+    public String[] getSolverNames() {
+        return SOLVER_NAMES;
+    }
+
     /**
      * create a new board with random cell color values.
      */
@@ -190,7 +199,8 @@ public class GameState {
         @Override
         public void run() {
             GameState.this.clearProgressSolutions();
-            final ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_SOLVER_THREADS);
+            final int numThreads = Runtime.getRuntime().availableProcessors();
+            final ExecutorService executor = Executors.newFixedThreadPool(numThreads);
             final List<Future<Solution>> futureSolutions = new ArrayList<Future<Solution>>();
             int i = 0;
             for (final Class<?> strategy : STRATEGIES) {

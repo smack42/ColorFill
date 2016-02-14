@@ -30,6 +30,8 @@ public class DfsSolver extends AbstractSolver {
 
     private static final int MAX_SEARCH_DEPTH = 150; // arbitrary limit
 
+    private static final int EXHAUSTIVE_MAX_BOARD_SIZE = 15*15; // DfsExhaustiveStrategy will not run for larger boards
+
     private Class<? extends DfsStrategy> strategyClass = DfsGreedyStrategy.class; // default
     private DfsStrategy strategy;
 
@@ -71,7 +73,11 @@ public class DfsSolver extends AbstractSolver {
         } else if (DfsDeeperStrategy.class.equals(this.strategyClass)) {
             result = new DfsDeeperStrategy(this.board, startPos);
         } else if (DfsExhaustiveStrategy.class.equals(this.strategyClass)) {
-            result = new DfsExhaustiveStrategy(this.board);
+            if (this.board.getSize() <= EXHAUSTIVE_MAX_BOARD_SIZE) {
+                result = new DfsExhaustiveStrategy(this.board);
+            } else {
+                result = null; // do not use DfsExhaustiveStrategy for large boards
+            }
         } else {
             throw new IllegalArgumentException(
                     "unsupported strategy class " + this.strategyClass.getName());
@@ -93,6 +99,9 @@ public class DfsSolver extends AbstractSolver {
     @Override
     protected void executeInternal(final int startPos) throws InterruptedException {
         this.strategy = this.makeStrategy(startPos);
+        if (null == this.strategy) {
+            return;
+        }
 
         final ColorArea startCa = this.board.getColorArea4Cell(startPos);
         this.allFlooded = new ColorAreaSet(this.board);
