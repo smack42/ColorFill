@@ -33,7 +33,6 @@ import colorfill.solver.AStarTigrouStrategy;
 import colorfill.solver.AbstractSolver;
 import colorfill.solver.DfsDeepStrategy;
 import colorfill.solver.DfsDeeperStrategy;
-import colorfill.solver.DfsSolver;
 import colorfill.solver.DfsExhaustiveStrategy;
 import colorfill.solver.DfsGreedyStrategy;
 import colorfill.solver.DfsGreedyNextStrategy;
@@ -46,8 +45,8 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill __DEV__";
-        final String version  = "0.1.13 (2015-10-25)";
-        final String author   = "Copyright (C) 2015 Michael Henke <smack42@gmail.com>";
+        final String version  = "0.1.13 (2016-02-20)";
+        final String author   = "Copyright (C) 2016 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
 

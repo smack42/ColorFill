@@ -351,14 +351,15 @@ public class ControlPanel extends JPanel {
      * @param canUndoStep
      * @param canRedoStep
      */
-    protected void setButtons(final boolean canUndoStep, final boolean canRedoStep) {
-        if (SwingUtilities.isEventDispatchThread()) {                        setButtonsInternal(canUndoStep, canRedoStep); }
-        else SwingUtilities.invokeLater(new Runnable() { public void run() { setButtonsInternal(canUndoStep, canRedoStep); } });
+    protected void setButtons(final boolean canUndoStep, final boolean canRedoStep, final boolean isFinished) {
+        if (SwingUtilities.isEventDispatchThread()) {                        setButtonsInternal(canUndoStep, canRedoStep, isFinished); }
+        else SwingUtilities.invokeLater(new Runnable() { public void run() { setButtonsInternal(canUndoStep, canRedoStep, isFinished); } });
     }
-    private void setButtonsInternal(final boolean canUndoStep, final boolean canRedoStep) {
+    private void setButtonsInternal(final boolean canUndoStep, final boolean canRedoStep, final boolean isFinished) {
         if (0 == this.selectedSolution) {
             this.buttonUndo.setEnabled(canUndoStep);
             this.buttonRedo.setEnabled(canRedoStep);
+            this.buttonHint.setEnabled(!isFinished);
         } else {
             this.solverPrevButtons[this.selectedSolution - 1].setEnabled(canUndoStep);
             this.solverNextButtons[this.selectedSolution - 1].setEnabled(canRedoStep);

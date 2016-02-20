@@ -48,8 +48,9 @@ public class ControlController {
      * controls should be updated using values from the model.
      */
     protected void actionUpdateBoardColors() {
-        this.controlPanel.setLabelMove(this.gameState.getSelectedProgress().getCurrentStep(), this.gameState.getSelectedProgress().isFinished());
-        this.controlPanel.setButtons(this.gameState.getSelectedProgress().canUndoStep(), this.gameState.getSelectedProgress().canRedoStep());
+        final GameProgress progress = this.gameState.getSelectedProgress();
+        this.controlPanel.setLabelMove(progress.getCurrentStep(), progress.isFinished());
+        this.controlPanel.setButtons(progress.canUndoStep(), progress.canRedoStep(), progress.isFinished());
         this.controlPanel.setButtonColors(this.gameState.getPreferences().getUiColors(), this.gameState.getPreferences().getNumColors());
     }
 
