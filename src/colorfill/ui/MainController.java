@@ -180,13 +180,11 @@ public class MainController {
         @Override
         public void propertyChange(final PropertyChangeEvent evt) {
             if (GameState.PROPERTY_PROGRESS_SOLUTIONS.equals(evt.getPropertyName())) {
-//                final GameProgress[] oldValue = (GameProgress[]) evt.getOldValue();
-                final GameProgress[] newValue = (GameProgress[]) evt.getNewValue();
-                if (0 == newValue.length) {
+                final GameProgress newValue = (GameProgress) evt.getNewValue();
+                if (null == newValue) {
                     MainController.this.controlController.actionClearSolverResults();
                 } else {
-//                    System.out.println("propertyChange add " + (newValue.length - oldValue.length));
-                    MainController.this.controlController.actionAddSolverResult(newValue[newValue.length - 1]);
+                    MainController.this.controlController.actionAddSolverResult(newValue);
                 }
             } else if (GameState.PROPERTY_HINT.equals(evt.getPropertyName())) {
                 if ((null != evt.getOldValue()) && (null != evt.getNewValue())) {

@@ -21,6 +21,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
@@ -28,6 +29,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import colorfill.solver.AStarTigrouStrategy;
@@ -47,6 +51,22 @@ import colorfill.solver.Strategy;
  */
 public class GameState {
 
+    private static final Class<?>[] STRATEGIES = { // all solver strategies, sorted by average speed (fastest first)
+        AStarTigrouStrategy.class
+        ,DfsGreedyStrategy.class
+        ,DfsGreedyNextStrategy.class
+        ,DfsDeepStrategy.class
+        ,DfsDeeperStrategy.class
+        ,DfsExhaustiveStrategy.class // too slow and needs too much memory
+    };
+
+    private static final String[] SOLVER_NAMES = new String[STRATEGIES.length];
+    static {
+        for (int i = 0;  i < SOLVER_NAMES.length;  ++i) {
+            SOLVER_NAMES[i] = AbstractSolver.getSolverName((Class<Strategy>) STRATEGIES[i]);
+        }
+    }
+
     private Board board;
     private int startPos;
 
@@ -56,27 +76,11 @@ public class GameState {
 
     private boolean isAutoRunSolver;
     private final AtomicReference<SolverRun> activeSolverRun = new AtomicReference<SolverRun>();
-    private final List<GameProgress> progressSolutions = new ArrayList<GameProgress>();
+    private final GameProgress[] progressSolutions = new GameProgress[STRATEGIES.length];
     public static final String PROPERTY_PROGRESS_SOLUTIONS = "progressSolutions";
 
     private final AtomicReference<GameState> hintGameState = new AtomicReference<GameState>();
     public static final String PROPERTY_HINT = "hint";
-
-    private static final Class<?>[] STRATEGIES = { // all solver strategies, sorted by average speed (fastest first)
-            AStarTigrouStrategy.class
-            ,DfsGreedyStrategy.class
-            ,DfsGreedyNextStrategy.class
-            ,DfsDeepStrategy.class
-            ,DfsDeeperStrategy.class
-            ,DfsExhaustiveStrategy.class // too slow and needs too much memory
-    };
-
-    private static final String[] SOLVER_NAMES = new String[STRATEGIES.length];
-    static {
-        for (int i = 0;  i < SOLVER_NAMES.length;  ++i) {
-            SOLVER_NAMES[i] = AbstractSolver.getSolverName((Class<Strategy>) STRATEGIES[i]);
-        }
-    }
 
     public GameState() {
         this.pref = new GamePreferences();
@@ -161,8 +165,9 @@ public class GameState {
             this.progressSelected = this.progressUser;
         } else {
             synchronized (this.progressSolutions) {
-                if ((1 <= numProgress) && (this.progressSolutions.size() >= numProgress)) {
-                    this.progressSelected = this.progressSolutions.get(numProgress - 1);
+                final int i = numProgress - 1;
+                if ((0 <= i) && (this.progressSolutions.length > i) && (null != this.progressSolutions[i])) {
+                    this.progressSelected = this.progressSolutions[i];
                 } else {
                     isDone = false;
                 }
@@ -199,15 +204,23 @@ public class GameState {
         @Override
         public void run() {
             GameState.this.clearProgressSolutions();
-            final int numThreads = Runtime.getRuntime().availableProcessors();
-            final ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+            final int numThreads = Math.min(Runtime.getRuntime().availableProcessors() * 2, this.numberOfSolverStrategies);
+            final ThreadFactory threadFactory = new ThreadFactory() {
+                final ThreadFactory defaultFactory = Executors.defaultThreadFactory();
+                @Override
+                public Thread newThread(Runnable r) {
+                    final Thread t = this.defaultFactory.newThread(r);
+                    t.setPriority(Thread.MIN_PRIORITY);
+                    return t;
+                }
+            };
+            final ExecutorService executor = Executors.newFixedThreadPool(numThreads, threadFactory);
             final List<Future<Solution>> futureSolutions = new ArrayList<Future<Solution>>();
-            int i = 0;
-            for (final Class<?> strategy : STRATEGIES) {
-                if (++i > this.numberOfSolverStrategies) {
+            for (int i = 0;  i < STRATEGIES.length;  ++i) {
+                if (i >= this.numberOfSolverStrategies) {
                     break; // for()
                 }
-                final Solver solver = AbstractSolver.createSolver((Class<Strategy>)strategy, this.board);
+                final Solver solver = AbstractSolver.createSolver((Class<Strategy>)STRATEGIES[i], this.board);
                 futureSolutions.add(executor.submit(new Callable<Solution>() {
                     public Solution call() throws Exception {
                         solver.execute(SolverRun.this.startPos);
@@ -215,26 +228,36 @@ public class GameState {
                     }
                 }));
             }
-            for (final Future<Solution> futureSolution : futureSolutions) {
-                Solution solution = null;
-                try {
-                    solution = futureSolution.get();
-                } catch (InterruptedException e) {
-                    System.out.println("***** SolverRun interrupted *****");
-                    executor.shutdownNow(); // interrupt the solver threads
-                } catch (ExecutionException e) {
-                    if (false == e.getCause() instanceof InterruptedException) {
-                        e.printStackTrace();
+            for (int waitMask = (1 << futureSolutions.size()) - 1;  waitMask != 0;  ) {
+                for (int i = 0;  i < futureSolutions.size();  ++i) {
+                    final int iMask = (1 << i); // bit for this solution
+                    if (0 != (waitMask & iMask)) {
+                        waitMask ^= iMask; // clear this bit, expecting to get the solution or an exception
+                        Solution solution = null;
+                        try {
+                            solution = futureSolutions.get(i).get(0 == waitMask ? 5000 : 50, TimeUnit.MILLISECONDS);
+                        } catch (InterruptedException e) {
+                            System.out.println("***** SolverRun interrupted *****");
+                            executor.shutdownNow(); // interrupt the solver threads
+                            waitMask = 0; // end outer loop
+                            break; // end inner loop
+                        } catch (ExecutionException e) {
+                            if (false == e.getCause() instanceof InterruptedException) {
+                                e.printStackTrace();
+                            }
+                        } catch (CancellationException e) {
+                            // do nothing
+                        } catch (TimeoutException e) {
+                            waitMask |= iMask; // set this bit again because the solution is not ready yet
+                        }
+                        if (null != solution) {
+                            GameState.this.addProgressSolution(new GameProgress(this.board, this.startPos, solution));
+                            System.out.println(
+                                    padRight(solution.getSolverName(), 21 + 2) // 21==max. length of strategy names
+                                    + padRight("steps(" + solution.getNumSteps() + ")", 7 + 2 + 2)
+                                    + "solution(" + solution + ")");
+                        }
                     }
-                } catch (CancellationException e) {
-                    // do nothing
-                }
-                if (null != solution) {
-                    GameState.this.addProgressSolution(new GameProgress(this.board, this.startPos, solution));
-                    System.out.println(
-                            padRight(solution.getSolverName(), 21 + 2) // 21==max. length of strategy names
-                            + padRight("steps(" + solution.getNumSteps() + ")", 7 + 2 + 2)
-                            + "solution(" + solution + ")");
                 }
             }
             executor.shutdown();
@@ -259,24 +282,34 @@ public class GameState {
 
 
 
-    private static final GameProgress[] EMPTY_ARRAY_GAME_PROGRESS = new GameProgress[0];
     private void clearProgressSolutions() {
-        final Object oldValue, newValue;
+        final Object oldValue = null, newValue;
         synchronized (this.progressSolutions) {
-            oldValue = this.progressSolutions.toArray(EMPTY_ARRAY_GAME_PROGRESS);
-            this.progressSolutions.clear();
-            newValue = this.progressSolutions.toArray(EMPTY_ARRAY_GAME_PROGRESS);
+            Arrays.fill(this.progressSolutions, null);
+            newValue = null;
         }
         this.firePropertyChange(PROPERTY_PROGRESS_SOLUTIONS, oldValue, newValue);
     }
     private void addProgressSolution(final GameProgress progress) {
-        final Object oldValue, newValue;
+        final Object oldValue = null, newValue;
         synchronized (this.progressSolutions) {
-            oldValue = this.progressSolutions.toArray(EMPTY_ARRAY_GAME_PROGRESS);
-            this.progressSolutions.add(progress);
-            newValue = this.progressSolutions.toArray(EMPTY_ARRAY_GAME_PROGRESS);
+            final String solverName = progress.getName();
+            int i;
+            for (i = 0;  i < SOLVER_NAMES.length;  ++i) {
+                if (SOLVER_NAMES[i].equals(solverName)) {
+                    break;
+                }
+            }
+            if (i < SOLVER_NAMES.length) { // solverName found
+                this.progressSolutions[i] = progress;
+                newValue = progress;
+            } else { // solverName not found
+                newValue = null;
+            }
         }
-        this.firePropertyChange(PROPERTY_PROGRESS_SOLUTIONS, oldValue, newValue);
+        if (null != newValue) { // solverName found
+            this.firePropertyChange(PROPERTY_PROGRESS_SOLUTIONS, oldValue, newValue);
+        }
     }
 
 
@@ -289,7 +322,7 @@ public class GameState {
                 if (GameState.PROPERTY_HINT.equals(evt.getPropertyName())) {
                     Integer color = null, stepsToDo = Integer.valueOf(Integer.MAX_VALUE);
                     for (final GameProgress gp : newHint.progressSolutions) {
-                        if (stepsToDo.intValue() > gp.getTotalSteps()) {
+                        if ((null != gp) && (stepsToDo.intValue() > gp.getTotalSteps())) {
                             stepsToDo = Integer.valueOf(gp.getTotalSteps());
                             color = gp.getNextColor();
                         }
