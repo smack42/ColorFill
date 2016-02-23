@@ -96,9 +96,9 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
         private static final int MEMORY_BLOCK_SHIFT = 20; // 20 == 1 MiB
         private static final int MEMORY_BLOCK_SIZE = 1 << MEMORY_BLOCK_SHIFT;
         private static final int MEMORY_BLOCK_MASK = MEMORY_BLOCK_SIZE - 1;
-        private byte[][] memoryBlocks = new byte[100][]; // constructor allocates first block
-        private int numMemoryBlocks = 1, nextState = 1, nextMemoryBlock = MEMORY_BLOCK_SIZE;
-
+        private byte[][] memoryBlocks = new byte[1][MEMORY_BLOCK_SIZE];
+        private byte[] nextStateMemory = memoryBlocks[0];
+        private int numMemoryBlocks = 1, nextState = 1, nextStateOffset = 1, nextMemoryBlock = MEMORY_BLOCK_SIZE;
         private final int stateSize;
         private final Int2ByteOpenCustomHashMapPutIfLess theMap = new Int2ByteOpenCustomHashMapPutIfLess(100000000, Hash.FAST_LOAD_FACTOR, new HashStrategy());
 
@@ -135,7 +135,6 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
          */
         public StateMap(final int stateSize) {
             this.stateSize = stateSize;
-            this.memoryBlocks[0] = new byte[MEMORY_BLOCK_SIZE];
         }
 
         /** add state to this map, assign depth to it and return true
@@ -146,22 +145,23 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
          * @return true if the state/depth pair was added.
          */
         public boolean put(final byte[] state, final int depth) {
-            // ensure that nextState points to next available memory position
-            if (this.nextState + this.stateSize > this.nextMemoryBlock) {
-                if (this.memoryBlocks.length <= this.numMemoryBlocks) {
-                    this.memoryBlocks = Arrays.copyOf(this.memoryBlocks, this.memoryBlocks.length << 1);
-                }
-                this.memoryBlocks[this.numMemoryBlocks++] = new byte[MEMORY_BLOCK_SIZE];
-                this.nextState = this.nextMemoryBlock;
-                this.nextMemoryBlock += MEMORY_BLOCK_SIZE;
-            }
             // copy state into memory at nextState
-            final byte[] memory = this.memoryBlocks[this.nextState >>> MEMORY_BLOCK_SHIFT];
-            final int offset = this.nextState & MEMORY_BLOCK_MASK;
-            System.arraycopy(state, 0, memory, offset, this.stateSize);
+            System.arraycopy(state, 0, this.nextStateMemory, this.nextStateOffset, this.stateSize);
             // add to theMap, increment nextState only if we want to accept the new state/depth pair
             if (this.theMap.putIfLess(this.nextState, (byte)depth)) {
                 this.nextState += this.stateSize;
+                this.nextStateOffset += this.stateSize;
+                // ensure that nextState points to next available memory position
+                if (this.nextState + this.stateSize > this.nextMemoryBlock) {
+                    if (this.memoryBlocks.length <= this.numMemoryBlocks) {
+                        this.memoryBlocks = Arrays.copyOf(this.memoryBlocks, this.memoryBlocks.length << 1);
+                    }
+                    this.nextStateMemory = new byte[MEMORY_BLOCK_SIZE];
+                    this.memoryBlocks[this.numMemoryBlocks++] = this.nextStateMemory;
+                    this.nextState = this.nextMemoryBlock;
+                    this.nextStateOffset = 0;
+                    this.nextMemoryBlock += MEMORY_BLOCK_SIZE;
+                }
                 return true; // added
             } else {
                 return false; // not added
