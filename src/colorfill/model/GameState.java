@@ -245,6 +245,7 @@ public class GameState {
                             if (false == e.getCause() instanceof InterruptedException) {
                                 e.printStackTrace();
                             }
+                            solution = new Solution(new byte[0], SOLVER_NAMES[i]);
                         } catch (CancellationException e) {
                             // do nothing
                         } catch (TimeoutException e) {
