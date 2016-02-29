@@ -22,8 +22,7 @@ import java.util.Arrays;
 import net.jpountz.xxhash.XXHash32;
 import net.jpountz.xxhash.XXHashFactory;
 
-import it.unimi.dsi.fastutil.Hash;
-import it.unimi.dsi.fastutil.ints.IntHash;
+import it.unimi.dsi.fastutil.HashCommon;
 
 import colorfill.model.Board;
 import static colorfill.solver.ColorAreaGroup.NO_COLOR;
@@ -40,13 +39,12 @@ import static colorfill.solver.ColorAreaGroup.NO_COLOR;
  */
 public class DfsExhaustiveStrategy implements DfsStrategy {
 
-    private final byte[] thisState;
-    private final StateMap stateMap;
-
     public DfsExhaustiveStrategy(final Board board) {
-        final int stateBytes = board.getSizeColorAreas8();
-        this.thisState = new byte[(stateBytes + 3) & ~3];
-        this.stateMap = new StateMap(stateBytes);
+        final int stateSize = board.getSizeColorAreas8();
+        this.stateSize = stateSize;
+        this.stateSize4 = (stateSize + 3) & ~3; // next multiple of four
+        this.constructorInt2ByteOpenCustomHashMapPutIfLess(100000000);
+        this.f = 0.5f; // Hash.FAST_LOAD_FACTOR
     }
 
     @Override
@@ -62,11 +60,11 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
             result = new byte[tmpColors.length];
             int idx = 0;
 
-            // filter the result: remove colors which result in already known states
+            // filter the result:
+            // only include colors which do not result in already known states (at this or lower depth)
             for (final byte nextColor : tmpColors) {
                 if (NO_COLOR == nextColor) break;
-                this.makeThisState(flooded, neighbors.getColor(nextColor));
-                if (true == this.stateMap.put(this.thisState, depth + 1)) {
+                if (true == this.put(flooded, neighbors.getColor(nextColor), depth + 1)) {
                     result[idx++] = nextColor;
                 }
             }
@@ -75,23 +73,12 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
         return result;
     }
 
-    /** store the id's of the color areas as bits in thisState */
-    private void makeThisState(final ColorAreaSet set1, final ColorAreaSet set2) {
-        final int[] arr1 = set1.getArray();
-        final int[] arr2 = set2.getArray();
-        for (int b = -1, i = 0;  i < arr1.length;  ++i) {
-            final int v = arr1[i] | arr2[i];
-            this.thisState[++b] = (byte)(v);
-            this.thisState[++b] = (byte)(v >> 8);
-            this.thisState[++b] = (byte)(v >> 16);
-            this.thisState[++b] = (byte)(v >> 24);
-        }
-    }
-
 
     /** this class is a minimal HashMap implementation that is used here
      * to store the known states and the depths they were found at */
-    private static class StateMap {
+//    private static class StateMap {
+
+        private final int stateSize, stateSize4;
 
         private static final int MEMORY_BLOCK_SHIFT = 20; // 20 == 1 MiB
         private static final int MEMORY_BLOCK_SIZE = 1 << MEMORY_BLOCK_SHIFT;
@@ -99,60 +86,32 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
         private byte[][] memoryBlocks = new byte[1][MEMORY_BLOCK_SIZE];
         private byte[] nextStateMemory = memoryBlocks[0];
         private int numMemoryBlocks = 1, nextState = 1, nextStateOffset = 1, nextMemoryBlock = MEMORY_BLOCK_SIZE;
-        private final int stateSize;
-        private final Int2ByteOpenCustomHashMapPutIfLess theMap = new Int2ByteOpenCustomHashMapPutIfLess(100000000, Hash.FAST_LOAD_FACTOR, new HashStrategy());
 
-        /** this hash strategy accesses the data in the StateMap memory arrays */
-        private class HashStrategy implements IntHash.Strategy {
-            private final XXHash32 xxhash32 = XXHashFactory.fastestJavaInstance().hash32();
-
-            @Override
-            public boolean equals(final int arg0, final int arg1) {
-                final byte[] memory0 = StateMap.this.memoryBlocks[arg0 >>> MEMORY_BLOCK_SHIFT];
-                int offset0 = (arg0 & MEMORY_BLOCK_MASK) - 1;
-                final byte[] memory1 = StateMap.this.memoryBlocks[arg1 >>> MEMORY_BLOCK_SHIFT];
-                int offset1 = (arg1 & MEMORY_BLOCK_MASK) - 1;
-                int count = StateMap.this.stateSize;
-                do {
-                    if (memory0[++offset0] != memory1[++offset1]) {
-                        return false; // not equal
-                    }
-                } while (--count > 0);
-                return true; // equal
-            }
-
-            @Override
-            public int hashCode(final int arg0) {
-                final byte[] memory = StateMap.this.memoryBlocks[arg0 >>> MEMORY_BLOCK_SHIFT];
-                final int offset = arg0 & MEMORY_BLOCK_MASK;
-                final int hash = this.xxhash32.hash(memory, offset, StateMap.this.stateSize, 0x9747b28c);
-                return hash;
-            }
-        }
-
-        /** the constructor.
-         * @param stateSize number of bytes in a single state
-         */
-        public StateMap(final int stateSize) {
-            this.stateSize = stateSize;
-        }
-
-        /** add state to this map, assign depth to it and return true
-         *  if the state is not present yet
+        /** add "state" to this map, assign depth to it and return true
+         *  if the "state" is not present yet
          *  or if it's present and had a larger depth assigned to it.
-         * @param state to be stored (as key)
-         * @param depth to be assigned (as value) to state
+         * @param set1 colors part 1, combined with set2 it will be stored as "state"
+         * @param set2 colors part 2, combined with set1 it will be stored as "state"
+         * @param depth to be assigned (as value) to "state"
          * @return true if the state/depth pair was added.
          */
-        public boolean put(final byte[] state, final int depth) {
+        private boolean put(final ColorAreaSet set1, final ColorAreaSet set2, final int depth) {
             // copy state into memory at nextState
-            System.arraycopy(state, 0, this.nextStateMemory, this.nextStateOffset, this.stateSize);
-            // add to theMap, increment nextState only if we want to accept the new state/depth pair
-            if (this.theMap.putIfLess(this.nextState, (byte)depth)) {
+            final int[] arr1 = set1.getArray();
+            final int[] arr2 = set2.getArray();
+            for (int b = this.nextStateOffset - 1, i = 0;  i < arr1.length;  ++i) {
+                final int v = arr1[i] | arr2[i];
+                this.nextStateMemory[++b] = (byte)(v);
+                this.nextStateMemory[++b] = (byte)(v >> 8);
+                this.nextStateMemory[++b] = (byte)(v >> 16);
+                this.nextStateMemory[++b] = (byte)(v >> 24);
+            }
+            // add to the map, increment nextState only if we want to accept the new state/depth pair
+            if (this.putIfLess(this.nextState, (byte)depth)) {
                 this.nextState += this.stateSize;
                 this.nextStateOffset += this.stateSize;
                 // ensure that nextState points to next available memory position
-                if (this.nextState + this.stateSize > this.nextMemoryBlock) {
+                if (this.nextState + this.stateSize4 > this.nextMemoryBlock) {
                     if (this.memoryBlocks.length <= this.numMemoryBlocks) {
                         this.memoryBlocks = Arrays.copyOf(this.memoryBlocks, this.memoryBlocks.length << 1);
                     }
@@ -167,5 +126,132 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
                 return false; // not added
             }
         }
-    }
+
+        /** this hash strategy accesses the data in the StateMap memory arrays */
+//        private class HashStrategy {
+            private final XXHash32 xxhash32 = XXHashFactory.fastestJavaInstance().hash32();
+
+            public boolean hashStrategyEquals(final int arg0, final int arg1) {
+                final byte[] memory0 = this.memoryBlocks[arg0 >>> MEMORY_BLOCK_SHIFT];
+                int offset0 = (arg0 & MEMORY_BLOCK_MASK) - 1;
+                final byte[] memory1 = this.memoryBlocks[arg1 >>> MEMORY_BLOCK_SHIFT];
+                int offset1 = (arg1 & MEMORY_BLOCK_MASK) - 1;
+                int count = this.stateSize;
+                do {
+                    if (memory0[++offset0] != memory1[++offset1]) {
+                        return false; // not equal
+                    }
+                } while (--count > 0);
+                return true; // equal
+            }
+
+            public int hashStrategyHashCode(final int arg0) {
+                final byte[] memory = this.memoryBlocks[arg0 >>> MEMORY_BLOCK_SHIFT];
+                final int offset = arg0 & MEMORY_BLOCK_MASK;
+                final int hash = this.xxhash32.hash(memory, offset, this.stateSize, 0x9747b28c);
+                return hash;
+            }
+//        } // private class HashStrategy
+
+        /** this is a modified version of class Int2ByteOpenCustomHashMap
+         * taken from the library "fastutil" <br>
+         * http://fastutil.di.unimi.it/ <br>
+         * https://github.com/vigna/fastutil
+         */
+        /*
+         * Copyright (C) 2002-2014 Sebastiano Vigna
+         *
+         * Licensed under the Apache License, Version 2.0 (the "License");
+         * you may not use this file except in compliance with the License.
+         * You may obtain a copy of the License at
+         *
+         *     http://www.apache.org/licenses/LICENSE-2.0
+         *
+         * Unless required by applicable law or agreed to in writing, software
+         * distributed under the License is distributed on an "AS IS" BASIS,
+         * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+         * See the License for the specific language governing permissions and
+         * limitations under the License.
+         */
+//        private class Int2ByteOpenCustomHashMapPutIfLess {
+            /** The array of keys. */
+            private transient int[] key;
+            /** The array of values. */
+            private transient byte[] value;
+            /** The mask for wrapping a position counter. */
+            private transient int mask;
+            /** The current table size. */
+            private transient int n;
+            /** Threshold after which we rehash. It must be the table size times {@link #f}. */
+            private transient int maxFill;
+            /** Number of entries in the set (including the key zero, if present). */
+            private int size;
+            /** The acceptable load factor. */
+            private final float f;
+            /** constructor */
+            private void constructorInt2ByteOpenCustomHashMapPutIfLess( final int expected) {
+                if ( expected < 0 ) throw new IllegalArgumentException( "The expected number of elements must be nonnegative" );
+                n = HashCommon.arraySize( expected, f );
+                mask = n - 1;
+                maxFill = HashCommon.maxFill( n, f );
+                key = new int[ n + 1 ];
+                value = new byte[ n + 1 ];
+            }
+            /**
+             * put the key / value pair into this map if the key is not already in the
+             * map or if it already exists and the new value is less than the old value.
+             * @param k key
+             * @param v value
+             * @return true if key and value have been added to this map.
+             */
+            private boolean putIfLess(final int k, final byte v) {
+                final int pos = this.insert( k, v );
+                if ( pos < 0 ) return true; // key/value pair is new; added.
+                final byte oldValue = this.value[ pos ];
+                if (v < oldValue) { // putIfLess
+                    this.value[ pos ] = v;
+                    return true; // key already exists, new value is less than old value; added.
+                } else {
+                    return false;// key already exists, new value is not less than old value; not added.
+                }
+            }
+            /** actually put the k/v pair into the hashmap */
+            private int insert( final int k, final byte v ) {
+                int pos, curr;
+                final int[] key = this.key;
+                if ( !( ( curr = key[ pos = ( this.hashStrategyHashCode( k ) ) & mask ] ) == ( 0 ) ) ) {
+                    if ( ( this.hashStrategyEquals( ( curr ), ( k ) ) ) ) return pos;
+                    while ( !( ( curr = key[ pos = ( pos + 1 ) & mask ] ) == ( 0 ) ) )
+                        if ( ( this.hashStrategyEquals( ( curr ), ( k ) ) ) ) return pos;
+                }
+                key[ pos ] = k;
+                this.value[ pos ] = v;
+                if ( this.size++ >= this.maxFill ) { this.rehash( HashCommon.arraySize( size + 1, f ) ); }
+                return -1;
+            }
+            /** Rehashes the map.
+             * @param newN the new size */
+            private void rehash( final int newN ) {
+                final int key[] = this.key;
+                final byte value[] = this.value;
+                final int mask = newN - 1;
+                final int newKey[] = new int[ newN + 1 ];
+                final byte newValue[] = new byte[ newN + 1 ];
+                int i = n, pos;
+                for ( int j = size; j-- != 0; ) {
+                    while ( ( ( key[ --i ] ) == ( 0 ) ) );
+                    if ( !( ( newKey[ pos = ( this.hashStrategyHashCode( key[ i ] ) ) & mask ] ) == ( 0 ) ) ) while ( !( ( newKey[ pos = ( pos + 1 ) & mask ] ) == ( 0 ) ) );
+                    newKey[ pos ] = key[ i ];
+                    newValue[ pos ] = value[ i ];
+                }
+                newValue[ newN ] = value[ n ];
+                n = newN;
+                this.mask = mask;
+                maxFill = HashCommon.maxFill( n, f );
+                this.key = newKey;
+                this.value = newValue;
+            }
+//        } // private class Int2ByteOpenCustomHashMapPutIfLess
+//    } // private static class StateMap
+
 }
