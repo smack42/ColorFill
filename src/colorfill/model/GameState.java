@@ -224,6 +224,10 @@ public class GameState {
                 futureSolutions.add(executor.submit(new Callable<Solution>() {
                     public Solution call() throws Exception {
                         solver.execute(SolverRun.this.startPos);
+                        final String info = solver.getSolverInfo();
+                        if ((null != info) && (false == info.isEmpty())) {
+                            System.out.println(info);
+                        }
                         return solver.getSolution();
                     }
                 }));

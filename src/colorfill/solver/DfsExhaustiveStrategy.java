@@ -48,6 +48,22 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
     }
 
     @Override
+    public String getInfo() {
+        final long mbHashK = (this.key.length * 4) >> 20;
+        final long mbHashV = (this.value.length) >> 20;
+        long bData = 0;
+        for (final byte[] b : this.memoryBlocks) {
+            if (null != b) {
+                bData += b.length;
+            }
+        }
+        final long mbData = bData >> 20;
+        return (mbHashK + mbHashV + mbData) + " MB memory used (hashMap "
+                + (mbHashK + mbHashV) + " MB, data " + mbData + " MB)"
+                + " stateSize=" + this.stateSize + " numStates=" + (bData / this.stateSize);
+    }
+
+    @Override
     public byte[] selectColors(final int depth,
             final byte thisColor,
             final byte[] solution,

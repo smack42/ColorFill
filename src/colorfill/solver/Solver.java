@@ -47,4 +47,10 @@ public interface Solver {
      * @return the name
      */
     public String getSolverName();
+
+    /**
+     * get some info from the solver, like memory usage after execute() has finished.
+     * @return some info, may be null or empty if the particular solver has nothing to say.
+     */
+    public String getSolverInfo();
 }

@@ -94,6 +94,19 @@ public class DfsSolver extends AbstractSolver {
     }
 
     /* (non-Javadoc)
+     * @see colorfill.solver.Solver#getSolverInfo()
+     */
+    @Override
+    public String getSolverInfo() {
+        final String info = this.strategy.getInfo();
+        if ((null == info) || info.isEmpty()) {
+            return null;
+        } else {
+            return this.getSolverName() + " " + info;
+        }
+    }
+
+    /* (non-Javadoc)
      * @see colorfill.solver.AbstractSolver#executeInternal(int)
      */
     @Override

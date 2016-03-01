@@ -59,6 +59,14 @@ public class AStarSolver extends AbstractSolver {
         return this.strategyClass.getSimpleName();
     }
 
+    /* (non-Javadoc)
+     * @see colorfill.solver.Solver#getSolverInfo()
+     */
+    @Override
+    public String getSolverInfo() {
+        return null; // no info available
+    }
+
     private AStarStrategy makeStrategy() {
         final AStarStrategy result;
         if (AStarTigrouStrategy.class.equals(this.strategyClass)) {

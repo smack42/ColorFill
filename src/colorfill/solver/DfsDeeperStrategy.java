@@ -38,6 +38,11 @@ public class DfsDeeperStrategy implements DfsStrategy {
     }
 
     @Override
+    public String getInfo() {
+        return null; // no info available
+    }
+
+    @Override
     public byte[] selectColors(final int depth,
             final byte thisColor,
             final byte[] solution,

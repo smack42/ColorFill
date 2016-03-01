@@ -39,4 +39,10 @@ public interface DfsStrategy extends Strategy {
             ColorAreaSet flooded,
             ColorAreaGroup notFlooded,
             ColorAreaGroup neighbors);
+
+    /**
+     * get some info from the strategy, like memory usage after solver has finished.
+     * @return some info, may be null or empty if the particular solver has nothing to say.
+     */
+    public String getInfo();
 }
