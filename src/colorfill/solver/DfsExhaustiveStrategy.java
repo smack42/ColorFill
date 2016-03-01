@@ -127,7 +127,7 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
                 this.nextState += this.stateSize;
                 this.nextStateOffset += this.stateSize;
                 // ensure that nextState points to next available memory position
-                if (this.nextState + this.stateSize4 > this.nextMemoryBlock) {
+                if (this.nextMemoryBlock - this.nextState < this.stateSize4) { // this.nextState + this.stateSize4 > this.nextMemoryBlock
                     if (this.memoryBlocks.length <= this.numMemoryBlocks) {
                         this.memoryBlocks = Arrays.copyOf(this.memoryBlocks, this.memoryBlocks.length << 1);
                     }
@@ -136,8 +136,8 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
                     this.nextState = this.nextMemoryBlock;
                     this.nextStateOffset = 0;
                     this.nextMemoryBlock += MEMORY_BLOCK_SIZE;
-                    if (this.nextMemoryBlock < 0) {
-                        throw new IllegalStateException("Integer overflow! (2 GB data storage exceeded)");
+                    if (0 == this.nextMemoryBlock) { // works only if MEMORY_BLOCK_SIZE is a power of 2
+                        throw new IllegalStateException("Integer overflow! (4 GB data storage exceeded)");
                     }
                 }
                 return true; // added
