@@ -98,7 +98,7 @@ public class DfsSolver extends AbstractSolver {
      */
     @Override
     public String getSolverInfo() {
-        final String info = this.strategy.getInfo();
+        final String info = this.strategy == null ? null : this.strategy.getInfo();
         if ((null == info) || info.isEmpty()) {
             return null;
         } else {
