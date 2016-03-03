@@ -59,8 +59,9 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
         }
         final long mbData = bData >> 20;
         return (mbHashK + mbHashV + mbData) + " MB memory used (hashMap "
-                + (mbHashK + mbHashV) + " MB, data " + mbData + " MB)"
+                + (mbHashK + mbHashV) + " MB, data " + mbData + " MB, size " + this.size + ")"
                 + " stateSize=" + this.stateSize + " numStates=" + (bData / this.stateSize);
+                //+ " less=" + this.numLess + " notLess=" + this.numNotLess;
     }
 
     @Override
@@ -123,7 +124,8 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
                 this.nextStateMemory[++b] = (byte)(v >> 24);
             }
             // add to the map, increment nextState only if we want to accept the new state/depth pair
-            if (this.putIfLess(this.nextState, (byte)depth)) {
+            final int result = this.putIfLess(this.nextState, (byte)depth);
+            if (result > 0) {
                 this.nextState += this.stateSize;
                 this.nextStateOffset += this.stateSize;
                 // ensure that nextState points to next available memory position
@@ -140,10 +142,8 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
                         throw new IllegalStateException("Integer overflow! (4 GB data storage exceeded)");
                     }
                 }
-                return true; // added
-            } else {
-                return false; // not added
             }
+            return result >= 0;
         }
 
         /** this hash strategy accesses the data in the StateMap memory arrays */
@@ -207,6 +207,8 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
             private int size;
             /** The acceptable load factor. */
             private final float f;
+            /** some counters, for info only */
+            //private int numLess, numNotLess;
             /** constructor */
             private void constructorInt2ByteOpenCustomHashMapPutIfLess( final int expected) {
                 if ( expected < 0 ) throw new IllegalArgumentException( "The expected number of elements must be nonnegative" );
@@ -221,32 +223,33 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
              * map or if it already exists and the new value is less than the old value.
              * @param k key
              * @param v value
-             * @return true if key and value have been added to this map.
+             * @return 1 if a new entry was added,
+             *  0 if an existing entry was updated (new value is less than old value),
+             *  -1 if nothing was changed (new value is NOT less than old value)
              */
-            private boolean putIfLess(final int k, final byte v) {
-                final int pos = this.insert( k, v );
-                if ( pos < 0 ) return true; // key/value pair is new; added.
-                final byte oldValue = this.value[ pos ];
-                if (v < oldValue) { // putIfLess
-                    this.value[ pos ] = v;
-                    return true; // key already exists, new value is less than old value; added.
-                } else {
-                    return false;// key already exists, new value is not less than old value; not added.
-                }
-            }
-            /** actually put the k/v pair into the hashmap */
-            private int insert( final int k, final byte v ) {
+            private int putIfLess(final int k, final byte v) {
                 int pos, curr;
-                final int[] key = this.key;
-                if ( !( ( curr = key[ pos = ( this.hashStrategyHashCode( k ) ) & mask ] ) == ( 0 ) ) ) {
-                    if ( ( this.hashStrategyEquals( ( curr ), ( k ) ) ) ) return pos;
-                    while ( !( ( curr = key[ pos = ( pos + 1 ) & mask ] ) == ( 0 ) ) )
-                        if ( ( this.hashStrategyEquals( ( curr ), ( k ) ) ) ) return pos;
+                insert: {
+                    final int[] key = this.key;
+                    if ( !( ( curr = key[ pos = ( this.hashStrategyHashCode( k ) ) & mask ] ) == ( 0 ) ) ) {
+                        if ( ( this.hashStrategyEquals( ( curr ), ( k ) ) ) ) break insert;
+                        while ( !( ( curr = key[ pos = ( pos + 1 ) & mask ] ) == ( 0 ) ) )
+                            if ( ( this.hashStrategyEquals( ( curr ), ( k ) ) ) ) break insert;
+                    }
+                    key[ pos ] = k;
+                    this.value[ pos ] = v;
+                    if ( this.size++ >= this.maxFill ) { this.rehash( HashCommon.arraySize( size + 1, f ) ); }
+                    return 1; // key/value pair is new; ADDED.
                 }
-                key[ pos ] = k;
-                this.value[ pos ] = v;
-                if ( this.size++ >= this.maxFill ) { this.rehash( HashCommon.arraySize( size + 1, f ) ); }
-                return -1;
+                final byte oldValue = this.value[ pos ];
+                if (oldValue - v > 0) { // putIfLess
+                    //++this.numLess;
+                    this.value[ pos ] = v;
+                    return 0; // key already exists, new value is less than old value; UPDATED.
+                } else {
+                    //++this.numNotLess;
+                    return -1;// key already exists, new value is not less than old value; NOT CHANGED.
+                }
             }
             /** Rehashes the map.
              * @param newN the new size */
