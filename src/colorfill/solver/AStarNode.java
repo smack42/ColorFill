@@ -17,10 +17,8 @@
 
 package colorfill.solver;
 
+import java.util.Arrays;
 import java.util.Queue;
-
-import it.unimi.dsi.fastutil.bytes.ByteArrayList;
-import it.unimi.dsi.fastutil.bytes.ByteList;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
@@ -32,7 +30,8 @@ public class AStarNode implements Comparable<AStarNode> {
 
     private final ColorAreaSet flooded;
     private final ColorAreaGroup neighbors;
-    private final ByteList solution;
+    private final byte[] solution;
+    private int solutionSize;
     private int estimatedCost;
 
     /**
@@ -44,7 +43,8 @@ public class AStarNode implements Comparable<AStarNode> {
         this.flooded.add(startCa);
         this.neighbors = new ColorAreaGroup(board);
         this.neighbors.addAll(startCa.getNeighborsArray(), this.flooded);
-        this.solution = new ByteArrayList();
+        this.solution = new byte[AbstractSolver.MAX_SEARCH_DEPTH];
+        this.solutionSize = 0;
         this.estimatedCost = Integer.MAX_VALUE;
     }
 
@@ -55,7 +55,8 @@ public class AStarNode implements Comparable<AStarNode> {
     public AStarNode(final AStarNode other) {
         this.flooded = new ColorAreaSet(other.flooded);
         this.neighbors = new ColorAreaGroup(other.neighbors);
-        this.solution = new ByteArrayList(other.solution);
+        this.solution = other.solution.clone();
+        this.solutionSize = other.solutionSize;
         this.estimatedCost = other.estimatedCost;
     }
 
@@ -72,7 +73,7 @@ public class AStarNode implements Comparable<AStarNode> {
      * @return
      */
     public byte[] getSolution() {
-        return this.solution.toByteArray();
+        return Arrays.copyOf(this.solution, this.solutionSize);
     }
 
     /**
@@ -80,7 +81,7 @@ public class AStarNode implements Comparable<AStarNode> {
      * @return
      */
     public int getSolutionSize() {
-        return this.solution.size();
+        return this.solutionSize;
     }
 
     /**
@@ -102,7 +103,7 @@ public class AStarNode implements Comparable<AStarNode> {
         for (final ColorArea tmpCa : tmpFlooded) {
             this.neighbors.addAll(tmpCa.getNeighborsArray(), this.flooded);
         }
-        this.solution.add(nextColor);
+        this.solution[this.solutionSize++] = nextColor;
     }
 
     /* (non-Javadoc)

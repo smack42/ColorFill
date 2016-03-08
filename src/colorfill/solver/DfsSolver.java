@@ -28,8 +28,6 @@ import static colorfill.solver.ColorAreaGroup.NO_COLOR;
  */
 public class DfsSolver extends AbstractSolver {
 
-    private static final int MAX_SEARCH_DEPTH = 150; // arbitrary limit
-
     private static final int EXHAUSTIVE_MAX_BOARD_SIZE = 15*15; // DfsExhaustiveStrategy will not run for larger boards
 
     private Class<? extends DfsStrategy> strategyClass = DfsGreedyStrategy.class; // default

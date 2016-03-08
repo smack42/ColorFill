@@ -9,7 +9,7 @@
 -target 1.6
 
 # avoid a crash in some fastutil class  http://sourceforge.net/p/proguard/bugs/462/
--optimizations !code/allocation/variable
+#-optimizations !code/allocation/variable
 
 -optimizationpasses 9
 
