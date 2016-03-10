@@ -22,8 +22,6 @@ import java.util.Arrays;
 import net.jpountz.xxhash.XXHash32;
 import net.jpountz.xxhash.XXHashFactory;
 
-import it.unimi.dsi.fastutil.HashCommon;
-
 import colorfill.model.Board;
 import static colorfill.solver.ColorAreaGroup.NO_COLOR;
 
@@ -212,9 +210,9 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
             /** constructor */
             private void constructorInt2ByteOpenCustomHashMapPutIfLess( final int expected) {
                 if ( expected < 0 ) throw new IllegalArgumentException( "The expected number of elements must be nonnegative" );
-                n = HashCommon.arraySize( expected, f );
+                n = hashCommonArraySize( expected, f );
                 mask = n - 1;
-                maxFill = HashCommon.maxFill( n, f );
+                maxFill = hashCommonMaxFill( n, f );
                 key = new int[ n + 1 ];
                 value = new byte[ n + 1 ];
             }
@@ -238,7 +236,7 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
                     }
                     key[ pos ] = k;
                     this.value[ pos ] = v;
-                    if ( this.size++ >= this.maxFill ) { this.rehash( HashCommon.arraySize( size + 1, f ) ); }
+                    if ( this.size++ >= this.maxFill ) { this.rehash( hashCommonArraySize( size + 1, f ) ); }
                     return 1; // key/value pair is new; ADDED.
                 }
                 final byte oldValue = this.value[ pos ];
@@ -269,10 +267,46 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
                 newValue[ newN ] = value[ n ];
                 n = newN;
                 this.mask = mask;
-                maxFill = HashCommon.maxFill( n, f );
+                maxFill = hashCommonMaxFill( n, f );
                 this.key = newKey;
                 this.value = newValue;
             }
+            /** Returns the maximum number of entries that can be filled before rehashing. 
+            * @param n the size of the backing array.
+            * @param f the load factor.
+            * @return the maximum number of entries before rehashing. 
+            */
+           private static int hashCommonMaxFill( final int n, final float f ) {
+               /* We must guarantee that there is always at least 
+                * one free entry (even with pathological load factors). */
+               return Math.min( (int)Math.ceil( n * f ), n - 1 );
+           }
+           /** Returns the least power of two smaller than or equal to 2<sup>30</sup> and larger than or equal to <code>Math.ceil( expected / f )</code>. 
+            * @param expected the expected number of elements in a hash table.
+            * @param f the load factor.
+            * @return the minimum possible size for a backing array.
+            * @throws IllegalArgumentException if the necessary size is larger than 2<sup>30</sup>.
+            */
+           private static int hashCommonArraySize( final int expected, final float f ) {
+               final long s = Math.max( 2, hashCommonNextPowerOfTwo( (long)Math.ceil( expected / f ) ) );
+               if ( s > (1 << 30) ) throw new IllegalArgumentException( "Too large (" + expected + " expected elements with load factor " + f + ")" );
+               return (int)s;
+           }
+           /** Return the least power of two greater than or equal to the specified value.
+            * <p>Note that this function will return 1 when the argument is 0.
+            * @param x a long integer smaller than or equal to 2<sup>62</sup>.
+            * @return the least power of two greater than or equal to the specified value.
+            */
+           private static long hashCommonNextPowerOfTwo( long x ) {
+               if ( x == 0 ) return 1;
+               x--;
+               x |= x >> 1;
+               x |= x >> 2;
+               x |= x >> 4;
+               x |= x >> 8;
+               x |= x >> 16;
+               return ( x | x >> 32 ) + 1;
+           }
 //        } // private class Int2ByteOpenCustomHashMapPutIfLess
 //    } // private static class StateMap
 

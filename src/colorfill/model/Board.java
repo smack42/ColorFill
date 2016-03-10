@@ -17,9 +17,6 @@
 
 package colorfill.model;
 
-import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
-import it.unimi.dsi.fastutil.ints.IntSortedSet;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -99,11 +96,11 @@ public class Board {
         this.cellsColorAreas = new ColorArea[len];
         this.colorAreas = new TreeSet<ColorArea>();
         this.colorAreas.addAll(this.createColorAreas());
-        final IntSortedSet colors = new IntAVLTreeSet();
+        int maxColor = 0;
         for (final byte color : this.cells) {
-            colors.add(color);
+            maxColor = Math.max(maxColor, color);
         }
-        this.colors = colors.lastInt() + 1;
+        this.colors = maxColor + 1;
         this.startPos = this.depth = -1;
     }
 

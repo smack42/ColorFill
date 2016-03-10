@@ -170,7 +170,7 @@ public class GameProgress {
         for (int i = 0;  i < result.length;  ++i) {
             result[i] = this.board.getColor(i);
             for (final ColorArea ca : flooded) {
-                if (ca.getMembers().contains(i)) {
+                if (ca.containsMember(i)) {
                     result[i] = floodColor;
                     break; // for (ca)
                 }
@@ -233,7 +233,7 @@ public class GameProgress {
      */
     public boolean isFloodNeighborCell(int index) {
         for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
-            if (ca.getMembers().contains(index)) {
+            if (ca.containsMember(index)) {
                 return true;
             }
         }

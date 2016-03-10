@@ -17,10 +17,6 @@
 
 package colorfill.model;
 
-import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
-import it.unimi.dsi.fastutil.ints.IntSortedSet;
-import it.unimi.dsi.fastutil.ints.IntSortedSets;
-
 import java.util.Collections;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -32,8 +28,8 @@ public class ColorArea implements Comparable<ColorArea> {
     private int id;
     private final byte color;
     private final int boardWidth;
-    private final IntSortedSet members = new IntAVLTreeSet(); // sorted set - used by compareTo!
-    private final IntSortedSet membersUnmodifiable = IntSortedSets.unmodifiable(this.members);
+    private final SortedSet<Integer> members = new TreeSet<Integer>(); // sorted set - used by compareTo!
+    private final SortedSet<Integer> membersUnmodifiable = Collections.unmodifiableSortedSet(this.members);
     private final SortedSet<ColorArea> neighbors = new TreeSet<ColorArea>();
     private final SortedSet<ColorArea> neighborsUnmodifiable = Collections.unmodifiableSortedSet(this.neighbors);
     private ColorArea[] neighborsArray = null; // will be created by makeNeighborsArray()
@@ -75,7 +71,7 @@ public class ColorArea implements Comparable<ColorArea> {
             return false; // wrong (different) color
         }
         if (this.isNeighborCell(index)) {
-            return this.members.add(index); // added
+            return this.members.add(Integer.valueOf(index)); // added
         }
         return false; // not added
     }
@@ -145,8 +141,16 @@ public class ColorArea implements Comparable<ColorArea> {
         return this.color;
     }
 
-    public IntSortedSet getMembers() {
+    public SortedSet<Integer> getMembers() {
         return this.membersUnmodifiable;
+    }
+
+    public int getMemberSize() {
+        return this.members.size();
+    }
+
+    public boolean containsMember(int i) {
+        return this.members.contains(Integer.valueOf(i));
     }
 
     public SortedSet<ColorArea> getNeighbors() {

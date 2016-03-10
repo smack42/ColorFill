@@ -231,7 +231,7 @@ public class ColorAreaGroup {
         for (byte color = 0;  color < this.theArray.length;  ++color) {
             int count = 0;
             for (final ColorArea ca : this.theArray[color]) {
-                count += ca.getMembers().size();
+                count += ca.getMemberSize();
             }
             if (maxCount < count) {
                 maxCount = count;
@@ -259,7 +259,7 @@ public class ColorAreaGroup {
             int count = 0;
             for (final ColorArea ca : this.theArray[color]) {
                 if (false == excludeNeighbors.containsAll(ca.getNeighborsArray())) {
-                    count += ca.getMembers().size();
+                    count += ca.getMemberSize();
                 }
             }
             if (maxCount < count) {
@@ -290,7 +290,7 @@ public class ColorAreaGroup {
                 for (final ColorArea caNext : ca.getNeighborsArray()) {
                     if ((false == excludeNeighbors.contains(caNext))
                             && excludeNeighbors.containsNone(caNext.getNeighborsArray())) {
-                        count += caNext.getMembers().size();
+                        count += caNext.getMemberSize();
                     }
                 }
             }
