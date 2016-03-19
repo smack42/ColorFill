@@ -45,16 +45,18 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill __DEV__";
-        final String version  = "0.1.13 (2016-03-02)";
+        final String version  = "0.1.13 (2016-03-19)";
         final String author   = "Copyright (C) 2016 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
 
         switch (args.length) {
         case 0:
+            DfsExhaustiveStrategy.setHashLoadFactorNormal();
             new MainController(progname, version, author);
             break;
         case 1:
+            DfsExhaustiveStrategy.setHashLoadFactorFast();
             runSolver(args[0]);
             break;
         case 2:

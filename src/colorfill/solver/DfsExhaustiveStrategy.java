@@ -37,12 +37,23 @@ import static colorfill.solver.ColorAreaGroup.NO_COLOR;
  */
 public class DfsExhaustiveStrategy implements DfsStrategy {
 
+    private static final float HASH_LOAD_FACTOR_FAST = 0.5f;
+    private static final float HASH_LOAD_FACTOR_NORMAL = 0.75f;
+    private static float HASH_LOAD_FACTOR = HASH_LOAD_FACTOR_FAST;
+
+    public static void setHashLoadFactorFast() {
+        HASH_LOAD_FACTOR = HASH_LOAD_FACTOR_FAST;
+    }
+    public static void setHashLoadFactorNormal() {
+        HASH_LOAD_FACTOR = HASH_LOAD_FACTOR_NORMAL;
+    }
+
     public DfsExhaustiveStrategy(final Board board) {
         final int stateSize = board.getSizeColorAreas8();
         this.stateSize = stateSize;
         this.stateSize4 = (stateSize + 3) & ~3; // next multiple of four
         this.constructorInt2ByteOpenCustomHashMapPutIfLess(100000000);
-        this.f = 0.5f; // Hash.FAST_LOAD_FACTOR
+        this.f = HASH_LOAD_FACTOR;
     }
 
     @Override
