@@ -45,18 +45,18 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill __DEV__";
-        final String version  = "0.1.13 (2016-03-19)";
+        final String version  = "0.1.13 (2016-03-21)";
         final String author   = "Copyright (C) 2016 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
 
         switch (args.length) {
         case 0:
-            DfsExhaustiveStrategy.setHashLoadFactorNormal();
+            DfsExhaustiveStrategy.setHashNormal();
             new MainController(progname, version, author);
             break;
         case 1:
-            DfsExhaustiveStrategy.setHashLoadFactorFast();
+            DfsExhaustiveStrategy.setHashFast();
             runSolver(args[0]);
             break;
         case 2:
@@ -230,7 +230,7 @@ public class Starter {
                     (minSteps > 25 ? "!!!!!!!  " : "         ") +
                     minStrategy + "_" + stSolution[minStrategy].getSolverName());
             pwResults.println(stSolution[minStrategy].toString());
-            //if (100 == count) break; // for (lineTiles)
+            if (400 == count) break; // for (lineTiles)
         }
         // print summary
         for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
