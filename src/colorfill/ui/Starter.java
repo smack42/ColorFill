@@ -45,7 +45,7 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill __DEV__";
-        final String version  = "0.1.13 (2016-03-21)";
+        final String version  = "0.1.13 (2016-03-22)";
         final String author   = "Copyright (C) 2016 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
@@ -230,7 +230,7 @@ public class Starter {
                     (minSteps > 25 ? "!!!!!!!  " : "         ") +
                     minStrategy + "_" + stSolution[minStrategy].getSolverName());
             pwResults.println(stSolution[minStrategy].toString());
-            if (400 == count) break; // for (lineTiles)
+            //if (100 == count) break; // for (lineTiles)
         }
         // print summary
         for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
