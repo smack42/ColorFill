@@ -28,8 +28,6 @@ import colorfill.model.ColorArea;
  */
 public class ColorAreaSet implements Iterable<ColorArea> {
 
-    private static final int SIZE_UNKNOWN = -1;
-
     private final Board board;
     private final int[] array;
     private int size;
@@ -85,8 +83,11 @@ public class ColorAreaSet implements Iterable<ColorArea> {
      */
     public void add(final ColorArea ca) {
         final int id = ca.getId();
-        this.array[id >> 5] |= 1 << id;  // implicit shift distance (id & 0x1f)
-        this.size = SIZE_UNKNOWN;
+        final int i = id >> 5;
+        final int a = this.array[i];
+        final int b = a | 1 << id;  // implicit shift distance (id & 0x1f)
+        this.array[i] = b;
+        this.size += (a == b ? 0 : 1);
     }
 
     /**
@@ -140,12 +141,6 @@ public class ColorAreaSet implements Iterable<ColorArea> {
      * return the number of ColorAreas in this set
      */
     public int size() {
-        if (SIZE_UNKNOWN == this.size) {
-            this.size = 0;
-            for (final int i : this.array) {
-                this.size += Integer.bitCount(i); // hopefully an intrinsic function using instruction POPCNT
-            }
-        }
         return this.size;
     }
 
@@ -153,14 +148,6 @@ public class ColorAreaSet implements Iterable<ColorArea> {
      * return true is this set is empty
      */
     public boolean isEmpty() {
-        if (SIZE_UNKNOWN == this.size) {
-            for (final int i : this.array) {
-                if (0 != i) {
-                    return false;
-                }
-            }
-            this.size = 0;
-        }
         return 0 == this.size;
     }
 
@@ -168,20 +155,24 @@ public class ColorAreaSet implements Iterable<ColorArea> {
      * add all ColorAreas in the other set to this set
      */
     public void addAll(final ColorAreaSet other) {
+        int sz = 0;
         for (int i = 0;  i < this.array.length;  ++i) {
-            this.array[i] |= other.array[i];
+            final int a = (this.array[i] |= other.array[i]);
+            sz += Integer.bitCount(a);  // hopefully an intrinsic function using instruction POPCNT
         }
-        this.size = SIZE_UNKNOWN;
+        this.size = sz;
     }
 
     /**
      * remove all ColorAreas in the other set from this set
      */
     public void removeAll(final ColorAreaSet other) {
+        int sz = 0;
         for (int i = 0;  i < this.array.length;  ++i) {
-            this.array[i] &= ~(other.array[i]);
+            final int a = (this.array[i] &= ~(other.array[i]));
+            sz += Integer.bitCount(a);  // hopefully an intrinsic function using instruction POPCNT
         }
-        this.size = SIZE_UNKNOWN;
+        this.size = sz;
     }
 
     /* (non-Javadoc)
