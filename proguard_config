@@ -18,7 +18,6 @@
 -dontobfuscate
 -verbose
 
-
 # XXHash uses reflection to access its implementation classes
 -keep class net.jpountz.xxhash.XXHash32JavaSafe,net.jpountz.xxhash.XXHash32JavaUnsafe {
     *;
@@ -35,7 +34,7 @@
 
 # Keep - Applications. Keep all application classes, along with their 'main'
 # methods.
--keepclasseswithmembers public class * {
+-keepclasseswithmembers public class colorfill.ui.Starter {
     public static void main(java.lang.String[]);
 }
 
