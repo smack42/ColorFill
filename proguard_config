@@ -1,15 +1,10 @@
 -injars bin
 -injars lib/designgridlayout-1.11.jar(**.class)
-#-injars lib/fastutil-6.6.3.jar(**.class)
--injars lib/lz4-1.3.0.jar(**.class)
 # specify this on the command line: -outjars colorfill.jar
 
 -libraryjars <java.home>/lib/rt.jar
 
 -target 1.6
-
-# avoid a crash in some fastutil class  http://sourceforge.net/p/proguard/bugs/462/
-#-optimizations !code/allocation/variable
 
 -optimizationpasses 9
 
@@ -17,14 +12,6 @@
 
 -dontobfuscate
 -verbose
-
-# XXHash uses reflection to access its implementation classes
--keep class net.jpountz.xxhash.XXHash32JavaSafe,net.jpountz.xxhash.XXHash32JavaUnsafe {
-    *;
-}
--keep class net.jpountz.xxhash.StreamingXXHash32JavaSafe*,net.jpountz.xxhash.StreamingXXHash64JavaSafe*,net.jpountz.xxhash.XXHash64JavaSafe {
-    *;
-}
 
 
 # Keep names - Native method names. Keep all native class/method names.

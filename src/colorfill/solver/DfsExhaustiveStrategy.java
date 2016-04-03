@@ -166,6 +166,28 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
                 return true; // equal
             }
 
+            /*
+             * hashcode calculation based on xxhash32
+             * <p>
+             * Java implementation by Adrien Grand
+             * https://github.com/jpountz/lz4-java
+             * <p>
+             * based on xxhash by Yann Collet
+             * https://github.com/Cyan4973/xxHash
+             */
+            /*
+             * Licensed under the Apache License, Version 2.0 (the "License");
+             * you may not use this file except in compliance with the License.
+             * You may obtain a copy of the License at
+             *
+             *     http://www.apache.org/licenses/LICENSE-2.0
+             *
+             * Unless required by applicable law or agreed to in writing, software
+             * distributed under the License is distributed on an "AS IS" BASIS,
+             * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+             * See the License for the specific language governing permissions and
+             * limitations under the License.
+             */
             private static final int SEED = 0x9747b28c;
 //            private static final int PRIME1 = -1640531535;
 //            private static final int PRIME2 = -2048144777;
