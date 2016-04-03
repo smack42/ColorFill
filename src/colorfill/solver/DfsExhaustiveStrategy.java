@@ -19,9 +19,6 @@ package colorfill.solver;
 
 import java.util.Arrays;
 
-import net.jpountz.xxhash.XXHash32;
-import net.jpountz.xxhash.XXHashFactory;
-
 import colorfill.model.Board;
 import static colorfill.solver.ColorAreaGroup.NO_COLOR;
 
@@ -54,27 +51,26 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
     }
 
     public DfsExhaustiveStrategy(final Board board) {
-        final int stateSize = board.getSizeColorAreas8();
-        this.stateSize = stateSize;
-        this.stateSize4 = (stateSize + 3) & ~3; // next multiple of four
+        final int stateSizeBytes = board.getSizeColorAreas8();
+        this.stateSize = (stateSizeBytes + 3) >> 2;
         this.f = HASH_LOAD_FACTOR;
         this.constructorInt2ByteOpenCustomHashMapPutIfLess(HASH_EXPECTED);
     }
 
     @Override
     public String getInfo() {
-        final long mbHashK = (this.key.length * 4) >> 20;
-        final long mbHashV = (this.value.length) >> 20;
+        final long mbHashK = (this.key.length >> 20) * 4;
+        final long mbHashV = this.value.length >> 20;
         long bData = 0;
-        for (final byte[] b : this.memoryBlocks) {
-            if (null != b) {
-                bData += b.length;
+        for (final int[] i : this.memoryBlocks) {
+            if (null != i) {
+                bData += i.length * 4;
             }
         }
         final long mbData = bData >> 20;
         return (mbHashK + mbHashV + mbData) + " MB memory used (hashMap "
                 + (mbHashK + mbHashV) + " MB, data " + mbData + " MB, size " + this.size + ")"
-                + " stateSize=" + this.stateSize + " numStates=" + (bData / this.stateSize);
+                + " stateSize=" + (this.stateSize*4) + " numStates=" + (bData / (this.stateSize*4));
                 //+ " less=" + this.numLess + " notLess=" + this.numNotLess;
     }
 
@@ -109,13 +105,13 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
      * to store the known states and the depths they were found at */
 //    private static class StateMap {
 
-        private final int stateSize, stateSize4;
+        private final int stateSize;
 
-        private static final int MEMORY_BLOCK_SHIFT = 20; // 20 == 1 MiB
+        private static final int MEMORY_BLOCK_SHIFT = 20; // 20 == 4 MiB
         private static final int MEMORY_BLOCK_SIZE = 1 << MEMORY_BLOCK_SHIFT;
         private static final int MEMORY_BLOCK_MASK = MEMORY_BLOCK_SIZE - 1;
-        private byte[][] memoryBlocks = new byte[1][MEMORY_BLOCK_SIZE];
-        private byte[] nextStateMemory = memoryBlocks[0];
+        private int[][] memoryBlocks = new int[1][MEMORY_BLOCK_SIZE];
+        private int[] nextStateMemory = memoryBlocks[0];
         private int numMemoryBlocks = 1, nextState = 1, nextStateOffset = 1, nextMemoryBlock = MEMORY_BLOCK_SIZE;
 
         /** add "state" to this map, assign depth to it and return true
@@ -130,30 +126,26 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
             // copy state into memory at nextState
             final int[] arr1 = set1.getArray();
             final int[] arr2 = set2.getArray();
-            for (int b = this.nextStateOffset - 1, i = 0;  i < arr1.length;  ++i) {
-                final int v = arr1[i] | arr2[i];
-                this.nextStateMemory[++b] = (byte)(v);
-                this.nextStateMemory[++b] = (byte)(v >> 8);
-                this.nextStateMemory[++b] = (byte)(v >> 16);
-                this.nextStateMemory[++b] = (byte)(v >> 24);
+            for (int b = this.nextStateOffset, i = 0, len = arr1.length;  i < len;  ++i, ++b) {
+                this.nextStateMemory[b] = arr1[i] | arr2[i];
             }
             // add to the map, increment nextState only if we want to accept the new state/depth pair
-            final int result = this.putIfLess(this.nextState, (byte)depth);
+            final int result = this.putIfLess((byte)depth);
             if (result > 0) {
                 this.nextState += this.stateSize;
                 this.nextStateOffset += this.stateSize;
                 // ensure that nextState points to next available memory position
-                if (this.nextMemoryBlock - this.nextState < this.stateSize4) { // this.nextState + this.stateSize4 > this.nextMemoryBlock
+                if (this.nextMemoryBlock - this.nextState < this.stateSize) { // this.nextState + this.stateSize > this.nextMemoryBlock
                     if (this.memoryBlocks.length <= this.numMemoryBlocks) {
                         this.memoryBlocks = Arrays.copyOf(this.memoryBlocks, this.memoryBlocks.length << 1);
                     }
-                    this.nextStateMemory = new byte[MEMORY_BLOCK_SIZE];
+                    this.nextStateMemory = new int[MEMORY_BLOCK_SIZE];
                     this.memoryBlocks[this.numMemoryBlocks++] = this.nextStateMemory;
                     this.nextState = this.nextMemoryBlock;
                     this.nextStateOffset = 0;
                     this.nextMemoryBlock += MEMORY_BLOCK_SIZE;
-                    if (0 == this.nextMemoryBlock) { // works only if MEMORY_BLOCK_SIZE is a power of 2
-                        throw new IllegalStateException("Integer overflow! (4 GB data storage exceeded)");
+                    if (0 == this.nextMemoryBlock) { // works only because MEMORY_BLOCK_SIZE is a power of 2
+                        throw new IllegalStateException("Integer overflow! (16 GB data storage exceeded)");
                     }
                 }
             }
@@ -162,27 +154,43 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
 
         /** this hash strategy accesses the data in the StateMap memory arrays */
 //        private class HashStrategy {
-            private final XXHash32 xxhash32 = XXHashFactory.fastestJavaInstance().hash32();
-
             public boolean hashStrategyEquals(final int arg0, final int arg1) {
-                final byte[] memory0 = this.memoryBlocks[arg0 >>> MEMORY_BLOCK_SHIFT];
-                int offset0 = (arg0 & MEMORY_BLOCK_MASK) - 1;
-                final byte[] memory1 = this.memoryBlocks[arg1 >>> MEMORY_BLOCK_SHIFT];
-                int offset1 = (arg1 & MEMORY_BLOCK_MASK) - 1;
-                int count = this.stateSize;
+                final int[] memory0 = this.memoryBlocks[arg0 >>> MEMORY_BLOCK_SHIFT];
+                int offset0 = arg0 & MEMORY_BLOCK_MASK;
+                final int[] memory1 = this.memoryBlocks[arg1 >>> MEMORY_BLOCK_SHIFT];
+                int offset1 = arg1 & MEMORY_BLOCK_MASK;
+                final int limit0 = offset0 + this.stateSize;
                 do {
-                    if (memory0[++offset0] != memory1[++offset1]) {
-                        return false; // not equal
-                    }
-                } while (--count > 0);
+                    if (memory0[offset0++] != memory1[offset1++]) { return false; } // not equal
+                } while (offset0 < limit0);
                 return true; // equal
             }
 
+            private static final int SEED = 0x9747b28c;
+//            private static final int PRIME1 = -1640531535;
+//            private static final int PRIME2 = -2048144777;
+            private static final int PRIME3 = -1028477379;
+            private static final int PRIME4 = 668265263;
+            private static final int PRIME5 = 374761393;
+
             public int hashStrategyHashCode(final int arg0) {
-                final byte[] memory = this.memoryBlocks[arg0 >>> MEMORY_BLOCK_SHIFT];
-                final int offset = arg0 & MEMORY_BLOCK_MASK;
-                final int hash = this.xxhash32.hash(memory, offset, this.stateSize, 0x9747b28c);
-                return hash;
+                final int[] memory = this.memoryBlocks[arg0 >>> MEMORY_BLOCK_SHIFT];
+                int offset = arg0 & MEMORY_BLOCK_MASK;
+                // calculation taken from xxhash32
+                final int len = this.stateSize;
+                int h32 = SEED + PRIME5;
+                h32 += len << 2;
+                final int limit = offset + len;
+                do {
+                    h32 += memory[offset++] * PRIME3;
+                    h32 = Integer.rotateLeft(h32, 17) * PRIME4;
+                } while (offset < limit);
+//                h32 ^= h32 >>> 15;
+//                h32 *= PRIME2;
+//                h32 ^= h32 >>> 13;
+//                h32 *= PRIME3;
+//                h32 ^= h32 >>> 16;
+                return h32;
             }
 //        } // private class HashStrategy
 
@@ -241,7 +249,8 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
              *  0 if an existing entry was updated (new value is less than old value),
              *  -1 if nothing was changed (new value is NOT less than old value)
              */
-            private int putIfLess(final int k, final byte v) {
+            private int putIfLess(final byte v) {
+                final int k = this.nextState;
                 int pos, curr;
                 insert: {
                     final int[] key = this.key;
