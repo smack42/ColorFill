@@ -166,13 +166,14 @@ public class ColorAreaSet implements Iterable<ColorArea> {
     /**
      * remove all ColorAreas in the other set from this set
      */
-    public void removeAll(final ColorAreaSet other) {
+    public int removeAll(final ColorAreaSet other) {
         int sz = 0;
         for (int i = 0;  i < this.array.length;  ++i) {
             final int a = (this.array[i] &= ~(other.array[i]));
             sz += Integer.bitCount(a);  // hopefully an intrinsic function using instruction POPCNT
         }
         this.size = sz;
+        return sz;
     }
 
     /* (non-Javadoc)

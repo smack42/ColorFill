@@ -50,9 +50,12 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
         HASH_EXPECTED = HASH_EXPECTED_NORMAL;
     }
 
+    private final int sizeColorArray;
+
     public DfsExhaustiveStrategy(final Board board) {
         final int stateSizeBytes = board.getSizeColorAreas8();
         this.stateSize = (stateSizeBytes + 3) >> 2;
+        this.sizeColorArray = board.getNumColors() + 1;
         this.f = HASH_LOAD_FACTOR;
         this.constructorInt2ByteOpenCustomHashMapPutIfLess(HASH_EXPECTED);
     }
@@ -83,16 +86,14 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
             final ColorAreaGroup neighbors) {
         byte[] result = neighbors.getColorsCompleted(notFlooded);
         if (null == result) {
-            final byte[] tmpColors = neighbors.getColorsNotEmpty();
-            result = new byte[tmpColors.length];
+            result = new byte[this.sizeColorArray];
             int idx = 0;
 
             // filter the result:
             // only include colors which do not result in already known states (at this or lower depth)
-            for (final byte nextColor : tmpColors) {
-                if (NO_COLOR == nextColor) break;
-                if (true == this.put(flooded, neighbors.getColor(nextColor), depth + 1)) {
-                    result[idx++] = nextColor;
+            for (int color = 0, colorsBits = neighbors.getColorsNotEmptyBits();  0 != colorsBits;  color++, colorsBits >>= 1) {
+                if ((0 != (colorsBits & 1)) && this.put(flooded, neighbors.getColor((byte)color), depth + 1)) {
+                    result[idx++] = (byte)color;
                 }
             }
             result[idx] = NO_COLOR;

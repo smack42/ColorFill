@@ -31,6 +31,8 @@ public class ColorAreaGroup {
     private final Board board;
     private final ColorAreaSet[] theArray;
     private final int sizeColorArray;
+    
+    private int colorsNotEmptyBits;
 
     /**
      * the standard constructor
@@ -42,6 +44,7 @@ public class ColorAreaGroup {
             this.theArray[color] = new ColorAreaSet(this.board);
         }
         this.sizeColorArray = this.board.getNumColors() + 1;
+        this.colorsNotEmptyBits = 0;
     }
 
     /**
@@ -55,6 +58,7 @@ public class ColorAreaGroup {
             this.theArray[color] = new ColorAreaSet(this.theArray[color]);
         }
         this.sizeColorArray = other.sizeColorArray;
+        this.colorsNotEmptyBits = other.colorsNotEmptyBits;
     }
 
     /**
@@ -69,6 +73,8 @@ public class ColorAreaGroup {
                 this.theArray[color].clear();
             }
         }
+        final int mask = ~(1 << exceptColor);
+        this.colorsNotEmptyBits = other.colorsNotEmptyBits & mask;
     }
 
     /**
@@ -79,7 +85,9 @@ public class ColorAreaGroup {
     public void addAll(final ColorArea[] addColorAreas, final ColorAreaSet excludeColorAreas) {
         for (final ColorArea ca : addColorAreas) {
             if (false == excludeColorAreas.contains(ca)) {
-                this.theArray[ca.getColor()].add(ca);
+                final int color = ca.getColor();
+                this.theArray[color].add(ca);
+                this.colorsNotEmptyBits |= 1 << color;
             }
         }
     }
@@ -91,7 +99,9 @@ public class ColorAreaGroup {
      * @param color the color
      */
     public void addAllColor(final ColorAreaSet addColorAreas, final byte color) {
+        assert addColorAreas.size() > 0;
         this.theArray[color].addAll(addColorAreas);
+        this.colorsNotEmptyBits |= 1 << color;
     }
 
     /**
@@ -101,7 +111,12 @@ public class ColorAreaGroup {
      * @param color the color
      */
     public void removeAllColor(final ColorAreaSet removeColorAreas, final byte color) {
-        this.theArray[color].removeAll(removeColorAreas);
+        final int sz = this.theArray[color].removeAll(removeColorAreas);
+        assert sz >= 0;
+        // conditionally set/clear a bit without branching
+        final int mask = ~(1 << color);
+        final int newBit = ((-sz) >>> 31) << color;
+        this.colorsNotEmptyBits = this.colorsNotEmptyBits & mask | newBit;
     }
 
     /**
@@ -109,12 +124,7 @@ public class ColorAreaGroup {
      * @return
      */
     public boolean isEmpty() {
-        for (final ColorAreaSet caSet : this.theArray) {
-            if (false == caSet.isEmpty()) {
-                return false;
-            }
-        }
-        return true;
+        return 0 == this.colorsNotEmptyBits;
     }
 
     /**
@@ -122,13 +132,15 @@ public class ColorAreaGroup {
      * @return number of occupied colors
      */
     public int countColorsNotEmpty() {
-        int result = 0;
-        for (final ColorAreaSet caSet : this.theArray) {
-            if (false == caSet.isEmpty()) {
-                ++result;
-            }
-        }
-        return result;
+        return Integer.bitCount(this.colorsNotEmptyBits);  // hopefully an intrinsic function using instruction POPCNT
+    }
+
+    /**
+     * get the colors that have at least one color area.
+     * @return bitfield of occupied colors
+     */
+    public int getColorsNotEmptyBits() {
+        return this.colorsNotEmptyBits;
     }
 
     /**
@@ -321,5 +333,7 @@ public class ColorAreaGroup {
      */
     public void clearColor(final byte color) {
         this.theArray[color].clear();
+        final int mask = ~(1 << color);
+        this.colorsNotEmptyBits &= mask;
     }
 }
