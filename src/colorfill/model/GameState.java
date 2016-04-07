@@ -223,12 +223,15 @@ public class GameState {
                 final Solver solver = AbstractSolver.createSolver((Class<Strategy>)STRATEGIES[i], this.board);
                 futureSolutions.add(executor.submit(new Callable<Solution>() {
                     public Solution call() throws Exception {
-                        solver.execute(SolverRun.this.startPos);
-                        final String info = solver.getSolverInfo();
-                        if ((null != info) && (false == info.isEmpty())) {
-                            System.out.println(info);
+                        try {
+                            solver.execute(SolverRun.this.startPos);
+                            return solver.getSolution();
+                        } finally {
+                            final String info = solver.getSolverInfo();
+                            if ((null != info) && (0 != info.length())) {
+                                System.out.println(info);
+                            }
                         }
-                        return solver.getSolution();
                     }
                 }));
             }
