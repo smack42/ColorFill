@@ -165,7 +165,7 @@ public class DfsSolver extends AbstractSolver {
                 nextNeighbors.addAll(ca.getNeighborsArray(), this.allFlooded);
             }
             // pick the "best" neighbor colors to go on
-            final byte[] nextColors = this.strategy.selectColors(depth, thisColor, this.solution, this.allFlooded, this.notFlooded, nextNeighbors);
+            final byte[] nextColors = this.strategy.selectColors(depth, this.allFlooded, this.notFlooded, nextNeighbors);
             // go to next recursion level
             for (final byte nextColor : nextColors) {
                 if (NO_COLOR == nextColor) break;

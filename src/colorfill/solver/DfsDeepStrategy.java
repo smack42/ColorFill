@@ -49,8 +49,6 @@ public class DfsDeepStrategy implements DfsStrategy {
 
     @Override
     public byte[] selectColors(final int depth,
-            final byte thisColor,
-            final byte[] solution,
             final ColorAreaSet flooded,
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
