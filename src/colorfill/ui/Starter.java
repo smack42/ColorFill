@@ -45,7 +45,7 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill __DEV__";
-        final String version  = "0.1.13 (2016-04-05)";
+        final String version  = "0.1.13 (2016-04-07)";
         final String author   = "Copyright (C) 2016 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
@@ -187,8 +187,8 @@ public class Starter {
             }
             ++count;
             // run each of the strategies
-            for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
-                final Solver solver = AbstractSolver.createSolver((Class<Strategy>) STRATEGIES[strategy], board);
+            for (int strategy = 0, previousNumSteps = Integer.MAX_VALUE;  strategy < STRATEGIES.length;  ++strategy) {
+                final Solver solver = AbstractSolver.createSolver((Class<Strategy>) STRATEGIES[strategy], board, previousNumSteps);
                 final long nanoStart = System.nanoTime();
                 final int numSteps = solver.execute(board.getStartPos());
                 final long nanoEnd = System.nanoTime();
@@ -196,6 +196,7 @@ public class Starter {
                 stSolution[strategy] = solver.getSolution();
                 stCountSteps[strategy] += numSteps;
                 stCountSteps25[strategy] += (numSteps > 25 ? 25 : numSteps);
+                previousNumSteps = Math.min(previousNumSteps, numSteps);
                 final String solutionCheckResult = board.checkSolution(solver.getSolution().toString(), board.getStartPos());
                 if (solutionCheckResult.isEmpty()) {
                     stCountCheckOK[strategy] += 1;
@@ -290,7 +291,7 @@ public class Starter {
                     break; // end of input file
                 }
                 for (final Class strategy : STRATEGIES) {
-                    final Solver solver = AbstractSolver.createSolver(strategy, board);
+                    final Solver solver = AbstractSolver.createSolver(strategy, board, 0);  // TODO createSolver previousNumSteps
                     futureSolutions.add(exec.submit(new Callable<Solution>() {
                         public Solution call() throws Exception {
                             solver.execute(board.getStartPos());

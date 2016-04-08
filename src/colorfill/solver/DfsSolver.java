@@ -38,12 +38,17 @@ public class DfsSolver extends AbstractSolver {
     private ColorAreaGroup notFlooded;
     private ColorAreaGroup[] neighbors;
 
+    private final int previousNumSteps;
+
     /**
      * construct a new solver for this Board.
      * @param board the problem to be solved
+     * @param previousNumSteps number of steps in the best solution found (by another solver?) for this board;
+     *        used to speed up DfsExhaustiveStrategy; if not known then just give a negative or zero value.
      */
-    public DfsSolver(final Board board) {
+    public DfsSolver(final Board board, final int previousNumSteps) {
         super(board);
+        this.previousNumSteps = previousNumSteps <= 0 ? Integer.MAX_VALUE : previousNumSteps;
     }
 
     /* (non-Javadoc)
@@ -72,7 +77,7 @@ public class DfsSolver extends AbstractSolver {
             result = new DfsDeeperStrategy(this.board, startPos);
         } else if (DfsExhaustiveStrategy.class.equals(this.strategyClass)) {
             if (this.board.getSize() <= EXHAUSTIVE_MAX_BOARD_SIZE) {
-                result = new DfsExhaustiveStrategy(this.board);
+                result = new DfsExhaustiveStrategy(this.board, this.previousNumSteps);
             } else {
                 result = null; // do not use DfsExhaustiveStrategy for large boards
             }

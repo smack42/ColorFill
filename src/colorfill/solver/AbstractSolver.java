@@ -37,12 +37,14 @@ public abstract class AbstractSolver implements Solver {
      * create a new solver.
      * @param strategyClass strategy to be used
      * @param board to be solved
+     * @param previousNumSteps number of steps in the best solution found (by another solver?) for this board;
+     *        used to speed up DfsExhaustiveStrategy; if not known then just give a negative or zero value.
      * @return
      */
-    public static Solver createSolver(final Class<Strategy> strategyClass, final Board board) {
+    public static Solver createSolver(final Class<Strategy> strategyClass, final Board board, final int previousNumSteps) {
         final Solver solver;
         if (DfsStrategy.class.isAssignableFrom(strategyClass)) {
-            solver = new DfsSolver(board);
+            solver = new DfsSolver(board, previousNumSteps <= 0 ? Integer.MAX_VALUE : previousNumSteps);
         } else if (AStarStrategy.class.isAssignableFrom(strategyClass)) {
             solver = new AStarSolver(board);
         } else {
@@ -58,7 +60,7 @@ public abstract class AbstractSolver implements Solver {
      * @return
      */
     public static String getSolverName(final Class<Strategy> strategyClass) {
-        final Solver solver = createSolver(strategyClass, new Board(2, 2, 2));
+        final Solver solver = createSolver(strategyClass, new Board(2, 2, 2), 0);
         return solver.getSolverName();
     }
 

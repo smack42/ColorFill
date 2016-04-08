@@ -57,7 +57,7 @@ public class GameState {
         ,DfsGreedyNextStrategy.class
         ,DfsDeepStrategy.class
         ,DfsDeeperStrategy.class
-        ,DfsExhaustiveStrategy.class // too slow and needs too much memory
+        ,DfsExhaustiveStrategy.class // DfsExhaustiveStrategy must be the last entry in this array!
     };
 
     private static final String[] SOLVER_NAMES = new String[STRATEGIES.length];
@@ -216,11 +216,18 @@ public class GameState {
             };
             final ExecutorService executor = Executors.newFixedThreadPool(numThreads, threadFactory);
             final List<Future<Solution>> futureSolutions = new ArrayList<Future<Solution>>();
-            for (int i = 0;  i < STRATEGIES.length;  ++i) {
-                if (i >= this.numberOfSolverStrategies) {
+            int strategyIdx;
+            int previousNumSteps = Integer.MAX_VALUE;
+            for (strategyIdx = 0;  strategyIdx < STRATEGIES.length;  ++strategyIdx) {
+                if (strategyIdx >= this.numberOfSolverStrategies) {
+                    strategyIdx = Integer.MAX_VALUE;
                     break; // for()
                 }
-                final Solver solver = AbstractSolver.createSolver((Class<Strategy>)STRATEGIES[i], this.board);
+                // DfsExhaustiveStrategy must be the last entry in this array!
+                if (DfsExhaustiveStrategy.class.equals(STRATEGIES[strategyIdx])) {
+                    break; // for()
+                }
+                final Solver solver = AbstractSolver.createSolver((Class<Strategy>)STRATEGIES[strategyIdx], this.board, 0);
                 futureSolutions.add(executor.submit(new Callable<Solution>() {
                     public Solution call() throws Exception {
                         try {
@@ -259,6 +266,7 @@ public class GameState {
                             waitMask |= iMask; // set this bit again because the solution is not ready yet
                         }
                         if (null != solution) {
+                            previousNumSteps = Math.min(previousNumSteps, solution.getNumSteps());
                             GameState.this.addProgressSolution(new GameProgress(this.board, this.startPos, solution));
                             System.out.println(
                                     padRight(solution.getSolverName(), 21 + 2) // 21==max. length of strategy names
@@ -269,6 +277,34 @@ public class GameState {
                 }
             }
             executor.shutdown();
+            // run DfsExhaustiveStrategy now
+            if ((strategyIdx < STRATEGIES.length) && DfsExhaustiveStrategy.class.equals(STRATEGIES[strategyIdx])) {
+                final Solver solver = AbstractSolver.createSolver((Class<Strategy>)STRATEGIES[strategyIdx], this.board, previousNumSteps);
+                Solution solution = null;
+                try {
+                    solver.execute(SolverRun.this.startPos);
+                    solution = solver.getSolution();
+                } catch (InterruptedException e) {
+                    System.out.println("***** SolverRun interrupted *****");
+                } catch (Throwable e) {
+                    if (false == e.getCause() instanceof InterruptedException) {
+                        e.printStackTrace();
+                    }
+                    solution = new Solution(new byte[0], SOLVER_NAMES[strategyIdx]);
+                } finally {
+                    final String info = solver.getSolverInfo();
+                    if ((null != info) && (0 != info.length())) {
+                        System.out.println(info);
+                    }
+                    if (null != solution) {
+                        GameState.this.addProgressSolution(new GameProgress(this.board, this.startPos, solution));
+                        System.out.println(
+                                padRight(solution.getSolverName(), 21 + 2) // 21==max. length of strategy names
+                                + padRight("steps(" + solution.getNumSteps() + ")", 7 + 2 + 2)
+                                + "solution(" + solution + ")");
+                    }
+                }
+            }
             System.out.println();
             GameState.this.activeSolverRun.compareAndSet(this, null);
             GameState.this.firePropertyChange(GameState.PROPERTY_HINT, null, null); // callback to the "main" GameState.calculateHint()

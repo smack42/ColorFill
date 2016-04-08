@@ -51,11 +51,13 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
     }
 
     private final int sizeColorArray;
+    private final int previousNumSteps;
 
-    public DfsExhaustiveStrategy(final Board board) {
+    public DfsExhaustiveStrategy(final Board board, final int previousNumSteps) {
         final int stateSizeBytes = board.getSizeColorAreas8();
         this.stateSize = (stateSizeBytes + 3) >> 2;
         this.sizeColorArray = board.getNumColors() + 1;
+        this.previousNumSteps = previousNumSteps;
         this.f = HASH_LOAD_FACTOR;
         this.constructorInt2ByteOpenCustomHashMapPutIfLess(HASH_EXPECTED);
     }
@@ -82,19 +84,23 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
             final ColorAreaSet flooded,
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
-        byte[] result = neighbors.getColorsCompleted(notFlooded);
-        if (null == result) {
-            result = new byte[this.sizeColorArray];
-            int idx = 0;
-
-            // filter the result:
-            // only include colors which do not result in already known states (at this or lower depth)
-            for (int color = 0, colorsBits = neighbors.getColorsNotEmptyBits();  0 != colorsBits;  color++, colorsBits >>= 1) {
-                if ((0 != (colorsBits & 1)) && this.put(flooded, neighbors.getColor((byte)color), depth + 1)) {
-                    result[idx++] = (byte)color;
+        byte[] result;
+        if (depth + notFlooded.countColorsNotEmpty() > this.previousNumSteps) {
+            result = new byte [0];
+        } else {
+            result = neighbors.getColorsCompleted(notFlooded);
+            if (null == result) {
+                result = new byte[this.sizeColorArray];
+                int idx = 0;
+                // filter the result:
+                // only include colors which do not result in already known states (at this or lower depth)
+                for (int color = 0, colorsBits = neighbors.getColorsNotEmptyBits();  0 != colorsBits;  color++, colorsBits >>= 1) {
+                    if ((0 != (colorsBits & 1)) && this.put(flooded, neighbors.getColor((byte)color), depth + 1)) {
+                        result[idx++] = (byte)color;
+                    }
                 }
+                result[idx] = NO_COLOR;
             }
-            result[idx] = NO_COLOR;
         }
         return result;
     }
