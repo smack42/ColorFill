@@ -41,4 +41,11 @@ public interface DfsStrategy extends Strategy {
      * @return some info, may be null or empty if the particular solver has nothing to say.
      */
     public String getInfo();
+
+    /**
+     * set previousNumSteps
+     * @param previousNumSteps number of steps in the best solution found (by this or another solver?) for this board;
+     *        used to speed up DfsExhaustiveStrategy; if not known then just give a negative or zero value.
+     */
+    public void setPreviousNumSteps(int previousNumSteps);
 }

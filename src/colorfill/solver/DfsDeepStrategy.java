@@ -48,6 +48,11 @@ public class DfsDeepStrategy implements DfsStrategy {
     }
 
     @Override
+    public void setPreviousNumSteps(int previousNumSteps) {
+        // not used here
+    }
+
+    @Override
     public byte[] selectColors(final int depth,
             final ColorAreaSet flooded,
             final ColorAreaGroup notFlooded,

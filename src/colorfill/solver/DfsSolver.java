@@ -154,6 +154,7 @@ public class DfsSolver extends AbstractSolver {
             this.solution[depth] = thisColor;
             // skip element 0 because it's not a step but just the initial color at startPos
             this.addSolution(Arrays.copyOfRange(this.solution, 1, depth + 1));
+            this.strategy.setPreviousNumSteps(Math.min(this.solutionSize, this.previousNumSteps));
 
         // do next step
         } else if (this.solutionSize > depth + colorsNotFlooded) { // TODO use ">=" instead of ">" to find all shortest solutions; slower!

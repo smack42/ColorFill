@@ -50,8 +50,10 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
         HASH_EXPECTED = HASH_EXPECTED_NORMAL;
     }
 
+    private static final byte[] EMPTY_RESULT = new byte[0];
+
     private final int sizeColorArray;
-    private final int previousNumSteps;
+    private int previousNumSteps;
 
     public DfsExhaustiveStrategy(final Board board, final int previousNumSteps) {
         final int stateSizeBytes = board.getSizeColorAreas8();
@@ -80,13 +82,18 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
     }
 
     @Override
+    public void setPreviousNumSteps(final int previousNumSteps) {
+        this.previousNumSteps = previousNumSteps;
+    }
+
+    @Override
     public byte[] selectColors(final int depth,
             final ColorAreaSet flooded,
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
         byte[] result;
         if (depth + notFlooded.countColorsNotEmpty() > this.previousNumSteps) {
-            result = new byte [0];
+            result = EMPTY_RESULT;
         } else {
             result = neighbors.getColorsCompleted(notFlooded);
             if (null == result) {
