@@ -403,6 +403,120 @@ public class GameState {
 
 
 
+
+
+
+    /**
+     * try to parse the specified gameId and return the resulting GameState
+     * @param gameId
+     * @return the resulting GameState or IllegalArgumentException if something went wrong
+     */
+    public static GameState tryInfoGameId(String gameId) throws IllegalArgumentException {
+        final GameState gs = new GameState();
+        final String error = gs.internalApplyGameId(gameId, false, false);
+        if ((null == error) || (0 == error.length())) {
+            return gs;
+        } else {
+            throw new IllegalArgumentException(error);
+        }
+    }
+
+    /**
+     * compare the specified gameId with the current GameState
+     * @param gameId
+     * @return true if gameId is equal to current GameState
+     */
+    public boolean isSameGameId(String gameId) {
+        boolean result = false;
+        if (null != gameId) {
+            gameId = gameId.replaceAll("\\s", ""); //remove whitespace
+            result = this.getGameId().equals(gameId);
+        }
+        return result;
+    }
+
+    private static final String GAMEID_PREFIX = "ColorFill";
+    private static final char GAMEID_SEPARATOR = ';';
+
+    /**
+     * return the game ID that represents the current GameState
+     * @return gameId
+     */
+    public String getGameId() {
+        final StringBuilder sb = new StringBuilder();
+        sb  .append(GAMEID_SEPARATOR).append(GAMEID_PREFIX)
+            .append(GAMEID_SEPARATOR).append(this.board.getWidth())
+            .append(GAMEID_SEPARATOR).append(this.board.getHeight())
+            .append(GAMEID_SEPARATOR).append(this.board.getNumColors())
+            .append(GAMEID_SEPARATOR).append(StartPositionEnum.intValueFromPosition(this.board.getStartPos(), this.board.getWidth(), this.board.getHeight()))
+            .append(GAMEID_SEPARATOR).append(this.board.toStringCells())
+            .append(GAMEID_SEPARATOR).append(this.progressUser.getCurrentStep())
+            .append(GAMEID_SEPARATOR).append(this.progressUser.toStringSteps())
+            .append(GAMEID_SEPARATOR);
+        return sb.toString();
+    }
+
+    /**
+     * try to parse the the specified gameId and to apply its
+     * contents to this GameState
+     * @param gameId
+     * @return error message (null or empty means "OK")
+     */
+    public String applyGameId(final String gameId) {
+        return internalApplyGameId(gameId, true, true);
+    }
+
+    private String internalApplyGameId(String gameId, final boolean doSolver, final boolean doPrefs) {
+        if (null == gameId) {
+            return "null";
+        }
+        gameId = gameId.replaceAll("\\s", ""); //remove whitespace
+        if (gameId.isEmpty()) {
+            return "empty";
+        }
+        try {
+            final String[] str = gameId.split(String.valueOf(GAMEID_SEPARATOR));
+            if ((8+1 != str.length) || (0 != str[0].length()) || !GAMEID_PREFIX.equals(str[1])) {
+                return "not a GameID structure";
+            }
+            int i = 2;
+            final int width = Integer.parseInt(str[i++]);
+            final int height = Integer.parseInt(str[i++]);
+            final int numColors = Integer.parseInt(str[i++]);
+            final int speIntValue = Integer.parseInt(str[i++]);
+            final int startPos = StartPositionEnum.calculatePosition(speIntValue, width, height);
+            final String cells = str[i++];
+            final int currentStep = Integer.parseInt(str[i++]);
+            final String steps = str[i++];
+            final Board b = new Board(width, height, numColors, cells, startPos);
+            final GameProgress gp = new GameProgress(b, startPos, currentStep, steps);
+            // update GameState
+            this.board = b;
+            this.startPos = startPos;
+            this.progressUser = gp;
+            this.selectGameProgress(0);
+            this.removeHint();
+            if (doSolver) {
+                new SolverRun(Integer.MAX_VALUE); // use all available solver strategies
+            }
+            // update GamePreferences
+            if (doPrefs) {
+                this.pref.setWidth(b.getWidth());
+                this.pref.setHeight(b.getHeight());
+                this.pref.setNumColors(b.getNumColors());
+                this.pref.setStartPos(speIntValue);
+                this.pref.savePrefs();
+                GamePreferences.saveBoard(b);
+                GamePreferences.saveSolution(gp);
+            }
+        } catch (final Exception e) {
+            return e.toString();
+        }
+        return null;
+    }
+
+
+
     public static String padRight(String s, int n) {
         return String.format("%1$-" + n + "s", s);
     }

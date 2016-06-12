@@ -54,6 +54,7 @@ public class ControlPanel extends JPanel {
 
     private final JButton buttonNew = new JButton();
     private final JButton buttonPrefs = new JButton();
+    private final JButton buttonGameID = new JButton();
     private final JRadioButton userRButton = new JRadioButton();
     private final JLabel userMove = new JLabel();
     private final JButton buttonUndo = new JButton();
@@ -131,6 +132,7 @@ public class ControlPanel extends JPanel {
         final JPanel panel = new JPanel();
         final DesignGridLayout layout = new DesignGridLayout(panel);
         layout.row().grid().add(this.makeButtonNew(), 3).add(this.makeButtonPrefs(), 3);
+        layout.row().grid().add(this.makeButtonGameID(), 3).empty(3);
         layout.row().grid().add(new JSeparator());
         layout.row().grid().add(this.makeRButtonUser(bgroup), 4).add(this.makeLabelMove()).empty();
         final IRow rowButtonColors = layout.row().grid();
@@ -164,6 +166,16 @@ public class ControlPanel extends JPanel {
             }
         });
         return this.buttonPrefs;
+    }
+
+    private JButton makeButtonGameID() {
+        this.buttonGameID.setText(L10N.getString("ctrl.btn.GameID.txt"));
+        this.buttonGameID.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ControlPanel.this.controller.userButtonGameID();
+            }
+        });
+        return this.buttonGameID;
     }
 
     private JRadioButton makeRButtonUser(final ButtonGroup bgroup) {

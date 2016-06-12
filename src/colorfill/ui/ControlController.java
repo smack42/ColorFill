@@ -78,6 +78,13 @@ public class ControlController {
     }
 
     /**
+     * called by ControlPanel when user clicks on button "Game ID"
+     */
+    protected void userButtonGameID() {
+        this.mainController.actionGameID();
+    }
+
+    /**
      * called by ControlPanel when user clicks on button "Undo"
      */
     protected void userButtonUndo() {

@@ -42,6 +42,7 @@ public class MainController {
     private BoardController boardController;
     private ControlController controlController;
     private PreferencesController preferencesController;
+    private GameIdController gameidController;
 
     /**
      * the main entry point to this Swing GUI.
@@ -71,6 +72,7 @@ public class MainController {
         this.mainView.update();
         this.gameState.setAutoRunSolver(true);
         this.preferencesController = new PreferencesController(this, this.gameState, this.mainView, progname, version, author);
+        this.gameidController = new GameIdController(this, this.gameState, this.mainView);
     }
 
     private void internalUpdateBoardColors() {
@@ -136,6 +138,13 @@ public class MainController {
      */
     protected void actionPreferences() {
         this.preferencesController.showDialog();
+    }
+
+    /**
+     * show game ID dialog.
+     */
+    protected void actionGameID() {
+        this.gameidController.showDialog();
     }
 
     /**

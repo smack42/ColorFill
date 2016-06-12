@@ -90,4 +90,22 @@ public enum StartPositionEnum {
             return startPos;
         }
     }
+
+    /**
+     * determine the intValue of the StartPositionEnum value
+     * that matches the specified position (with width and height)
+     * or the position value if no matching StartPositionEnum exists.
+     * @param position
+     * @param width
+     * @param height
+     * @return
+     */
+    public static int intValueFromPosition(final int position, final int width, final int height) {
+        for (final StartPositionEnum spe : values()) {
+            if (position == spe.calculatePosition(width, height)) {
+                return spe.intValue; // found the enum value
+            }
+        }
+        return position; // no enum value exists
+    }
 }
