@@ -436,7 +436,7 @@ public class GameState {
     }
 
     private static final String GAMEID_PREFIX = "ColorFill";
-    private static final char GAMEID_SEPARATOR = ';';
+    private static final String GAMEID_SEPARATOR = ";";
 
     /**
      * return the game ID that represents the current GameState
@@ -475,19 +475,61 @@ public class GameState {
             return "empty";
         }
         try {
-            final String[] str = gameId.split(String.valueOf(GAMEID_SEPARATOR));
-            if ((8+1 != str.length) || (0 != str[0].length()) || !GAMEID_PREFIX.equals(str[1])) {
-                return "not a GameID structure";
+            final int width, height, numColors, speIntValue, startPos, currentStep;
+            final String cells, steps;
+            // try to parse it as a ColorFill GameID
+            final String[] str = gameId.split(GAMEID_SEPARATOR);
+            if ((8+1 == str.length) && (0 == str[0].length()) && GAMEID_PREFIX.equals(str[1])) {
+                int i = 2;
+                width = Integer.parseInt(str[i++]);
+                height = Integer.parseInt(str[i++]);
+                numColors = Integer.parseInt(str[i++]);
+                speIntValue = Integer.parseInt(str[i++]);
+                startPos = StartPositionEnum.calculatePosition(speIntValue, width, height);
+                cells = str[i++];
+                currentStep = Integer.parseInt(str[i++]);
+                steps = str[i++];
+            } else {
+                // try to parse it as a "Flood" GameID
+                // from Simon Tatham's Portable Puzzle Collection
+                // format: width + "x" + height [+ "c" + numColors] [+ "m" + extraMoves] + ":" + cells(0...c) + "," + numMoves
+                // 14x14:5034352442000401554521300213305402320310535452020550552422052045403530325333450525112112303133345114253150435533444400020013402304412530111000404130225111421100032452435511440141531031030511452454,20
+                final String WITH_DELIMITER = "((?<=%1$s)|(?=%1$s))";
+                final String[] strFlood = gameId.split(String.format(WITH_DELIMITER, "[xcm:,]"));
+                width = Integer.parseInt(strFlood[0]);
+                height = Integer.parseInt(strFlood[2]); // expect "x" at strFlood[1]
+                // find cells string
+                String strFloodCells = null;
+                for (int i = 0;  i < strFlood.length;  ++i) {
+                    if (":".equals(strFlood[i])) {
+                        strFloodCells = strFlood[i+1];
+                        break;
+                    }
+                }
+                // transform cells string from (0...c) to (1...c+1)
+                final StringBuilder sbCells = new StringBuilder();
+                int maxColor = 0;
+                for (int i = 0;  i < strFloodCells.length();  ++i) {
+                    final char c = strFloodCells.charAt(i);
+                    maxColor = Math.max(maxColor, Character.digit(c, 10));
+                    sbCells.append((char)(c + 1));
+                }
+                cells = sbCells.toString();
+                numColors = maxColor + 1;
+                speIntValue = StartPositionEnum.TOP_LEFT.intValue;
+                startPos = 0;
+                currentStep = 0;
+                steps = null;
             }
-            int i = 2;
-            final int width = Integer.parseInt(str[i++]);
-            final int height = Integer.parseInt(str[i++]);
-            final int numColors = Integer.parseInt(str[i++]);
-            final int speIntValue = Integer.parseInt(str[i++]);
-            final int startPos = StartPositionEnum.calculatePosition(speIntValue, width, height);
-            final String cells = str[i++];
-            final int currentStep = Integer.parseInt(str[i++]);
-            final String steps = str[i++];
+            if (width * height != cells.length()) {
+                throw new IllegalArgumentException("w=" + width + " h=" + height + " c=" + cells.length());
+            }
+            if ((2 > numColors) || (6 < numColors)) {
+                throw new UnsupportedOperationException("colors=" + numColors);
+            }
+            if ((0 > currentStep) || ((null != steps) && (steps.length() <= currentStep))) {
+                throw new IllegalArgumentException("currentStep=" + currentStep);
+            }
             final Board b = new Board(width, height, numColors, cells, startPos);
             final GameProgress gp = new GameProgress(b, startPos, currentStep, steps);
             // update GameState
@@ -510,7 +552,7 @@ public class GameState {
                 GamePreferences.saveSolution(gp);
             }
         } catch (final Exception e) {
-            return e.toString();
+            return "not a valid GameID; " + e.toString();
         }
         return null;
     }

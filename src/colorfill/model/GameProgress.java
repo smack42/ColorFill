@@ -75,10 +75,12 @@ public class GameProgress {
      */
     protected GameProgress(final Board board, final int startPos, final int step, final String strStepColors) {
         this(board, startPos);
-        for (final char c : strStepColors.toCharArray()) {
-            this.addStep(Integer.parseInt(String.valueOf(c)) - 1, true);
+        if ((null != strStepColors) && (0 != strStepColors.length())) {
+            for (final char c : strStepColors.toCharArray()) {
+                this.addStep(Integer.parseInt(String.valueOf(c)) - 1, true);
+            }
+            this.numSteps = step;
         }
-        this.numSteps = step;
     }
 
     private void initSteps(final int startPos) {
