@@ -509,7 +509,7 @@ public class GameState {
                 // transform cells string from (0...c) to (1...c+1)
                 final StringBuilder sbCells = new StringBuilder();
                 int maxColor = 0;
-                for (int i = 0;  i < strFloodCells.length();  ++i) {
+                if (null != strFloodCells) for (int i = 0;  i < strFloodCells.length();  ++i) {
                     final char c = strFloodCells.charAt(i);
                     maxColor = Math.max(maxColor, Character.digit(c, 10));
                     sbCells.append((char)(c + 1));

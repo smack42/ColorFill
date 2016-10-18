@@ -246,7 +246,7 @@ public class PreferencesDialog extends JDialog {
 
         private class ColorSchemeIcon implements Icon {
             private final int uiColorsIndex;
-            private final int SIZE = 24; // TODO icon size adapting to JLabel text height
+            private static final int SIZE = 24; // TODO icon size adapting to JLabel text height
             public ColorSchemeIcon(final int uiColorsIndex) {
                 this.uiColorsIndex = uiColorsIndex;
             }
