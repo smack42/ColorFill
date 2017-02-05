@@ -2,6 +2,25 @@ ColorFill  CHANGES
 
 
 
+1.0 (2017-02-05)
+
+- program solves the challenge:  Code Golf: Create a Flood Paint AI
+  * https://codegolf.stackexchange.com/questions/26232/create-a-flood-paint-ai
+  * input data and solver results in directory 'codegolf26232'
+  * output of this program, ColorFill: 2,095,015 steps (would have been 1st place!)
+- added AStar (A*) solver
+  * heuristic taken from the Programming Challenge 19 program by tigrou
+- speed up the solver algorithms, especially DfsExhaustiveStrategy
+- added DfsExhaustiveStrategy to interactive GUI solvers
+  * used for boards up to 15 x 15
+  * very slow but it's solutions are always optimal (shortest possible)
+- added 'Game ID' feature to GUI
+  * copy a game as text to system clipboard to save it
+  * paste a game as text from system clipboard to restore it
+  * can import GameID from Simon Tatham's "Flood"
+
+
+
 0.1.12 (2015-08-09)
 
 - added "Hint" button

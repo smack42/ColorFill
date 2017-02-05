@@ -1,7 +1,28 @@
-ColorFill game and solver - yet another Flood-It / Globs clone
+ColorFill - yet another Flood-It clone (game and solver algorithm)
 
-Version   0.1.12 (2015-08-09)
+Version   1.0 (2017-02-05)
 Homepage  https://github.com/smack42/ColorFill/wiki
+
+
+
+about
+
+The game called Flood-It has been around for some years. There are many
+clones and variants available for desktop and mobile platforms.
+
+The game board is a grid squares, colored at random in multiple colors. In each
+move the player changes the color of the "start square" (top left corner) and
+all squares of the same color that are connected to it. The objective is to
+fill the entire grid in a single color using as few moves as possible.
+
+This program, ColorFill, is yet another clone of this game. It includes an
+interactive GUI mode which lets you play the puzzles and explore the solutions
+that its integrated solver algorithms have found.
+
+The program also has a dedicated "solver mode" that uses the algorithms to
+solve two competition tasks that I've found on the internet:
+- "Programming Challenge 19" (1.000 14x14 boards; see directory pc19)
+- "Code Golf 26232" (100.000 19x19 boards; see directory codegolf26232)
 
 
 
@@ -18,19 +39,10 @@ On the command line run it like this:
 
 
 
-http://cplus.about.com/od/programmingchallenges/a/challenge19.htm
-If you're interested in the "Programming Challenge 19" results then
-have a look at the contents of folder "pc19".
-You can run ColorFill in "PC19 mode" using a command line like this:
-  java -Xmx8G -jar colorfill.jar pc19/tiles.txt
-(warning: this will run for some hours and needs several GB's of RAM)
-
-
-
 license
 
 ColorFill game and solver
-Copyright (C) 2015 Michael Henke <smack42@gmail.com>
+Copyright (C) 2017 Michael Henke <smack42@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -64,3 +76,4 @@ Programming
     https://stackoverflow.com/questions/1430962/how-to-optimally-solve-the-flood-fill-puzzle
     http://markgritter.livejournal.com/tag/floodit
     http://kunigami.wordpress.com/2012/09/16/flood-it-an-exact-approach/
+    https://codegolf.stackexchange.com/questions/26232/create-a-flood-paint-ai
