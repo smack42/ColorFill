@@ -3,6 +3,9 @@ by Joe Z.
 
 https://codegolf.stackexchange.com/questions/26232/create-a-flood-paint-ai
 
+(question/contest originally published on 2014-04-23 and closed by accepting
+the answer/winning program by tigrou on 2014-05-10)
+
 Your task is to create a program that will take a 19-by-19 grid of colours from
 1 to 6 as input, in whatever form you choose [...] and return a sequence of
 colours that the center square will change to each turn, again in the format
@@ -21,7 +24,9 @@ optimal strategy), the shorter program will win.
 
 results:
 
-1.  2,098,382 - tigrou, C#
+1.  2,075,452 - user1502040, C  (published on 2017-03-28)
+
+1.  2,098,382 - tigrou, C#  (published on 2014-05-10)
 2.  2,155,834 - CoderTao, C#
 3.  2,201,995 - MrBackend, Java
 4.  2,383,569 - CoderTao, C#
@@ -45,6 +50,11 @@ the files:
 floodtest           = input file, contains the 100,000 test cases
 01_tigrou.cs        = winning program by tigrou
 steps_01_tigrou.txt = output of winning program by tigrou: 2,098,382 steps
+
+01_user1502040.c    = new, even better program by user1502040
+steps_01_user1502040.txt = output of program by user1502040: 2,075,590 steps
+(note: the original program crashed and had to be fixed; this change seems to
+produce a slightly different/worse result, 138 steps more than claimed)
 
 
 output of this program, ColorFill: 2,116,152 steps (would have been 2nd place)
