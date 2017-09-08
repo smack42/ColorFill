@@ -29,7 +29,7 @@ bugfixes applied:
 - runtime crash: changed this line in funtion main():
     hash ^= zobrist_table[i][(int)solution[i]];
   to
-    hash ^= zobrist_table[i%len][(int)solution[i]+ncolors+i/len];
+    hash ^= zobrist_table[i%len][(int)solution[i]+(i/len)*ncolors];
 
 compile:
 gcc -O2 01_user1502040.c -o 01_user1502040 -lm
@@ -309,7 +309,7 @@ int main(void) {
             }
             hash = 0;
             for (int i = 0; i < score; i++) {
-                hash ^= zobrist_table[i%len][(int)solution[i]+ncolors+i/len];
+                hash ^= zobrist_table[i%len][(int)solution[i]+(i/len)*ncolors];
             }
             if (hash == prev_hash) {
                 same_count++;
