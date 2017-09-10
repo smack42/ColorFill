@@ -138,11 +138,16 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
             // copy state into memory at nextState
             final int[] arr1 = set1.getArray();
             final int[] arr2 = set2.getArray();
+            // performance: inline hashcode computation; copy&paste from hashStrategyHashCode()
+            int h32 = SEED + PRIME5;
             for (int b = this.nextStateOffset, i = 0, len = arr1.length;  i < len;  ++i, ++b) {
-                this.nextStateMemory[b] = arr1[i] | arr2[i];
+                final int k = arr1[i] | arr2[i];
+                this.nextStateMemory[b] = k;
+                h32 += k * PRIME3;
+                h32 = Integer.rotateLeft(h32, 17) * PRIME4;
             }
             // add to the map, increment nextState only if we want to accept the new state/depth pair
-            final int result = this.putIfLess((byte)depth);
+            final int result = this.putIfLess(h32, (byte)depth);
             if (result > 0) {
                 this.nextState += this.stateSize;
                 this.nextStateOffset += this.stateSize;
@@ -213,12 +218,14 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
                 // calculation taken from xxhash32
                 final int len = this.stateSize;
                 int h32 = SEED + PRIME5;
-                h32 += len << 2;
+                // we don't need to mix in "len" because it's a constant value
+//                h32 += len << 2;
                 final int limit = offset + len;
                 do {
                     h32 += memory[offset++] * PRIME3;
                     h32 = Integer.rotateLeft(h32, 17) * PRIME4;
                 } while (offset < limit);
+                // we omit the finalization step because we want faster computation; hash quality still seems to be good enough
 //                h32 ^= h32 >>> 15;
 //                h32 *= PRIME2;
 //                h32 ^= h32 >>> 13;
@@ -277,18 +284,18 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
             /**
              * put the key / value pair into this map if the key is not already in the
              * map or if it already exists and the new value is less than the old value.
-             * @param k key
+             * @param h32 pre-computed hashcode of key
              * @param v value
              * @return 1 if a new entry was added,
              *  0 if an existing entry was updated (new value is less than old value),
              *  -1 if nothing was changed (new value is NOT less than old value)
              */
-            private int putIfLess(final byte v) {
+            private int putIfLess(final int h32, final byte v) {
                 final int k = this.nextState;
                 int pos, curr;
                 insert: {
                     final int[] key = this.key;
-                    if ( !( ( curr = key[ pos = ( this.hashStrategyHashCode( k ) ) & mask ] ) == ( 0 ) ) ) {
+                    if ( !( ( curr = key[ pos = h32 & mask ] ) == ( 0 ) ) ) {
                         if ( ( this.hashStrategyEquals( ( curr ), ( k ) ) ) ) break insert;
                         while ( !( ( curr = key[ pos = ( pos + 1 ) & mask ] ) == ( 0 ) ) )
                             if ( ( this.hashStrategyEquals( ( curr ), ( k ) ) ) ) break insert;
