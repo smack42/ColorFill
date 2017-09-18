@@ -53,13 +53,12 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
     private static final byte[] EMPTY_RESULT = new byte[0];
 
     private final int sizeColorArray;
-    private int previousNumSteps;
+    private int previousNumSteps = Integer.MAX_VALUE;
 
-    public DfsExhaustiveStrategy(final Board board, final int previousNumSteps) {
+    public DfsExhaustiveStrategy(final Board board) {
         final int stateSizeBytes = board.getSizeColorAreas8();
         this.stateSize = (stateSizeBytes + 3) >> 2;
         this.sizeColorArray = board.getNumColors() + 1;
-        this.previousNumSteps = previousNumSteps;
         this.f = HASH_LOAD_FACTOR;
         this.constructorInt2ByteOpenCustomHashMapPutIfLess(HASH_EXPECTED);
     }
@@ -92,7 +91,7 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
         byte[] result;
-        if (depth + notFlooded.countColorsNotEmpty() > this.previousNumSteps) {
+        if (depth + notFlooded.countColorsNotEmpty() >= this.previousNumSteps) {
             result = EMPTY_RESULT;
         } else {
             result = neighbors.getColorsCompleted(notFlooded);

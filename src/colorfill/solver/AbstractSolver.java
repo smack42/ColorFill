@@ -31,20 +31,18 @@ public abstract class AbstractSolver implements Solver {
 
     protected final Board board;
     protected final List<Solution> solutions = new ArrayList<Solution>();
-    protected int solutionSize = 0;
+    protected int solutionSize = Integer.MAX_VALUE;
 
     /**
      * create a new solver.
      * @param strategyClass strategy to be used
      * @param board to be solved
-     * @param previousNumSteps number of steps in the best solution found (by another solver?) for this board;
-     *        used to speed up DfsExhaustiveStrategy; if not known then just give a negative or zero value.
      * @return
      */
-    public static Solver createSolver(final Class<Strategy> strategyClass, final Board board, final int previousNumSteps) {
-        final Solver solver;
+    public static Solver createSolver(final Class<Strategy> strategyClass, final Board board) {
+        final AbstractSolver solver;
         if (DfsStrategy.class.isAssignableFrom(strategyClass)) {
-            solver = new DfsSolver(board, previousNumSteps <= 0 ? Integer.MAX_VALUE : previousNumSteps);
+            solver = new DfsSolver(board);
         } else if (AStarStrategy.class.isAssignableFrom(strategyClass)) {
             solver = new AStarSolver(board);
         } else {
@@ -60,7 +58,7 @@ public abstract class AbstractSolver implements Solver {
      * @return
      */
     public static String getSolverName(final Class<Strategy> strategyClass) {
-        final Solver solver = createSolver(strategyClass, new Board(2, 2, 2), 0);
+        final Solver solver = createSolver(strategyClass, new Board(2, 2, 2));
         return solver.getSolverName();
     }
 
@@ -85,9 +83,13 @@ public abstract class AbstractSolver implements Solver {
      * @see colorfill.solver.Solver#execute(int)
      */
     @Override
-    public int execute(final int startPos) throws InterruptedException {
+    public int execute(final int startPos, final Solution previousSolution) throws InterruptedException {
         this.solutions.clear();
         this.solutionSize = Integer.MAX_VALUE;
+        if (null != previousSolution) {
+            this.solutionSize = previousSolution.getNumSteps();
+            this.solutions.add(new Solution(previousSolution.getSteps(), this.getSolverName()));
+        }
 
         this.executeInternal(startPos);
 

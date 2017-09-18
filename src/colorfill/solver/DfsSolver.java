@@ -38,17 +38,12 @@ public class DfsSolver extends AbstractSolver {
     private ColorAreaGroup notFlooded;
     private ColorAreaGroup[] neighbors;
 
-    private final int previousNumSteps;
-
     /**
      * construct a new solver for this Board.
      * @param board the problem to be solved
-     * @param previousNumSteps number of steps in the best solution found (by another solver?) for this board;
-     *        used to speed up DfsExhaustiveStrategy; if not known then just give a negative or zero value.
      */
-    public DfsSolver(final Board board, final int previousNumSteps) {
+    public DfsSolver(final Board board) {
         super(board);
-        this.previousNumSteps = previousNumSteps <= 0 ? Integer.MAX_VALUE : previousNumSteps;
     }
 
     /* (non-Javadoc)
@@ -77,7 +72,7 @@ public class DfsSolver extends AbstractSolver {
             result = new DfsDeeperStrategy(this.board, startPos);
         } else if (DfsExhaustiveStrategy.class.equals(this.strategyClass)) {
             if (this.board.getSize() <= EXHAUSTIVE_MAX_BOARD_SIZE) {
-                result = new DfsExhaustiveStrategy(this.board, this.previousNumSteps);
+                result = new DfsExhaustiveStrategy(this.board);
             } else {
                 result = null; // do not use DfsExhaustiveStrategy for large boards
             }
@@ -118,6 +113,7 @@ public class DfsSolver extends AbstractSolver {
         if (null == this.strategy) {
             return;
         }
+        this.strategy.setPreviousNumSteps(this.solutionSize);
 
         final ColorArea startCa = this.board.getColorArea4Cell(startPos);
         this.allFlooded = new ColorAreaSet(this.board);
@@ -154,7 +150,7 @@ public class DfsSolver extends AbstractSolver {
             this.solution[depth] = thisColor;
             // skip element 0 because it's not a step but just the initial color at startPos
             this.addSolution(Arrays.copyOfRange(this.solution, 1, depth + 1));
-            this.strategy.setPreviousNumSteps(Math.min(this.solutionSize, this.previousNumSteps));
+            this.strategy.setPreviousNumSteps(this.solutionSize);
 
         // do next step
         } else if (this.solutionSize > depth + colorsNotFlooded) { // TODO use ">=" instead of ">" to find all shortest solutions; slower!

@@ -45,7 +45,7 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill";
-        final String version  = "1.01 dev (2017-09-10)";
+        final String version  = "1.01 dev (2017-09-17)";
         final String author   = "Copyright (C) 2017 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
@@ -190,16 +190,19 @@ public class Starter {
             }
             ++count;
             // run each of the strategies
-            for (int strategy = 0, previousNumSteps = Integer.MAX_VALUE;  strategy < STRATEGIES.length;  ++strategy) {
-                final Solver solver = AbstractSolver.createSolver((Class<Strategy>) STRATEGIES[strategy], board, previousNumSteps);
+            Solution bestSolution = null;
+            for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
+                final Solver solver = AbstractSolver.createSolver((Class<Strategy>) STRATEGIES[strategy], board);
                 final long nanoStart = System.nanoTime();
-                final int numSteps = solver.execute(board.getStartPos());
+                final int numSteps = solver.execute(board.getStartPos(), DfsExhaustiveStrategy.class.equals(STRATEGIES[strategy]) ? bestSolution : null);
                 final long nanoEnd = System.nanoTime();
                 stNanoTime[strategy] += nanoEnd - nanoStart;
                 stSolution[strategy] = solver.getSolution();
                 stCountSteps[strategy] += numSteps;
                 stCountSteps25[strategy] += (numSteps > 25 ? 25 : numSteps);
-                previousNumSteps = Math.min(previousNumSteps, numSteps);
+                if ((null == bestSolution) || (numSteps < bestSolution.getNumSteps())) {
+                    bestSolution = solver.getSolution();
+                }
                 final String solutionCheckResult = board.checkSolution(solver.getSolution().toString(), board.getStartPos());
                 if (solutionCheckResult.isEmpty()) {
                     stCountCheckOK[strategy] += 1;
@@ -294,10 +297,10 @@ public class Starter {
                     break; // end of input file
                 }
                 for (final Class strategy : STRATEGIES) {
-                    final Solver solver = AbstractSolver.createSolver(strategy, board, 0);  // TODO createSolver previousNumSteps
+                    final Solver solver = AbstractSolver.createSolver(strategy, board);
                     futureSolutions.add(exec.submit(new Callable<Solution>() {
                         public Solution call() throws Exception {
-                            solver.execute(board.getStartPos());
+                            solver.execute(board.getStartPos(), null);  // TODO execute previousSolution
                             return solver.getSolution();
                         }
                     }));

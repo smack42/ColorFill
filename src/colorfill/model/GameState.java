@@ -217,7 +217,6 @@ public class GameState {
             final ExecutorService executor = Executors.newFixedThreadPool(numThreads, threadFactory);
             final List<Future<Solution>> futureSolutions = new ArrayList<Future<Solution>>();
             int strategyIdx;
-            int previousNumSteps = Integer.MAX_VALUE;
             for (strategyIdx = 0;  strategyIdx < STRATEGIES.length;  ++strategyIdx) {
                 if (strategyIdx >= this.numberOfSolverStrategies) {
                     strategyIdx = Integer.MAX_VALUE;
@@ -227,11 +226,11 @@ public class GameState {
                 if (DfsExhaustiveStrategy.class.equals(STRATEGIES[strategyIdx])) {
                     break; // for()
                 }
-                final Solver solver = AbstractSolver.createSolver((Class<Strategy>)STRATEGIES[strategyIdx], this.board, 0);
+                final Solver solver = AbstractSolver.createSolver((Class<Strategy>)STRATEGIES[strategyIdx], this.board);
                 futureSolutions.add(executor.submit(new Callable<Solution>() {
                     public Solution call() throws Exception {
                         try {
-                            solver.execute(SolverRun.this.startPos);
+                            solver.execute(SolverRun.this.startPos, null);
                             return solver.getSolution();
                         } finally {
                             final String info = solver.getSolverInfo();
@@ -242,6 +241,7 @@ public class GameState {
                     }
                 }));
             }
+            Solution bestSolution = null;
             for (int waitMask = (1 << futureSolutions.size()) - 1;  waitMask != 0;  ) {
                 for (int i = 0;  i < futureSolutions.size();  ++i) {
                     final int iMask = (1 << i); // bit for this solution
@@ -266,7 +266,9 @@ public class GameState {
                             waitMask |= iMask; // set this bit again because the solution is not ready yet
                         }
                         if (null != solution) {
-                            previousNumSteps = Math.min(previousNumSteps, solution.getNumSteps());
+                            if ((null == bestSolution) || (solution.getNumSteps() < bestSolution.getNumSteps())) {
+                                bestSolution = solution;
+                            }
                             GameState.this.addProgressSolution(new GameProgress(this.board, this.startPos, solution));
                             System.out.println(
                                     padRight(solution.getSolverName(), 21 + 2) // 21==max. length of strategy names
@@ -279,10 +281,10 @@ public class GameState {
             executor.shutdown();
             // run DfsExhaustiveStrategy now
             if ((strategyIdx < STRATEGIES.length) && DfsExhaustiveStrategy.class.equals(STRATEGIES[strategyIdx])) {
-                final Solver solver = AbstractSolver.createSolver((Class<Strategy>)STRATEGIES[strategyIdx], this.board, previousNumSteps);
+                final Solver solver = AbstractSolver.createSolver((Class<Strategy>)STRATEGIES[strategyIdx], this.board);
                 Solution solution = null;
                 try {
-                    solver.execute(SolverRun.this.startPos);
+                    solver.execute(SolverRun.this.startPos, bestSolution);
                     solution = solver.getSolution();
                 } catch (InterruptedException e) {
                     System.out.println("***** SolverRun interrupted *****");
