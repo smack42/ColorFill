@@ -20,7 +20,6 @@ package colorfill.solver;
 import java.util.Arrays;
 
 import colorfill.model.Board;
-import static colorfill.solver.ColorAreaGroup.NO_COLOR;
 
 /**
  * this strategy results in a complete search.
@@ -50,15 +49,11 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
         HASH_EXPECTED = HASH_EXPECTED_NORMAL;
     }
 
-    private static final byte[] EMPTY_RESULT = new byte[0];
-
-    private final int sizeColorArray;
     private int previousNumSteps = Integer.MAX_VALUE;
 
     public DfsExhaustiveStrategy(final Board board) {
         final int stateSizeBytes = board.getSizeColorAreas8();
         this.stateSize = (stateSizeBytes + 3) >> 2;
-        this.sizeColorArray = board.getNumColors() + 1;
         this.f = HASH_LOAD_FACTOR;
         this.constructorInt2ByteOpenCustomHashMapPutIfLess(HASH_EXPECTED);
     }
@@ -86,26 +81,23 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
     }
 
     @Override
-    public byte[] selectColors(final int depth,
+    public int selectColors(final int depth,
             final ColorAreaSet flooded,
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
-        byte[] result;
+        int result;
         if (depth + notFlooded.countColorsNotEmpty() >= this.previousNumSteps) {
-            result = EMPTY_RESULT;
+            result = 0;
         } else {
             result = neighbors.getColorsCompleted(notFlooded);
-            if (null == result) {
-                result = new byte[this.sizeColorArray];
-                int idx = 0;
+            if (0 == result) {
                 // filter the result:
                 // only include colors which do not result in already known states (at this or lower depth)
                 for (int color = 0, colorsBits = neighbors.getColorsNotEmptyBits();  0 != colorsBits;  color++, colorsBits >>= 1) {
                     if ((0 != (colorsBits & 1)) && this.put(flooded, neighbors.getColor((byte)color), depth + 1)) {
-                        result[idx++] = (byte)color;
+                        result |= 1 << color;
                     }
                 }
-                result[idx] = NO_COLOR;
             }
         }
         return result;

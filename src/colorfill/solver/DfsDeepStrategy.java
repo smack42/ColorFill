@@ -53,12 +53,12 @@ public class DfsDeepStrategy implements DfsStrategy {
     }
 
     @Override
-    public byte[] selectColors(final int depth,
+    public int selectColors(final int depth,
             final ColorAreaSet flooded,
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
-        byte[] result = neighbors.getColorsCompleted(notFlooded);
-        if (null == result) {
+        int result = neighbors.getColorsCompleted(notFlooded);
+        if (0 == result) {
             if (depth < this.maxDepth) {
                 result = neighbors.getColorsDepth(depth + 1);
             } else  {

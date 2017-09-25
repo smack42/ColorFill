@@ -31,7 +31,7 @@ public interface DfsStrategy extends Strategy {
      * @param neighbors the neighbor areas of the flooded area
      * @return the colors to be used for the next step
      */
-    public byte[] selectColors(int depth,
+    public int selectColors(int depth,
             ColorAreaSet flooded,
             ColorAreaGroup notFlooded,
             ColorAreaGroup neighbors);

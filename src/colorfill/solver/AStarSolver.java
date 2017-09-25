@@ -19,7 +19,6 @@ package colorfill.solver;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
-import static colorfill.solver.ColorAreaGroup.NO_COLOR;
 
 /**
  * a solver implementation that implements the AStar (A*) algorithm.
@@ -101,10 +100,13 @@ public class AStarSolver extends AbstractSolver {
                     return;  // finished!
                 } else {
                     // play all possible colors
-                    for (final byte nextColor : currentNode.getNeighborColors()) {
-                        if (NO_COLOR == nextColor) break;
+                    int nextColors = currentNode.getNeighborColors();
+                    while (0 != nextColors) {
+                        final int l1b = nextColors & -nextColors; // Integer.lowestOneBit()
+                        final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
+                        nextColors ^= l1b; // clear lowest one bit
                         final AStarNode nextNode = new AStarNode(currentNode);
-                        nextNode.play(nextColor);
+                        nextNode.play((byte)(31 - clz));
                         this.strategy.setEstimatedCost(nextNode);
                         open.offer(nextNode);
                     }
