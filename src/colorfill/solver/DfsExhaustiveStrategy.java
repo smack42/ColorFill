@@ -86,11 +86,14 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
         int result;
-        if (depth + notFlooded.countColorsNotEmpty() >= this.previousNumSteps) {
+        final int diffNumSteps = depth + notFlooded.countColorsNotEmpty() - this.previousNumSteps;
+        if (diffNumSteps >= 0) {
             result = 0;
         } else {
             result = neighbors.getColorsCompleted(notFlooded);
-            if (0 == result) {
+            // if no colors can be completed now
+            // then we will need at least one step more than there are colors left
+            if ((0 == result) && (diffNumSteps < -1)) {
                 // filter the result:
                 // only include colors which do not result in already known states (at this or lower depth)
                 for (int color = 0, colorsBits = neighbors.getColorsNotEmptyBits();  0 != colorsBits;  color++, colorsBits >>= 1) {
