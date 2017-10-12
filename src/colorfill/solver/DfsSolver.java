@@ -110,6 +110,7 @@ public class DfsSolver extends AbstractSolver {
     protected void executeInternal(final int startPos) throws InterruptedException {
         this.strategy = this.makeStrategy(startPos);
         if (null == this.strategy) {
+            this.solutions.clear();
             return;
         }
         this.strategy.setPreviousNumSteps(this.solutionSize);
