@@ -96,7 +96,7 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
             if ((0 == result) && (diffNumSteps < -1)) {
                 // filter the result:
                 // only include colors which do not result in already known states (at this or lower depth)
-                for (int color = 0, colorsBits = neighbors.getColorsNotEmptyBits();  0 != colorsBits;  color++, colorsBits >>= 1) {
+                for (int color = 0, colorsBits = neighbors.getColorsNotEmpty();  0 != colorsBits;  color++, colorsBits >>= 1) {
                     if ((0 != (colorsBits & 1)) && this.put(flooded, neighbors.getColor((byte)color), depth + 1)) {
                         result |= 1 << color;
                     }

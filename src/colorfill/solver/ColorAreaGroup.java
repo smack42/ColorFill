@@ -131,22 +131,8 @@ public class ColorAreaGroup {
      * get the colors that have at least one color area.
      * @return bitfield of occupied colors
      */
-    public int getColorsNotEmptyBits() {
-        return this.colorsNotEmptyBits;
-    }
-
-    /**
-     * get the colors that have at least one color area.
-     * @return list of occupied colors, not expected to be empty
-     */
     public int getColorsNotEmpty() {
-        int result = 0;
-        for (byte color = 0;  color < this.theArray.length;  ++color) {
-            if (false == this.theArray[color].isEmpty()) {
-                result |= 1 << color;
-            }
-        }
-        return result;
+        return this.colorsNotEmptyBits;
     }
 
     /**
@@ -204,13 +190,15 @@ public class ColorAreaGroup {
      * @return list of completed colors or 0 (zero)
      */
     public int getColorsCompleted(final ColorAreaGroup other) {
-        for (byte color = 0;  color < this.theArray.length;  ++color) {
-            final ColorAreaSet thisSet = this.theArray[color];
-            if (thisSet.size() > 0) {
-                final ColorAreaSet otherSet = other.theArray[color];
-                if ((thisSet.size() == otherSet.size())&& (thisSet.containsAll(otherSet))) {
-                    return 1 << color;
-                }
+        int colors = this.colorsNotEmptyBits;
+        while (0 != colors) {
+            final int l1b = colors & -colors; // Integer.lowestOneBit()
+            final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
+            colors ^= l1b; // clear lowest one bit
+            final ColorAreaSet  thisSet =  this.theArray[31 - clz];
+            final ColorAreaSet otherSet = other.theArray[31 - clz];
+            if ((thisSet.size() == otherSet.size()) && thisSet.containsAll(otherSet)) {
+                return l1b;
             }
         }
         return 0;

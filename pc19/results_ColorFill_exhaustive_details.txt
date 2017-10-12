@@ -1,11 +1,11 @@
 time nice java -Xmx8G -jar colorfill.jar pc19/tiles.txt > results_details.txt
 
-real	49m56.655s
-user	51m14.452s
-sys	0m9.456s
+real	47m49.285s
+user	49m1.412s
+sys	0m12.596s
 
 
-ColorFill 1.01 dev (2017-10-01)
+ColorFill __DEV__ 1.01 (2017-10-12)
 Copyright (C) 2017 Michael Henke <smack42@gmail.com>
 running Programming Challenge 19
 reading  input file: pc19/tiles.txt
@@ -1010,11 +1010,11 @@ writing output file: results.txt
 998  62613245412516412356____________20                     4_DfsExhaustiveStrategy
 999  41624253145324156____________17                        3_DfsDeeperStrategy
 1000 51325151434531624315____________20                     3_DfsDeeperStrategy
-0_DfsGreedyStrategy      steps=22833  steps25=22761  best=17    checkOK=1000  checkFAIL=0     milliSeconds=447    
-1_DfsGreedyNextStrategy  steps=22033  steps25=22012  best=67    checkOK=1000  checkFAIL=0     milliSeconds=149    
-2_DfsDeepStrategy        steps=21409  steps25=21404  best=159   checkOK=1000  checkFAIL=0     milliSeconds=4599   
-3_DfsDeeperStrategy      steps=20815  steps25=20815  best=399   checkOK=1000  checkFAIL=0     milliSeconds=29064  
-4_DfsExhaustiveStrategy  steps=20086  steps25=20086  best=1000  checkOK=1000  checkFAIL=0     milliSeconds=2904728
-5_AStarTigrouStrategy    steps=20865  steps25=20865  best=352   checkOK=1000  checkFAIL=0     milliSeconds=53216  
+0_DfsGreedyStrategy      steps=22833  steps25=22761  best=17    checkOK=1000  checkFAIL=0     milliSeconds=430    
+1_DfsGreedyNextStrategy  steps=22033  steps25=22012  best=67    checkOK=1000  checkFAIL=0     milliSeconds=147    
+2_DfsDeepStrategy        steps=21409  steps25=21404  best=159   checkOK=1000  checkFAIL=0     milliSeconds=4281   
+3_DfsDeeperStrategy      steps=20815  steps25=20815  best=399   checkOK=1000  checkFAIL=0     milliSeconds=28166  
+4_DfsExhaustiveStrategy  steps=20086  steps25=20086  best=1000  checkOK=1000  checkFAIL=0     milliSeconds=2777869
+5_AStarTigrouStrategy    steps=20865  steps25=20865  best=352   checkOK=1000  checkFAIL=0     milliSeconds=53863  
 total steps:   20086
 total steps25: 20086  (Programming Challenge 19 score)
