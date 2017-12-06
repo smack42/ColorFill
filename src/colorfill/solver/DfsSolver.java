@@ -27,7 +27,7 @@ import colorfill.model.ColorArea;
  */
 public class DfsSolver extends AbstractSolver {
 
-    private static final int EXHAUSTIVE_MAX_BOARD_SIZE = 15*15; // DfsExhaustiveStrategy will not run for larger boards
+    private static final int EXHAUSTIVE_MAX_BOARD_SIZE = 19*19; // DfsExhaustiveStrategy will not run for larger boards
 
     private Class<? extends DfsStrategy> strategyClass = DfsGreedyStrategy.class; // default
     private DfsStrategy strategy;

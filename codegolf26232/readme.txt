@@ -69,3 +69,19 @@ output of this program, ColorFill: 2,095,015 steps (would have been 1st place!)
 steps_ColorFill_AStar_DFS.txt         = A* (tigrou) + 2 fast DFS strategies
 steps_ColorFill_AStar_DFS_details.txt = detailed output (193 CPU minutes)
 
+
+---
+added 2017-12-06:
+output of this program, ColorFill: attempt to solve it using exhaustive search!
+
+steps.txt  = A* (tigrou) + 2 fast DFS strategies + exhaustive DFS
+steps_.txt = detailed output (shows failed attempts / OutOfMemoryError)
+
+this is work in progress, but very likely it will never be finished because the
+exhaustive search needs too much time. also, it fails with OutOfMemoryError and
+doesn't give the optimal solution for about 1/5 of the test cases on my machine
+that has 16GB of RAM. (using "java -Xmx14800M")
+
+extrapolating the current, partial result, we can expect that the total number
+of steps found by exhaustive search would be less than 2,000,000.
+

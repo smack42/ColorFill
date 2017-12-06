@@ -1,0 +1,401 @@
+2017-12-03T23:25:16+01:00
+ColorFill __DEV__ 1.01 (2017-12-03)
+Copyright (C) 2017 Michael Henke <smack42@gmail.com>
+running Code Golf 26232: Create a Flood Paint AI
+EXHAUSTIVE SOLVER ALGORITHM
+reading  input file: floodtest
+writing output file: steps.txt
+1       4265416513215346132456____________22                    2_AStarTigrouStrategy     predictedTotal=2200000  OutOfMemoryError
+2       43524642516536231645____________20                      2_AStarTigrouStrategy     predictedTotal=2100000  
+3       6125462156451234615432____________22                    2_AStarTigrouStrategy     predictedTotal=2133333  OutOfMemoryError
+4       35641353125641231645____________20                      2_AStarTigrouStrategy     predictedTotal=2100000  
+5       42352635246124365____________17                         3_DfsExhaustiveStrategy   predictedTotal=2020000  
+6       14362431254635246351____________20                      3_DfsExhaustiveStrategy   predictedTotal=2016666  
+7       23262435621523416235____________20                      3_DfsExhaustiveStrategy   predictedTotal=2014285  
+8       252143263145261324____________18                        3_DfsExhaustiveStrategy   predictedTotal=1987500  
+9       64134652435162463152____________20                      2_AStarTigrouStrategy     predictedTotal=1988888  
+10      14316523165216412356____________20                      3_DfsExhaustiveStrategy   predictedTotal=1990000  
+11      54636415636416235146____________20                      3_DfsExhaustiveStrategy   predictedTotal=1990909  
+12      13632651265413251436____________20                      3_DfsExhaustiveStrategy   predictedTotal=1991666  
+13      1431365416534216345____________19                       3_DfsExhaustiveStrategy   predictedTotal=1984615  
+14      23461451364215634125____________20                      2_AStarTigrouStrategy     predictedTotal=1985714  
+15      13465415231342361243156____________23                   2_AStarTigrouStrategy     predictedTotal=2006666  OutOfMemoryError
+16      53145265412461352612345____________23                   0_DfsGreedyStrategy       predictedTotal=2025000  OutOfMemoryError
+17      21243614523412542361____________20                      3_DfsExhaustiveStrategy   predictedTotal=2023529  
+18      12345124562354612345____________20                      3_DfsExhaustiveStrategy   predictedTotal=2022222  
+19      1245252413526351246____________19                       3_DfsExhaustiveStrategy   predictedTotal=2015789  
+20      35613452351624351624____________20                      2_AStarTigrouStrategy     predictedTotal=2015000  
+21      1245165126352165234____________19                       3_DfsExhaustiveStrategy   predictedTotal=2009523  
+22      161256213421634125____________18                        3_DfsExhaustiveStrategy   predictedTotal=2000000  
+23      3462354651421316245____________19                       3_DfsExhaustiveStrategy   predictedTotal=1995652  
+24      62361234156156326451____________20                      2_AStarTigrouStrategy     predictedTotal=1995833  
+25      13542615621632541326____________20                      3_DfsExhaustiveStrategy   predictedTotal=1996000  
+26      564263251645216345____________18                        3_DfsExhaustiveStrategy   predictedTotal=1988461  
+27      543263261235123456____________18                        3_DfsExhaustiveStrategy   predictedTotal=1981481  
+28      4216342156426314562____________19                       2_AStarTigrouStrategy     predictedTotal=1978571  
+29      1256342561453142356____________19                       3_DfsExhaustiveStrategy   predictedTotal=1975862  
+30      1324516253415234615____________19                       3_DfsExhaustiveStrategy   predictedTotal=1973333  
+31      41615361561324513246____________20                      3_DfsExhaustiveStrategy   predictedTotal=1974193  
+32      4165624145621352416____________19                       3_DfsExhaustiveStrategy   predictedTotal=1971875  
+33      1356453152635126345____________19                       3_DfsExhaustiveStrategy   predictedTotal=1969696  
+34      1234146456213242153462____________22                    3_DfsExhaustiveStrategy   predictedTotal=1976470  OutOfMemoryError
+35      1365214362361531624____________19                       3_DfsExhaustiveStrategy   predictedTotal=1974285  
+36      16345135243641352146____________20                      3_DfsExhaustiveStrategy   predictedTotal=1975000  
+37      624512363265412351246____________21                     2_AStarTigrouStrategy     predictedTotal=1978378  OutOfMemoryError
+38      362341463546352416____________18                        3_DfsExhaustiveStrategy   predictedTotal=1973684  
+39      12345421421634524613____________20                      3_DfsExhaustiveStrategy   predictedTotal=1974358  
+40      1235231653625154531246____________22                    3_DfsExhaustiveStrategy   predictedTotal=1980000  OutOfMemoryError
+41      1541534641235615234____________19                       3_DfsExhaustiveStrategy   predictedTotal=1978048  
+42      1412452163452634512____________19                       3_DfsExhaustiveStrategy   predictedTotal=1976190  
+43      24512412342315645312____________20                      3_DfsExhaustiveStrategy   predictedTotal=1976744  
+44      236526341363523516234____________21                     3_DfsExhaustiveStrategy   predictedTotal=1979545  
+45      35253616541263421645____________20                      2_AStarTigrouStrategy     predictedTotal=1980000  
+46      13243265432651624513____________20                      3_DfsExhaustiveStrategy   predictedTotal=1980434  
+47      1641362435614253461____________19                       3_DfsExhaustiveStrategy   predictedTotal=1978723  
+48      5131423126541642513246____________22                    3_DfsExhaustiveStrategy   predictedTotal=1983333  OutOfMemoryError
+49      31621635213526415236____________20                      3_DfsExhaustiveStrategy   predictedTotal=1983673  OutOfMemoryError
+50      1241326123614326145____________19                       3_DfsExhaustiveStrategy   predictedTotal=1982000  
+51      213413624251321651234____________21                     3_DfsExhaustiveStrategy   predictedTotal=1984313  OutOfMemoryError
+52      31636152153415631245____________20                      3_DfsExhaustiveStrategy   predictedTotal=1984615  
+53      4521361431465123456____________19                       3_DfsExhaustiveStrategy   predictedTotal=1983018  
+54      6143642153645132456____________19                       2_AStarTigrouStrategy     predictedTotal=1981481  
+55      25163141564135146235____________20                      3_DfsExhaustiveStrategy   predictedTotal=1981818  
+56      43264516421524653124____________20                      3_DfsExhaustiveStrategy   predictedTotal=1982142  
+57      42132341353462153246____________20                      3_DfsExhaustiveStrategy   predictedTotal=1982456  
+58      21346125423413614325____________20                      3_DfsExhaustiveStrategy   predictedTotal=1982758  
+59      4256212456235163245____________19                       3_DfsExhaustiveStrategy   predictedTotal=1981355  
+60      1245615364151263145____________19                       3_DfsExhaustiveStrategy   predictedTotal=1980000  
+61      1216215213615436213456____________22                    2_AStarTigrouStrategy     predictedTotal=1983606  OutOfMemoryError
+62      21243654164254621345____________20                      3_DfsExhaustiveStrategy   predictedTotal=1983870  
+63      41352313463251346____________17                         3_DfsExhaustiveStrategy   predictedTotal=1979365  
+64      43526436124361521346____________20                      3_DfsExhaustiveStrategy   predictedTotal=1979687  
+65      124146541562351634125____________21                     3_DfsExhaustiveStrategy   predictedTotal=1981538  
+66      4623152615435264513____________19                       2_AStarTigrouStrategy     predictedTotal=1980303  
+67      45612632154624523146____________20                      3_DfsExhaustiveStrategy   predictedTotal=1980597  
+68      12315652513263523146____________20                      3_DfsExhaustiveStrategy   predictedTotal=1980882  
+69      16425612651421361245____________20                      3_DfsExhaustiveStrategy   predictedTotal=1981159  
+70      31246254235641362154____________20                      2_AStarTigrouStrategy     predictedTotal=1981428  
+71      3245362145643253412536____________22                    2_AStarTigrouStrategy     predictedTotal=1984507  OutOfMemoryError
+72      51363156241325142364____________20                      3_DfsExhaustiveStrategy   predictedTotal=1984722  
+73      61643251632413215161432____________23                   2_AStarTigrouStrategy     predictedTotal=1989041  OutOfMemoryError
+74      4314135634153214536____________19                       3_DfsExhaustiveStrategy   predictedTotal=1987837  
+75      61251432416352416235____________20                      2_AStarTigrouStrategy     predictedTotal=1988000  
+76      264253412563421534261____________21                     3_DfsExhaustiveStrategy   predictedTotal=1989473  OutOfMemoryError
+77      41252135124135632146____________20                      3_DfsExhaustiveStrategy   predictedTotal=1989610  
+78      5312546123254623514____________19                       3_DfsExhaustiveStrategy   predictedTotal=1988461  
+79      35146135461325432615____________20                      3_DfsExhaustiveStrategy   predictedTotal=1988607  
+80      56341352145324165234____________20                      3_DfsExhaustiveStrategy   predictedTotal=1988750  
+81      4614216325461325146____________19                       3_DfsExhaustiveStrategy   predictedTotal=1987654  
+82      6563514154614356412356____________22                    2_AStarTigrouStrategy     predictedTotal=1990243  OutOfMemoryError
+83      41231251432156416235____________20                      3_DfsExhaustiveStrategy   predictedTotal=1990361  
+84      1516132136415241365____________19                       2_AStarTigrouStrategy     predictedTotal=1989285  
+85      53462453614625143256____________20                      0_DfsGreedyStrategy       predictedTotal=1989411  
+86      21342654365264513246____________20                      3_DfsExhaustiveStrategy   predictedTotal=1989534  
+87      215242161253462135____________18                        3_DfsExhaustiveStrategy   predictedTotal=1987356  
+88      145326143165231456____________18                        3_DfsExhaustiveStrategy   predictedTotal=1985227  
+89      232145312421623425613____________21                     3_DfsExhaustiveStrategy   predictedTotal=1986516  
+90      346324124632154361245____________21                     3_DfsExhaustiveStrategy   predictedTotal=1987777  OutOfMemoryError
+91      15234654312364516432____________20                      2_AStarTigrouStrategy     predictedTotal=1987912  
+92      2364534213626512346____________19                       3_DfsExhaustiveStrategy   predictedTotal=1986956  
+93      1412542164123641253416____________22                    3_DfsExhaustiveStrategy   predictedTotal=1989247  OutOfMemoryError
+0_DfsGreedyStrategy      steps=2149      best=0        milliSeconds=84     
+1_DfsGreedyNextStrategy  steps=2105      best=0        milliSeconds=23     
+2_AStarTigrouStrategy    steps=1941      best=0        milliSeconds=14482  
+3_DfsExhaustiveStrategy  steps=1850      best=0        milliSeconds=29712356
+total steps: 1850
+
+real	495m32.123s
+user	427m23.848s
+sys	2m37.356s
+2017-12-04T07:40:48+01:00
+
+
+2017-12-04T22:18:49+01:00
+ColorFill __DEV__ 1.01 (2017-12-04)
+Copyright (C) 2017 Michael Henke <smack42@gmail.com>
+running Code Golf 26232: Create a Flood Paint AI
+EXHAUSTIVE SOLVER ALGORITHM
+reading  input file: floodtest
+writing output file: steps.txt
+skipped existing output file content: 93 solutions with 1850 steps
+94      1213156312346512543126____________22                    2_AStarTigrouStrategy     predictedTotal=1991489  OutOfMemoryError
+95      12453163514613251436____________20                      3_DfsExhaustiveStrategy   predictedTotal=1991578  
+96      61323565161426341625____________20                      3_DfsExhaustiveStrategy   predictedTotal=1991666  
+97      1452651432154361245____________19                       3_DfsExhaustiveStrategy   predictedTotal=1990721  
+98      52615264123165423516____________20                      3_DfsExhaustiveStrategy   predictedTotal=1990816  
+99      121423521265416325146____________21                     3_DfsExhaustiveStrategy   predictedTotal=1991919  OutOfMemoryError
+100     12463251634164261345____________20                      3_DfsExhaustiveStrategy   predictedTotal=1992000  
+101     5314153614231632145____________19                       2_AStarTigrouStrategy     predictedTotal=1991089  
+102     234361346126316543216____________21                     3_DfsExhaustiveStrategy   predictedTotal=1992156  
+103     1543615415264135216____________19                       3_DfsExhaustiveStrategy   predictedTotal=1991262  
+104     12343146214531235642135____________23                   3_DfsExhaustiveStrategy   predictedTotal=1994230  OutOfMemoryError
+105     314516242465314263145____________21                     3_DfsExhaustiveStrategy   predictedTotal=1995238  
+106     15654213263156241325____________20                      2_AStarTigrouStrategy     predictedTotal=1995283  
+107     3462432153416213456____________19                       3_DfsExhaustiveStrategy   predictedTotal=1994392  
+108     1243165234612531246____________19                       3_DfsExhaustiveStrategy   predictedTotal=1993518  
+109     2534164513245162354____________19                       3_DfsExhaustiveStrategy   predictedTotal=1992660  
+110     32341253165236213456____________20                      3_DfsExhaustiveStrategy   predictedTotal=1992727  
+111     23165463146234125463____________20                      3_DfsExhaustiveStrategy   predictedTotal=1992792  
+112     1243152351365123456____________19                       3_DfsExhaustiveStrategy   predictedTotal=1991964  
+113     41253145256341235641____________20                      3_DfsExhaustiveStrategy   predictedTotal=1992035  
+114     13561345621423126454____________20                      3_DfsExhaustiveStrategy   predictedTotal=1992105  
+115     16235132542326435214____________20                      3_DfsExhaustiveStrategy   predictedTotal=1992173  
+116     154634565415236415263____________21                     2_AStarTigrouStrategy     predictedTotal=1993103  OutOfMemoryError
+117     16135632614256431256____________20                      0_DfsGreedyStrategy       predictedTotal=1993162  
+118     342646256142534125634____________21                     3_DfsExhaustiveStrategy   predictedTotal=1994067  OutOfMemoryError
+119     234615641453645164253____________21                     3_DfsExhaustiveStrategy   predictedTotal=1994957  OutOfMemoryError
+120     31354164512346542136____________20                      3_DfsExhaustiveStrategy   predictedTotal=1995000  
+121     152453121635261423516____________21                     1_DfsGreedyNextStrategy   predictedTotal=1995867  
+122     1523124154532615324____________19                       3_DfsExhaustiveStrategy   predictedTotal=1995081  
+123     25612536412356214563____________20                      2_AStarTigrouStrategy     predictedTotal=1995121  
+124     23514324563425625134____________20                      3_DfsExhaustiveStrategy   predictedTotal=1995161  
+125     1243612356215412356____________19                       3_DfsExhaustiveStrategy   predictedTotal=1994400  
+126     2161234143564134256____________19                       3_DfsExhaustiveStrategy   predictedTotal=1993650  
+127     26426561321531462513____________20                      3_DfsExhaustiveStrategy   predictedTotal=1993700  
+128     412451346213461235____________18                        3_DfsExhaustiveStrategy   predictedTotal=1992187  
+129     214241235615346132456____________21                     3_DfsExhaustiveStrategy   predictedTotal=1993023  OutOfMemoryError
+130     6415216451326452136____________19                       3_DfsExhaustiveStrategy   predictedTotal=1992307  
+131     2636512165123561234____________19                       3_DfsExhaustiveStrategy   predictedTotal=1991603  
+132     43162346231564512346____________20                      3_DfsExhaustiveStrategy   predictedTotal=1991666  
+133     1245132463542614235____________19                       3_DfsExhaustiveStrategy   predictedTotal=1990977  
+134     25643412631456243165____________20                      3_DfsExhaustiveStrategy   predictedTotal=1991044  
+135     23516342163531436251____________20                      3_DfsExhaustiveStrategy   predictedTotal=1991111  
+136     431356452621342561____________18                        3_DfsExhaustiveStrategy   predictedTotal=1989705  
+137     1512325436143652134____________19                       3_DfsExhaustiveStrategy   predictedTotal=1989051  
+138     32562324154613216435____________20                      3_DfsExhaustiveStrategy   predictedTotal=1989130  
+139     1624616416325432156____________19                       3_DfsExhaustiveStrategy   predictedTotal=1988489  
+140     145263625413542631254____________21                     3_DfsExhaustiveStrategy   predictedTotal=1989285  
+141     52343512463651542635____________20                      3_DfsExhaustiveStrategy   predictedTotal=1989361  
+142     364214351235416235____________18                        3_DfsExhaustiveStrategy   predictedTotal=1988028  
+143     5143264543261325346125____________22                    2_AStarTigrouStrategy     predictedTotal=1989510  OutOfMemoryError
+144     413251642654123456____________18                        3_DfsExhaustiveStrategy   predictedTotal=1988194  
+145     13241524356124563124____________20                      3_DfsExhaustiveStrategy   predictedTotal=1988275  
+146     1424156212453124536____________19                       1_DfsGreedyNextStrategy   predictedTotal=1987671  
+147     1321615463523413625____________19                       3_DfsExhaustiveStrategy   predictedTotal=1987074  
+148     126424132512546124356____________21                     3_DfsExhaustiveStrategy   predictedTotal=1987837  OutOfMemoryError
+149     15465423512451536124____________20                      1_DfsGreedyNextStrategy   predictedTotal=1987919  
+150     13541462561521643125____________20                      3_DfsExhaustiveStrategy   predictedTotal=1988000  
+151     532534256243264135____________18                        3_DfsExhaustiveStrategy   predictedTotal=1986754  
+152     213613416351256534126____________21                     3_DfsExhaustiveStrategy   predictedTotal=1987500  OutOfMemoryError
+153     1214615152341521436____________19                       3_DfsExhaustiveStrategy   predictedTotal=1986928  
+154     53162345641325341256____________20                      2_AStarTigrouStrategy     predictedTotal=1987012  
+155     46314156314521465342____________20                      3_DfsExhaustiveStrategy   predictedTotal=1987096  
+156     352645361345214636216543____________24                  2_AStarTigrouStrategy     predictedTotal=1989743  OutOfMemoryError
+157     426416423654132546____________18                        3_DfsExhaustiveStrategy   predictedTotal=1988535  
+158     15364516153124165234____________20                      3_DfsExhaustiveStrategy   predictedTotal=1988607  
+159     23251256152635425136____________20                      3_DfsExhaustiveStrategy   predictedTotal=1988679  
+160     26241234251432423156____________20                      3_DfsExhaustiveStrategy   predictedTotal=1988750  
+161     5461521324632451243653____________22                    2_AStarTigrouStrategy     predictedTotal=1990062  OutOfMemoryError
+162     2645643516251243613542____________22                    2_AStarTigrouStrategy     predictedTotal=1991358  OutOfMemoryError
+163     245632135456124625314____________21                     2_AStarTigrouStrategy     predictedTotal=1992024  
+164     24136246251314623514____________20                      3_DfsExhaustiveStrategy   predictedTotal=1992073  
+165     64126135342345621345____________20                      3_DfsExhaustiveStrategy   predictedTotal=1992121  
+166     214653214635241631245____________21                     2_AStarTigrouStrategy     predictedTotal=1992771  
+167     463451423541253146____________18                        3_DfsExhaustiveStrategy   predictedTotal=1991616  
+168     141213142634532614325____________21                     3_DfsExhaustiveStrategy   predictedTotal=1992261  
+169     451245245634243615____________18                        3_DfsExhaustiveStrategy   predictedTotal=1991124  
+170     23523451345236415642135____________23                   2_AStarTigrouStrategy     predictedTotal=1992941  OutOfMemoryError
+171     2135164534231451236____________19                       3_DfsExhaustiveStrategy   predictedTotal=1992397  
+172     452631265326154326____________18                        3_DfsExhaustiveStrategy   predictedTotal=1991279  
+173     134132413542315641235____________21                     3_DfsExhaustiveStrategy   predictedTotal=1991907  
+174     41516156542152462315____________20                      3_DfsExhaustiveStrategy   predictedTotal=1991954  
+175     1346421642163623451____________19                       3_DfsExhaustiveStrategy   predictedTotal=1991428  
+176     123613623456126341526____________21                     3_DfsExhaustiveStrategy   predictedTotal=1992045  
+177     264516253142345162____________18                        2_AStarTigrouStrategy     predictedTotal=1990960  
+178     213624135413651423____________18                        3_DfsExhaustiveStrategy   predictedTotal=1989887  
+179     35415431246521453126____________20                      2_AStarTigrouStrategy     predictedTotal=1989944  
+180     16265243162365142365____________20                      3_DfsExhaustiveStrategy   predictedTotal=1990000  
+181     636451643156324651234____________21                     2_AStarTigrouStrategy     predictedTotal=1990607  
+182     6235426143156213456____________19                       3_DfsExhaustiveStrategy   predictedTotal=1990109  
+183     5632124351321563142____________19                       3_DfsExhaustiveStrategy   predictedTotal=1989617  
+184     6523146254126351462____________19                       2_AStarTigrouStrategy     predictedTotal=1989130  
+185     1265121354243615234____________19                       3_DfsExhaustiveStrategy   predictedTotal=1988648  
+186     1456345161356432156____________19                       3_DfsExhaustiveStrategy   predictedTotal=1988172  
+187     12316452145236152346____________20                      3_DfsExhaustiveStrategy   predictedTotal=1988235  
+188     63214252656123415236____________20                      3_DfsExhaustiveStrategy   predictedTotal=1988297  
+189     21352312435434623145____________20                      3_DfsExhaustiveStrategy   predictedTotal=1988359  
+190     2643542163213425631____________19                       2_AStarTigrouStrategy     predictedTotal=1987894  
+191     61412413524361246315____________20                      3_DfsExhaustiveStrategy   predictedTotal=1987958  
+192     21523542312643641235____________20                      3_DfsExhaustiveStrategy   predictedTotal=1988020  
+193     4621532641325631413256____________22                    1_DfsGreedyNextStrategy   predictedTotal=1989119  OutOfMemoryError
+194     461365412613251463____________18                        3_DfsExhaustiveStrategy   predictedTotal=1988144  
+195     62521346132643561234____________20                      3_DfsExhaustiveStrategy   predictedTotal=1988205  
+196     354142641354156432516____________21                     2_AStarTigrouStrategy     predictedTotal=1988775  OutOfMemoryError
+197     32516412465436123465____________20                      3_DfsExhaustiveStrategy   predictedTotal=1988832  
+198     1241235163413651234____________19                       3_DfsExhaustiveStrategy   predictedTotal=1988383  
+199     24123426415623543126____________20                      3_DfsExhaustiveStrategy   predictedTotal=1988442  
+200     5341634253124625134____________19                       3_DfsExhaustiveStrategy   predictedTotal=1988000  
+201     2153452613231546123____________19                       3_DfsExhaustiveStrategy   predictedTotal=1987562  
+202     1516345613526524352146____________22                    2_AStarTigrouStrategy     predictedTotal=1988613  OutOfMemoryError
+203     64325246134623521346____________20                      3_DfsExhaustiveStrategy   predictedTotal=1988669  
+204     21341526142631245163____________20                      3_DfsExhaustiveStrategy   predictedTotal=1988725  
+205     46152563214532613245____________20                      3_DfsExhaustiveStrategy   predictedTotal=1988780  
+0_DfsGreedyStrategy      steps=2591      best=1        milliSeconds=54     
+1_DfsGreedyNextStrategy  steps=2519      best=4        milliSeconds=26     
+2_AStarTigrouStrategy    steps=2347      best=23       milliSeconds=14056  
+3_DfsExhaustiveStrategy  steps=2227      best=112      milliSeconds=34119113
+total steps: 4077
+
+real	569m0.104s
+user	498m32.136s
+sys	2m22.608s
+2017-12-05T07:47:49+01:00
+
+
+2017-12-05T22:32:16+01:00
+ColorFill __DEV__ 1.01 (2017-12-04)
+Copyright (C) 2017 Michael Henke <smack42@gmail.com>
+running Code Golf 26232: Create a Flood Paint AI
+EXHAUSTIVE SOLVER ALGORITHM
+reading  input file: floodtest
+writing output file: steps.txt
+skipped existing output file content: 205 solutions with 4077 steps
+206     5165121641231651234____________19                       3_DfsExhaustiveStrategy   predictedTotal=1988349  
+207     136416432541612354261____________21                     2_AStarTigrouStrategy     predictedTotal=1988888  
+208     463656135164321546321____________21                     2_AStarTigrouStrategy     predictedTotal=1989423  OutOfMemoryError
+209     21453243254163152634____________20                      3_DfsExhaustiveStrategy   predictedTotal=1989473  
+210     4141635143625345132456____________22                    3_DfsExhaustiveStrategy   predictedTotal=1990476  OutOfMemoryError
+211     14535124253265316245____________20                      3_DfsExhaustiveStrategy   predictedTotal=1990521  
+212     25125131524162536124____________20                      3_DfsExhaustiveStrategy   predictedTotal=1990566  
+213     21362343513146231456____________20                      3_DfsExhaustiveStrategy   predictedTotal=1990610  
+214     134216435136543214563____________21                     3_DfsExhaustiveStrategy   predictedTotal=1991121  OutOfMemoryError
+215     45145136514362156324____________20                      2_AStarTigrouStrategy     predictedTotal=1991162  
+216     1434234512351423516____________19                       3_DfsExhaustiveStrategy   predictedTotal=1990740  
+217     4132561241652132431265____________22                    1_DfsGreedyNextStrategy   predictedTotal=1991705  OutOfMemoryError
+218     1524324625416352146____________19                       3_DfsExhaustiveStrategy   predictedTotal=1991284  
+219     13256246152436541236542____________23                   2_AStarTigrouStrategy     predictedTotal=1992694  OutOfMemoryError
+220     152635132654215462135____________21                     3_DfsExhaustiveStrategy   predictedTotal=1993181  OutOfMemoryError
+221     14356426516523163245____________20                      3_DfsExhaustiveStrategy   predictedTotal=1993212  
+222     312451235423612145____________18                        3_DfsExhaustiveStrategy   predictedTotal=1992342  
+223     3124152632465136246135____________22                    3_DfsExhaustiveStrategy   predictedTotal=1993273  OutOfMemoryError
+224     6153416543256142356____________19                       3_DfsExhaustiveStrategy   predictedTotal=1992857  
+225     621361451264531246____________18                        3_DfsExhaustiveStrategy   predictedTotal=1992000  
+226     1236253124651462314562____________22                    3_DfsExhaustiveStrategy   predictedTotal=1992920  OutOfMemoryError
+227     123423635126352154623____________21                     3_DfsExhaustiveStrategy   predictedTotal=1993392  OutOfMemoryError
+228     16432145614631524316____________20                      3_DfsExhaustiveStrategy   predictedTotal=1993421  
+229     6421463153216451236____________19                       3_DfsExhaustiveStrategy   predictedTotal=1993013  
+230     32351325412364123456____________20                      3_DfsExhaustiveStrategy   predictedTotal=1993043  
+231     4125636413564321456____________19                       3_DfsExhaustiveStrategy   predictedTotal=1992640  
+232     16542362614264316521364____________23                   2_AStarTigrouStrategy     predictedTotal=1993965  OutOfMemoryError
+233     14623162413145624513____________20                      3_DfsExhaustiveStrategy   predictedTotal=1993991  
+234     6532142316526452136____________19                       3_DfsExhaustiveStrategy   predictedTotal=1993589  
+235     315425361546312456____________18                        3_DfsExhaustiveStrategy   predictedTotal=1992765  
+236     1253215261342613524____________19                       3_DfsExhaustiveStrategy   predictedTotal=1992372  
+237     2312512365413621435____________19                       3_DfsExhaustiveStrategy   predictedTotal=1991983  
+238     13514364341564521634____________20                      3_DfsExhaustiveStrategy   predictedTotal=1992016  
+239     2145616514231216354____________19                       3_DfsExhaustiveStrategy   predictedTotal=1991631  
+240     131425631432136421356____________21                     3_DfsExhaustiveStrategy   predictedTotal=1992083  OutOfMemoryError
+241     4153561453264165234165____________22                    2_AStarTigrouStrategy     predictedTotal=1992946  OutOfMemoryError
+242     13243615414315613245____________20                      3_DfsExhaustiveStrategy   predictedTotal=1992975  
+243     2615134253641624513____________19                       3_DfsExhaustiveStrategy   predictedTotal=1992592  
+244     3436152431642513246____________19                       3_DfsExhaustiveStrategy   predictedTotal=1992213  
+245     1546152364154612345____________19                       3_DfsExhaustiveStrategy   predictedTotal=1991836  
+246     435214632153653214____________18                        0_DfsGreedyStrategy       predictedTotal=1991056  
+247     65163253614265314256____________20                      2_AStarTigrouStrategy     predictedTotal=1991093  
+248     2361253631424365241____________19                       3_DfsExhaustiveStrategy   predictedTotal=1990725  
+249     2615361235142152346____________19                       3_DfsExhaustiveStrategy   predictedTotal=1990361  
+250     32623564513465324615____________20                      3_DfsExhaustiveStrategy   predictedTotal=1990400  
+251     6362564341362513246531____________22                    2_AStarTigrouStrategy     predictedTotal=1991235  OutOfMemoryError
+252     24163523415342631245____________20                      3_DfsExhaustiveStrategy   predictedTotal=1991269  
+253     15362534612436542136____________20                      3_DfsExhaustiveStrategy   predictedTotal=1991304  
+254     231436134635245613524____________21                     3_DfsExhaustiveStrategy   predictedTotal=1991732  
+255     4156351216121532456____________19                       3_DfsExhaustiveStrategy   predictedTotal=1991372  
+256     26243465125263432615____________20                      3_DfsExhaustiveStrategy   predictedTotal=1991406  OutOfMemoryError
+257     216543256145216451236____________21                     3_DfsExhaustiveStrategy   predictedTotal=1991828  
+258     316425312436413521465____________21                     3_DfsExhaustiveStrategy   predictedTotal=1992248  OutOfMemoryError
+259     6254152356231356415236____________22                    2_AStarTigrouStrategy     predictedTotal=1993050  OutOfMemoryError
+260     3625132126421531246____________19                       3_DfsExhaustiveStrategy   predictedTotal=1992692  
+261     14562416351456324615____________20                      3_DfsExhaustiveStrategy   predictedTotal=1992720  
+262     2652435263145642135____________19                       3_DfsExhaustiveStrategy   predictedTotal=1992366  
+263     4125463234513251634____________19                       3_DfsExhaustiveStrategy   predictedTotal=1992015  
+264     5632654324162341523164____________22                    2_AStarTigrouStrategy     predictedTotal=1992803  OutOfMemoryError
+265     56312351421653265134____________20                      1_DfsGreedyNextStrategy   predictedTotal=1992830  
+266     35265462314265361245____________20                      3_DfsExhaustiveStrategy   predictedTotal=1992857  
+267     12416453156245615423____________20                      3_DfsExhaustiveStrategy   predictedTotal=1992883  
+268     34536136425346153246____________20                      3_DfsExhaustiveStrategy   predictedTotal=1992910  
+269     14631651435263514623____________20                      3_DfsExhaustiveStrategy   predictedTotal=1992936  
+270     53561642564314532614____________20                      3_DfsExhaustiveStrategy   predictedTotal=1992962  
+271     5415652464351452362145____________22                    2_AStarTigrouStrategy     predictedTotal=1993726  OutOfMemoryError
+272     215142132563451425136____________21                     3_DfsExhaustiveStrategy   predictedTotal=1994117  OutOfMemoryError
+273     24563612654142314526____________20                      3_DfsExhaustiveStrategy   predictedTotal=1994139  
+274     64316531216435613246____________20                      1_DfsGreedyNextStrategy   predictedTotal=1994160  
+275     2343524124361521436____________19                       3_DfsExhaustiveStrategy   predictedTotal=1993818  
+276     54214534135326512346____________20                      3_DfsExhaustiveStrategy   predictedTotal=1993840  
+277     161454361261564213456____________21                     3_DfsExhaustiveStrategy   predictedTotal=1994223  OutOfMemoryError
+278     516532461423564321456____________21                     3_DfsExhaustiveStrategy   predictedTotal=1994604  
+279     121641312534261345____________18                        3_DfsExhaustiveStrategy   predictedTotal=1993906  
+280     1364352316245126152463____________22                    2_AStarTigrouStrategy     predictedTotal=1994642  OutOfMemoryError
+281     54261431326351241356____________20                      3_DfsExhaustiveStrategy   predictedTotal=1994661  
+282     2134564261542516312456____________22                    3_DfsExhaustiveStrategy   predictedTotal=1995390  OutOfMemoryError
+283     21262134125452631456____________20                      3_DfsExhaustiveStrategy   predictedTotal=1995406  
+284     15232156216345136245____________20                      3_DfsExhaustiveStrategy   predictedTotal=1995422  
+285     65342162512561531642____________20                      2_AStarTigrouStrategy     predictedTotal=1995438  
+286     234153652534621364125____________21                     3_DfsExhaustiveStrategy   predictedTotal=1995804  OutOfMemoryError
+287     5252361534563215325641____________22                    2_AStarTigrouStrategy     predictedTotal=1996515  OutOfMemoryError
+288     43613426453642316425____________20                      3_DfsExhaustiveStrategy   predictedTotal=1996527  
+289     6525425143624136245____________19                       3_DfsExhaustiveStrategy   predictedTotal=1996193  
+290     3521631562346134526____________19                       3_DfsExhaustiveStrategy   predictedTotal=1995862  
+291     1421643261235462134____________19                       3_DfsExhaustiveStrategy   predictedTotal=1995532  
+292     2516365315613421524613____________22                    1_DfsGreedyNextStrategy   predictedTotal=1996232  OutOfMemoryError
+293     641652135642136312456____________21                     0_DfsGreedyStrategy       predictedTotal=1996587  OutOfMemoryError
+294     426454342652136542163____________21                     2_AStarTigrouStrategy     predictedTotal=1996938  OutOfMemoryError
+295     14165262352123412635____________20                      3_DfsExhaustiveStrategy   predictedTotal=1996949  
+296     21321546212456243516____________20                      3_DfsExhaustiveStrategy   predictedTotal=1996959  
+297     451423516432416213654____________21                     2_AStarTigrouStrategy     predictedTotal=1997306  
+298     32454162413254162453____________20                      2_AStarTigrouStrategy     predictedTotal=1997315  
+299     51514613516245123456____________20                      3_DfsExhaustiveStrategy   predictedTotal=1997324  
+300     515413563542645123____________18                        0_DfsGreedyStrategy       predictedTotal=1996666  
+301     36431632124316534126____________20                      3_DfsExhaustiveStrategy   predictedTotal=1996677  
+302     65245643214315421356____________20                      2_AStarTigrouStrategy     predictedTotal=1996688  
+303     214613216416352163254____________21                     3_DfsExhaustiveStrategy   predictedTotal=1997029  OutOfMemoryError
+304     2621562514264312456____________19                       3_DfsExhaustiveStrategy   predictedTotal=1996710  
+305     3145613156241632145____________19                       3_DfsExhaustiveStrategy   predictedTotal=1996393  
+306     316454361546521346____________18                        3_DfsExhaustiveStrategy   predictedTotal=1995751  
+307     1635132651462346125____________19                       3_DfsExhaustiveStrategy   predictedTotal=1995439  
+308     3163526134523612345____________19                       3_DfsExhaustiveStrategy   predictedTotal=1995129  
+309     25136242351216356241____________20                      2_AStarTigrouStrategy     predictedTotal=1995145  
+310     45253146526324156234____________20                      3_DfsExhaustiveStrategy   predictedTotal=1995161  
+311     4365416342365412356____________19                       2_AStarTigrouStrategy     predictedTotal=1994855  
+312     161315461526135241356____________21                     3_DfsExhaustiveStrategy   predictedTotal=1995192  
+313     34125156432341562413____________20                      3_DfsExhaustiveStrategy   predictedTotal=1995207  
+314     12131652461432361245____________20                      3_DfsExhaustiveStrategy   predictedTotal=1995222  
+315     1354324614635142356____________19                       3_DfsExhaustiveStrategy   predictedTotal=1994920  
+316     13635132152634532164____________20                      3_DfsExhaustiveStrategy   predictedTotal=1994936  
+317     31234156134216521436____________20                      3_DfsExhaustiveStrategy   predictedTotal=1994952  
+318     6324236423546324156____________19                       3_DfsExhaustiveStrategy   predictedTotal=1994654  
+319     2564215263214312465____________19                       3_DfsExhaustiveStrategy   predictedTotal=1994357  
+320     13125623512634612345____________20                      3_DfsExhaustiveStrategy   predictedTotal=1994375  
+321     362545612351462514362____________21                     2_AStarTigrouStrategy     predictedTotal=1994704  OutOfMemoryError
+322     61345125464213541236____________20                      3_DfsExhaustiveStrategy   predictedTotal=1994720  
+323     12352452416454231456____________20                      3_DfsExhaustiveStrategy   predictedTotal=1994736  
+324     25346465326165243651____________20                      3_DfsExhaustiveStrategy   predictedTotal=1994753  
+325     13152435615265312456____________20                      3_DfsExhaustiveStrategy   predictedTotal=1994769  
+326     23541235413564321456____________20                      3_DfsExhaustiveStrategy   predictedTotal=1994785  
+327     24142163415465214365____________20                      3_DfsExhaustiveStrategy   predictedTotal=1994801  
+328     656326125462134526____________18                        3_DfsExhaustiveStrategy   predictedTotal=1994207  
+329     232461216436153251436____________21                     3_DfsExhaustiveStrategy   predictedTotal=1994528  
+330     12345623651245132654____________20                      2_AStarTigrouStrategy     predictedTotal=1994545  
+331     1431264125324162534____________19                       3_DfsExhaustiveStrategy   predictedTotal=1994259  
+332     5162516234165243516____________19                       3_DfsExhaustiveStrategy   predictedTotal=1993975  
+333     326463153465314256____________18                        3_DfsExhaustiveStrategy   predictedTotal=1993393  
+334     1235432135234214536____________19                       3_DfsExhaustiveStrategy   predictedTotal=1993113  
+335     16312532425145621345____________20                      3_DfsExhaustiveStrategy   predictedTotal=1993134  
+336     125136245136345154236____________21                     3_DfsExhaustiveStrategy   predictedTotal=1993452  
+337     1251453156243126534____________19                       3_DfsExhaustiveStrategy   predictedTotal=1993175  
+338     31423146324514315246____________20                      3_DfsExhaustiveStrategy   predictedTotal=1993195  
+339     634126251246134125____________18                        3_DfsExhaustiveStrategy   predictedTotal=1992625  
+340     123562134215632354126____________21                     3_DfsExhaustiveStrategy   predictedTotal=1992941  
+341     2341526526145631256431____________22                    2_AStarTigrouStrategy     predictedTotal=1993548  OutOfMemoryError
+342     51415325264361253146____________20                      3_DfsExhaustiveStrategy   predictedTotal=1993567  
+0_DfsGreedyStrategy      steps=3184      best=3        milliSeconds=158    
+1_DfsGreedyNextStrategy  steps=3128      best=5        milliSeconds=99     
+2_AStarTigrouStrategy    steps=2884      best=27       milliSeconds=26732  
+3_DfsExhaustiveStrategy  steps=2741      best=137      milliSeconds=33360237
+total steps: 6818
+
+real	556m32.190s
+user	563m34.580s
+sys	1m7.000s
+2017-12-06T07:48:48+01:00
+
+

@@ -45,7 +45,7 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill __DEV__";
-        final String version  = "1.01 (2017-10-12)";
+        final String version  = "1.01 (2017-12-04)";
         final String author   = "Copyright (C) 2017 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
@@ -107,7 +107,8 @@ public class Starter {
         }
         if (null != firstLine) {
             if (firstLine.length() == 19) {
-                runSolverCg26232(fileNameTestData);
+//                runSolverCg26232(fileNameTestData);
+                runSolverCg26232exhaustive(fileNameTestData);
             } else {
                 runSolverPc19(fileNameTestData);
             }
@@ -367,6 +368,122 @@ public class Starter {
         brBoards.close();
     }
 
+    /**
+     * test a solver implementation using the "floodtest" file from
+     * Code Golf 26232: Create a Flood Paint AI
+     * https://codegolf.stackexchange.com/questions/26232/create-a-flood-paint-ai
+     * <br>
+     * this is the attempt to solve it once and for all using the "exhaustive" algorithm
+     */
+    private static void runSolverCg26232exhaustive(final String inputFileName) throws Exception {
+        // which strategies to run
+        final Class[] STRATEGIES = {
+            DfsGreedyStrategy.class,
+            DfsGreedyNextStrategy.class,
+            AStarTigrouStrategy.class,
+            DfsExhaustiveStrategy.class
+        };
+
+        System.out.println("running Code Golf 26232: Create a Flood Paint AI");
+        System.out.println("EXHAUSTIVE SOLVER ALGORITHM");
+        System.out.println("reading  input file: " + inputFileName);
+        final BufferedReader brBoards = new BufferedReader(new FileReader(inputFileName));
+        final String outputFileName = "steps.txt";
+        System.out.println("writing output file: " + outputFileName);
+        final PrintWriter pwSteps = new PrintWriter(new FileWriter(outputFileName, true));  // append to existing output file
+
+        int count = 0, countSteps = 0;
+        final Solution[] stSolution = new Solution[STRATEGIES.length];
+        final int stCountSteps[] = new int[STRATEGIES.length], stCountBest[] = new int[STRATEGIES.length];
+        final long[] stNanoTime = new long[STRATEGIES.length];
+
+        // read existing output file and fast-forward input file accordingly
+        final BufferedReader brSteps = new BufferedReader(new FileReader(outputFileName));
+        for (;;) {
+            final String steps = brSteps.readLine();
+            if (null == steps) {
+                break;  // end of output file
+            }
+            final Board board = makeBoard(brBoards);
+            if (null == board) {
+                break; // end of input file
+            }
+            count += 1;
+            countSteps += steps.length();
+        }
+        if (count > 0) {
+            System.out.println("skipped existing output file content: " + count + " solutions with " + countSteps + " steps");
+        }
+        brSteps.close();
+
+        // read input file and solve boards and write to output file
+main_loop:
+        for (;;) {
+            final Board board = makeBoard(brBoards);
+            if (null == board) {
+                break; // end of input file !?
+            }
+            ++count;
+            // run each of the strategies
+            OutOfMemoryError oomError = null;
+            int bestStrategy = 0;
+            Solution bestSolution = null;
+            for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
+                final Solver solver = AbstractSolver.createSolver((Class<Strategy>) STRATEGIES[strategy], board);
+                final long nanoStart = System.nanoTime();
+                try {
+                    solver.execute(board.getStartPos(), DfsExhaustiveStrategy.class.equals(STRATEGIES[strategy]) ? bestSolution : null);
+                } catch (OutOfMemoryError oom) {
+                    oomError = oom;
+                }
+                final long nanoEnd = System.nanoTime();
+                stNanoTime[strategy] += nanoEnd - nanoStart;
+                final Solution solution = solver.getSolution();
+                stSolution[strategy] = solution;
+                stCountSteps[strategy] += solution.getNumSteps();
+                if ((null == bestSolution) || (solution.getNumSteps() < bestSolution.getNumSteps())) {
+                    bestSolution = solution;
+                    bestStrategy = strategy;
+                }
+            }
+            countSteps += bestSolution.getNumSteps();
+            for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
+                if (stSolution[strategy].getNumSteps() == bestSolution.getNumSteps()) {
+                    stCountBest[strategy] += 1;
+                }
+            }
+            System.out.println(
+                    padRight("" + count, 7 + 1) +
+                    padRight(bestSolution.toString() + "____________" + bestSolution.getNumSteps(), 40 + 12 + 2 + 2) +
+                    padRight(bestStrategy + "_" + STRATEGIES[bestStrategy].getSimpleName(), 26) +
+                    padRight("predictedTotal=" + (100000L*countSteps/count), 24) +
+                    (oomError != null ? "OutOfMemoryError" : "") );
+            System.out.flush();
+            pwSteps.println(bestSolution.toString());
+            pwSteps.flush();
+
+            // look for user input on stdin - if "q" is entered then we quit now
+            while (System.in.available() > 0) {
+                final int inp = System.in.read();
+                if ('q' == inp) {
+                    break main_loop;
+                }
+            }
+        }
+
+        // print summary
+        for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
+            System.out.println(
+                    padRight(strategy + "_" + STRATEGIES[strategy].getSimpleName(), 2 + 21 + 2) +
+                    padRight("steps=" + stCountSteps[strategy], 6 + 8 + 2) +
+                    padRight("best=" + stCountBest[strategy], 5 + 7 + 2) +
+                    padRight("milliSeconds=" + ((stNanoTime[strategy] + 999999L) / 1000000L), 13 + 5 + 2)
+                    );
+        }
+        System.out.println("total steps: " + countSteps + (100000 == count ? "  (Code Golf 26232: Create a Flood Paint AI)" : ""));
+        pwSteps.close();
+        brBoards.close();
+    }
 
 
     /**
