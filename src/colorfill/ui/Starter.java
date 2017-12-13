@@ -45,7 +45,7 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill __DEV__";
-        final String version  = "1.01 (2017-12-04)";
+        final String version  = "1.01 (2017-12-11)";
         final String author   = "Copyright (C) 2017 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
@@ -381,8 +381,9 @@ public class Starter {
             DfsGreedyStrategy.class,
             DfsGreedyNextStrategy.class,
             AStarTigrouStrategy.class,
-            DfsExhaustiveStrategy.class
+            DfsExhaustiveStrategy.class  // DfsExhaustiveStrategy must be last one!
         };
+        DfsExhaustiveStrategy.setCodeGolf26232();
 
         System.out.println("running Code Golf 26232: Create a Flood Paint AI");
         System.out.println("EXHAUSTIVE SOLVER ALGORITHM");
@@ -408,7 +409,7 @@ public class Starter {
             if (null == board) {
                 break; // end of input file
             }
-            count += 1;
+            ++count;
             countSteps += steps.length();
         }
         if (count > 0) {
@@ -425,10 +426,31 @@ main_loop:
             }
             ++count;
             // run each of the strategies
-            OutOfMemoryError oomError = null;
             int bestStrategy = 0;
             Solution bestSolution = null;
-            for (int strategy = 0;  strategy < STRATEGIES.length;  ++strategy) {
+            // don't run DfsExhaustiveStrategy yet
+            for (int strategy = 0;  strategy < STRATEGIES.length - 1;  ++strategy) {
+                final Solver solver = AbstractSolver.createSolver((Class<Strategy>) STRATEGIES[strategy], board);
+                final long nanoStart = System.nanoTime();
+                solver.execute(board.getStartPos(), null);
+                final long nanoEnd = System.nanoTime();
+                stNanoTime[strategy] += nanoEnd - nanoStart;
+                final Solution solution = solver.getSolution();
+                stSolution[strategy] = solution;
+                stCountSteps[strategy] += solution.getNumSteps();
+                if ((null == bestSolution) || (solution.getNumSteps() < bestSolution.getNumSteps())) {
+                    bestSolution = solution;
+                    bestStrategy = strategy;
+                }
+            }
+            final Solution bestQuickSolution = bestSolution;
+            System.out.print(
+                    padRight("" + count, 6 + 1) +
+                    padRight("quick=" + bestQuickSolution.getNumSteps(), 6 + 2 + 2) );
+            System.out.flush();
+            OutOfMemoryError oomError = null;
+            {  // run DfsExhaustiveStrategy only
+                final int strategy = STRATEGIES.length - 1;
                 final Solver solver = AbstractSolver.createSolver((Class<Strategy>) STRATEGIES[strategy], board);
                 final long nanoStart = System.nanoTime();
                 try {
@@ -453,22 +475,23 @@ main_loop:
                 }
             }
             System.out.println(
-                    padRight("" + count, 7 + 1) +
-                    padRight(bestSolution.toString() + "____________" + bestSolution.getNumSteps(), 40 + 12 + 2 + 2) +
-                    padRight(bestStrategy + "_" + STRATEGIES[bestStrategy].getSimpleName(), 26) +
+                    padRight(bestSolution.toString() + "____________" + bestSolution.getNumSteps(), 28 + 12 + 2 + 2) +
+                    padRight(bestStrategy + "_" + STRATEGIES[bestStrategy].getSimpleName(), 2 + 21 + 2) +
+                    padRight("gain=" + (bestQuickSolution.getNumSteps()-bestSolution.getNumSteps()), 5 + 1 + 2) +
                     padRight("predictedTotal=" + (100000L*countSteps/count), 24) +
                     (oomError != null ? "OutOfMemoryError" : "") );
             System.out.flush();
             pwSteps.println(bestSolution.toString());
             pwSteps.flush();
 
-            // look for user input on stdin - if "q" is entered then we quit now
+            // look for user input on stdin - if "q" is entered then we quit
             while (System.in.available() > 0) {
                 final int inp = System.in.read();
                 if ('q' == inp) {
                     break main_loop;
                 }
             }
+            if (count >= 1000) break;  // do 1% of the input file only
         }
 
         // print summary
@@ -477,7 +500,7 @@ main_loop:
                     padRight(strategy + "_" + STRATEGIES[strategy].getSimpleName(), 2 + 21 + 2) +
                     padRight("steps=" + stCountSteps[strategy], 6 + 8 + 2) +
                     padRight("best=" + stCountBest[strategy], 5 + 7 + 2) +
-                    padRight("milliSeconds=" + ((stNanoTime[strategy] + 999999L) / 1000000L), 13 + 5 + 2)
+                    padRight("milliSeconds=" + ((stNanoTime[strategy] + 999999L) / 1000000L), 13 + 8 + 2)
                     );
         }
         System.out.println("total steps: " + countSteps + (100000 == count ? "  (Code Golf 26232: Create a Flood Paint AI)" : ""));

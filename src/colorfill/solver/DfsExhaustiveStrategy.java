@@ -33,6 +33,10 @@ import colorfill.model.Board;
  */
 public class DfsExhaustiveStrategy implements DfsStrategy {
 
+    private static final int MAX_BOARD_SIZE_NORMAL = 15*15;
+    private static final int MAX_BOARD_SIZE_CODEGOLF26232 = 19*19;
+    static int MAX_BOARD_SIZE = MAX_BOARD_SIZE_NORMAL; // DfsExhaustiveStrategy will not run for larger boards
+
     private static final float HASH_LOAD_FACTOR_FAST = 0.5f;
     private static final int HASH_EXPECTED_FAST = 100000000;
     private static final float HASH_LOAD_FACTOR_NORMAL = 0.75f;
@@ -47,6 +51,11 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
     public static void setHashNormal() {
         HASH_LOAD_FACTOR = HASH_LOAD_FACTOR_NORMAL;
         HASH_EXPECTED = HASH_EXPECTED_NORMAL;
+    }
+    public static void setCodeGolf26232() {
+        HASH_LOAD_FACTOR = HASH_LOAD_FACTOR_NORMAL;
+        HASH_EXPECTED = HASH_EXPECTED_FAST;
+        MAX_BOARD_SIZE = MAX_BOARD_SIZE_CODEGOLF26232;
     }
 
     private int previousNumSteps = Integer.MAX_VALUE;

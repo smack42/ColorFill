@@ -27,8 +27,6 @@ import colorfill.model.ColorArea;
  */
 public class DfsSolver extends AbstractSolver {
 
-    private static final int EXHAUSTIVE_MAX_BOARD_SIZE = 19*19; // DfsExhaustiveStrategy will not run for larger boards
-
     private Class<? extends DfsStrategy> strategyClass = DfsGreedyStrategy.class; // default
     private DfsStrategy strategy;
 
@@ -70,7 +68,7 @@ public class DfsSolver extends AbstractSolver {
         } else if (DfsDeeperStrategy.class.equals(this.strategyClass)) {
             result = new DfsDeeperStrategy(this.board, startPos);
         } else if (DfsExhaustiveStrategy.class.equals(this.strategyClass)) {
-            if (this.board.getSize() <= EXHAUSTIVE_MAX_BOARD_SIZE) {
+            if (this.board.getSize() <= DfsExhaustiveStrategy.MAX_BOARD_SIZE) {
                 result = new DfsExhaustiveStrategy(this.board);
             } else {
                 result = null; // do not use DfsExhaustiveStrategy for large boards
