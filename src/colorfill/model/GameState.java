@@ -242,6 +242,7 @@ public class GameState {
                 }));
             }
             Solution bestSolution = null;
+            boolean interrupted = false;
             for (int waitMask = (1 << futureSolutions.size()) - 1;  waitMask != 0;  ) {
                 for (int i = 0;  i < futureSolutions.size();  ++i) {
                     final int iMask = (1 << i); // bit for this solution
@@ -252,6 +253,7 @@ public class GameState {
                             solution = futureSolutions.get(i).get(0 == waitMask ? 5000 : 50, TimeUnit.MILLISECONDS);
                         } catch (InterruptedException e) {
                             System.out.println("***** SolverRun interrupted *****");
+                            interrupted = true;
                             executor.shutdownNow(); // interrupt the solver threads
                             waitMask = 0; // end outer loop
                             break; // end inner loop
@@ -280,7 +282,7 @@ public class GameState {
             }
             executor.shutdown();
             // run DfsExhaustiveStrategy now
-            if ((strategyIdx < STRATEGIES.length) && DfsExhaustiveStrategy.class.equals(STRATEGIES[strategyIdx])) {
+            if (!interrupted && (strategyIdx < STRATEGIES.length) && DfsExhaustiveStrategy.class.equals(STRATEGIES[strategyIdx])) {
                 final Solver solver = AbstractSolver.createSolver((Class<Strategy>)STRATEGIES[strategyIdx], this.board);
                 Solution solution = null;
                 try {
