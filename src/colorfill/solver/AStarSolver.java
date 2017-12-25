@@ -17,6 +17,9 @@
 
 package colorfill.solver;
 
+import java.util.PriorityQueue;
+import java.util.Queue;
+
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
 
@@ -70,6 +73,8 @@ public class AStarSolver extends AbstractSolver {
         final AStarStrategy result;
         if (AStarTigrouStrategy.class.equals(this.strategyClass)) {
             result = new AStarTigrouStrategy();
+        } else if (AStarPuchertStrategy.class.equals(this.strategyClass)) {
+            result = new AStarPuchertStrategy(this.board);
         } else {
             throw new IllegalArgumentException(
                     "unsupported strategy class " + this.strategyClass.getName());
@@ -86,8 +91,48 @@ public class AStarSolver extends AbstractSolver {
 
         final ColorArea startCa = this.board.getColorArea4Cell(startPos);
 
+        if (this.strategy instanceof AStarTigrouStrategy) {
+            this.executeInternalTigrou(startCa);
+        } else if (this.strategy instanceof AStarPuchertStrategy) {
+            this.executeInternalPuchert(startCa);
+        }
+    }
+
+
+    private void executeInternalPuchert(final ColorArea startCa) throws InterruptedException {
+        final Queue<AStarNode> open = new PriorityQueue<AStarNode>(AStarNode.strongerComparator());
+        open.offer(new AStarNode(this.board, startCa));
+        AStarNode recycleNode = null;
+        while (open.size() > 0) {
+            if (Thread.interrupted()) { throw new InterruptedException(); }
+            final AStarNode currentNode = open.poll();
+            if (currentNode.isSolved()) {
+                this.addSolution(currentNode.getSolution());
+                return;
+            } else {
+                // play all possible colors
+                int nextColors = currentNode.getNeighborColors();
+                while (0 != nextColors) {
+                    final int l1b = nextColors & -nextColors; // Integer.lowestOneBit()
+                    final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
+                    nextColors ^= l1b; // clear lowest one bit
+                    final byte color = (byte)(31 - clz);
+                    if (currentNode.canPlay(color)) {
+                        final AStarNode nextNode = currentNode.copyAndPlay(color, recycleNode);
+                        recycleNode = null;
+                        this.strategy.setEstimatedCost(nextNode);
+                        open.offer(nextNode);
+                    }
+                }
+            }
+            recycleNode = currentNode;
+        }
+    }
+
+
+    private void executeInternalTigrou(final ColorArea startCa) throws InterruptedException {
         // use a PriorityQueue (faster!)
-        final java.util.Queue<AStarNode> open = new java.util.PriorityQueue<AStarNode>();
+        final Queue<AStarNode> open = new PriorityQueue<AStarNode>(AStarNode.simpleComparator());
         open.offer(new AStarNode(this.board, startCa));
         while (open.size() > 0) {
             if (Thread.interrupted()) { throw new InterruptedException(); }

@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
+import colorfill.solver.AStarPuchertStrategy;
 import colorfill.solver.AStarTigrouStrategy;
 import colorfill.solver.AbstractSolver;
 import colorfill.solver.DfsDeepStrategy;
@@ -52,7 +53,8 @@ import colorfill.solver.Strategy;
 public class GameState {
 
     private static final Class<?>[] STRATEGIES = { // all solver strategies, sorted by average speed (fastest first)
-        AStarTigrouStrategy.class
+        AStarPuchertStrategy.class
+        ,AStarTigrouStrategy.class
         ,DfsGreedyStrategy.class
         ,DfsGreedyNextStrategy.class
         ,DfsDeepStrategy.class

@@ -18,6 +18,7 @@
 package colorfill.solver;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Queue;
 
 import colorfill.model.Board;
@@ -26,7 +27,7 @@ import colorfill.model.ColorArea;
 /**
  * the node used by the AStar (A*) solver.
  */
-public class AStarNode implements Comparable<AStarNode> {
+public class AStarNode {
 
     private final ColorAreaSet flooded;
     private final ColorAreaGroup neighbors;
@@ -43,7 +44,8 @@ public class AStarNode implements Comparable<AStarNode> {
         this.flooded.add(startCa);
         this.neighbors = new ColorAreaGroup(board);
         this.neighbors.addAll(startCa.getNeighborsArray(), this.flooded);
-        this.solution = new byte[AbstractSolver.MAX_SEARCH_DEPTH];
+        this.solution = new byte[64];  // AbstractSolver.MAX_SEARCH_DEPTH; use less memory
+        this.solution[0] = startCa.getColor();
         this.solutionSize = 0;
         this.estimatedCost = Integer.MAX_VALUE;
     }
@@ -57,7 +59,7 @@ public class AStarNode implements Comparable<AStarNode> {
         this.neighbors = new ColorAreaGroup(other.neighbors);
         this.solution = other.solution.clone();
         this.solutionSize = other.solutionSize;
-        this.estimatedCost = other.estimatedCost;
+        //this.estimatedCost = other.estimatedCost;  // not necessary to copy
     }
 
     /**
@@ -73,7 +75,7 @@ public class AStarNode implements Comparable<AStarNode> {
      * @return
      */
     public byte[] getSolution() {
-        return Arrays.copyOf(this.solution, this.solutionSize);
+        return Arrays.copyOfRange(this.solution, 1, this.solutionSize + 1);
     }
 
     /**
@@ -93,6 +95,49 @@ public class AStarNode implements Comparable<AStarNode> {
     }
 
     /**
+     * get the set of neighbors of this color.
+     * @param color
+     * @return
+     */
+    public ColorAreaSet getNeighbors(final int color) {
+        return this.neighbors.getColor((byte)color);
+    }
+
+    /**
+     * copy contents of "flooded" set to this one.
+     * @param other
+     */
+    public void copyFloodedTo(final ColorAreaSet other) {
+        other.copyFrom(this.flooded);
+    }
+
+    /**
+     * check if this color can be played. (avoid duplicate moves)
+     * the idea is taken from the program "floodit" by Aaron and Simon Puchert,
+     * which can be found at <a>https://github.com/aaronpuchert/floodit</a>
+     * @param nextColor
+     * @return
+     */
+    public boolean canPlay(final byte nextColor) {
+        final byte currColor = this.solution[this.solutionSize];
+        if (nextColor > currColor) {
+            return true;
+        } else {
+            // does the move "nextColor" change anything that couldn't have happened before?
+            final ColorAreaSet nextNeighbors = this.neighbors.getColor(nextColor);
+next:       for (final ColorArea nextNeighbor : nextNeighbors) {
+                for (final ColorArea prevNeighbor : nextNeighbor.getNeighborsArray()) {
+                    if ((prevNeighbor.getColor() != currColor) && (this.flooded.contains(prevNeighbor))) {
+                        continue next;
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+    }
+
+    /**
      * play the given color.
      * @param nextColor
      */
@@ -103,15 +148,68 @@ public class AStarNode implements Comparable<AStarNode> {
         for (final ColorArea tmpCa : tmpFlooded) {
             this.neighbors.addAll(tmpCa.getNeighborsArray(), this.flooded);
         }
-        this.solution[this.solutionSize++] = nextColor;
+        this.solution[++this.solutionSize] = nextColor;
     }
 
-    /* (non-Javadoc)
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
+    /**
+     * try to re-use the given node or create a new one
+     * and then play the given color in the result node.
+     * @param nextColor
+     * @param recycleNode
+     * @return
      */
-    @Override
-    public int compareTo(final AStarNode other) {
-        return Integer.signum(this.estimatedCost - other.estimatedCost);
+    public AStarNode copyAndPlay(final byte nextColor, final AStarNode recycleNode) {
+        final AStarNode result;
+        if (null == recycleNode) {
+            result = new AStarNode(this);
+            result.play(nextColor);
+        } else {
+            // copy - compare copy constructor
+            result = recycleNode;
+            result.flooded.copyFrom(this.flooded);
+            result.neighbors.copyFrom(this.neighbors, nextColor);
+            System.arraycopy(this.solution, 0, result.solution, 0, this.solutionSize + 1);
+            result.solutionSize = this.solutionSize;
+            //result.estimatedCost = this.estimatedCost;  // not necessary to copy
+            // play - compare method play()
+            final ColorAreaSet tmpFlooded = new ColorAreaSet(this.neighbors.getColor(nextColor));
+            result.flooded.addAll(tmpFlooded);
+            for (final ColorArea tmpCa : tmpFlooded) {
+                result.neighbors.addAll(tmpCa.getNeighborsArray(), result.flooded);
+            }
+            result.solution[++result.solutionSize] = nextColor;
+        }
+        return result;
+    }
+
+    /**
+     * create a "simple" comparator for use in PriorityQueue
+     * @return
+     */
+    public static Comparator<AStarNode> simpleComparator() {
+        return new Comparator<AStarNode>() {
+            @Override
+            public int compare(AStarNode o1, AStarNode o2) {
+                return o1.estimatedCost - o2.estimatedCost;
+            }
+        };
+    }
+
+    /**
+     * create a "stronger" comparator for use in PriorityQueue
+     * @return
+     */
+    public static Comparator<AStarNode> strongerComparator() {
+        return new Comparator<AStarNode>() {
+            @Override
+            public int compare(AStarNode o1, AStarNode o2) {
+                if (o1.estimatedCost != o2.estimatedCost) {
+                    return o1.estimatedCost - o2.estimatedCost;
+                } else {
+                    return o2.solutionSize - o1.solutionSize;
+                }
+            }
+        };
     }
 
     /**
