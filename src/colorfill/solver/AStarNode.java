@@ -120,20 +120,34 @@ public class AStarNode {
      */
     public boolean canPlay(final byte nextColor) {
         final byte currColor = this.solution[this.solutionSize];
-        if (nextColor > currColor) {
-            return true;
-        } else {
-            // does the move "nextColor" change anything that couldn't have happened before?
-            final ColorAreaSet nextNeighbors = this.neighbors.getColor(nextColor);
-next:       for (final ColorArea nextNeighbor : nextNeighbors) {
-                for (final ColorArea prevNeighbor : nextNeighbor.getNeighborsArray()) {
-                    if ((prevNeighbor.getColor() != currColor) && (this.flooded.contains(prevNeighbor))) {
-                        continue next;
+        final ColorAreaSet nextColorNeighbors = this.neighbors.getColor(nextColor);
+        // did the previous move add any new "nextColor" neighbors?
+        boolean newNext = false;
+next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
+            for (final ColorArea prevNeighbor : nextColorNeighbor.getNeighborsArray()) {
+                if ((prevNeighbor.getColor() != currColor) && this.flooded.contains(prevNeighbor)) {
+                    continue next;
+                }
+            }
+            newNext = true;
+            break next;
+        }
+        if (!newNext) {
+            if (nextColor < currColor) {
+                return false;
+            } else {
+                // should nextColor have been played before currColor?
+                for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
+                    for (final ColorArea prevNeighbor : nextColorNeighbor.getNeighborsArray()) {
+                        if ((prevNeighbor.getColor() == currColor) && !this.flooded.contains(prevNeighbor)) {
+                            return false;
+                        }
                     }
                 }
                 return true;
             }
-            return false;
+        } else {
+            return true;
         }
     }
 
