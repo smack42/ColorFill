@@ -176,7 +176,7 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
         final AStarNode result;
         if (null == recycleNode) {
             result = new AStarNode(this);
-            result.play(nextColor);
+            result.neighbors.clearColor(nextColor);
         } else {
             // copy - compare copy constructor
             result = recycleNode;
@@ -185,14 +185,14 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
             System.arraycopy(this.solution, 0, result.solution, 0, this.solutionSize + 1);
             result.solutionSize = this.solutionSize;
             //result.estimatedCost = this.estimatedCost;  // not necessary to copy
-            // play - compare method play()
-            final ColorAreaSet tmpFlooded = new ColorAreaSet(this.neighbors.getColor(nextColor));
-            result.flooded.addAll(tmpFlooded);
-            for (final ColorArea tmpCa : tmpFlooded) {
-                result.neighbors.addAll(tmpCa.getNeighborsArray(), result.flooded);
-            }
-            result.solution[++result.solutionSize] = nextColor;
         }
+        // play - compare method play()
+        final ColorAreaSet tmpFlooded = this.neighbors.getColor(nextColor);
+        result.flooded.addAll(tmpFlooded);
+        for (final ColorArea tmpCa : tmpFlooded) {
+            result.neighbors.addAll(tmpCa.getNeighborsArray(), result.flooded);
+        }
+        result.solution[++result.solutionSize] = nextColor;
         return result;
     }
 

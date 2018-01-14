@@ -28,8 +28,9 @@ import colorfill.model.ColorArea;
  */
 public class AStarPuchertStrategy implements AStarStrategy {
 
-    ColorAreaSet visited, current, next;
-    final int[] colorsAtDistance = new int[AbstractSolver.MAX_SEARCH_DEPTH];
+    private final ColorAreaSet visited;
+    private ColorAreaSet current, next;
+    private final int[] colorsAtDistance = new int[AbstractSolver.MAX_SEARCH_DEPTH];
 
     AStarPuchertStrategy(final Board board) {
         this.visited = new ColorAreaSet(board);
@@ -54,8 +55,8 @@ public class AStarPuchertStrategy implements AStarStrategy {
         // obviously still a lower bound, hence admissible. It is also consistent.
 
         node.copyFloodedTo(visited);
-        current.clear();
-        next.clear();
+        //current.clear();  // clear() not necessary because it's empty
+        //next.clear();     // clear() not necessary because it's empty
 
         // collect the immediate neighbors (distance = 0)
         int colors = node.getNeighborColors();
@@ -87,6 +88,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
             next = tmp;
             next.clear();
         }
+        // (here, the ColorAreas current and next are empty)
         // in the collected colors, find the maximum of (distance + numcolors_at_greater_distance)
         int max = 0;
         for (--distance;  distance >= 0;  --distance) {
