@@ -34,6 +34,7 @@ public class AStarNode {
     private final byte[] solution;
     private int solutionSize;
     private int estimatedCost;
+    private final int[] numCaNotFilled;
 
     /**
      * initial constructor.
@@ -48,6 +49,11 @@ public class AStarNode {
         this.solution[0] = startCa.getColor();
         this.solutionSize = 0;
         this.estimatedCost = Integer.MAX_VALUE;
+        this.numCaNotFilled = new int[board.getNumColors()];
+        for (final ColorArea ca : board.getColorAreasArray()) {
+            ++this.numCaNotFilled[ca.getColor()];
+        }
+        --this.numCaNotFilled[startCa.getColor()];
     }
 
     /**
@@ -60,6 +66,7 @@ public class AStarNode {
         this.solution = other.solution.clone();
         this.solutionSize = other.solutionSize;
         //this.estimatedCost = other.estimatedCost;  // not necessary to copy
+        this.numCaNotFilled = other.numCaNotFilled.clone();
     }
 
     /**
@@ -112,6 +119,14 @@ public class AStarNode {
     }
 
     /**
+     * copy contents of "numCaNotFilled" array to this one.
+     * @param other
+     */
+    public void copyNumCaNotFilledTo(final int[] other) {
+        System.arraycopy(this.numCaNotFilled, 0, other, 0, this.numCaNotFilled.length);
+    }
+
+    /**
      * check if this color can be played. (avoid duplicate moves)
      * the idea is taken from the program "floodit" by Aaron and Simon Puchert,
      * which can be found at <a>https://github.com/aaronpuchert/floodit</a>
@@ -158,6 +173,7 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
     public void play(final byte nextColor) {
         final ColorAreaSet tmpFlooded = new ColorAreaSet(this.neighbors.getColor(nextColor));
         this.flooded.addAll(tmpFlooded);
+        this.numCaNotFilled[nextColor] -= tmpFlooded.size();
         this.neighbors.clearColor(nextColor);
         for (final ColorArea tmpCa : tmpFlooded) {
             this.neighbors.addAll(tmpCa.getNeighborsArray(), this.flooded);
@@ -185,10 +201,12 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
             System.arraycopy(this.solution, 0, result.solution, 0, this.solutionSize + 1);
             result.solutionSize = this.solutionSize;
             //result.estimatedCost = this.estimatedCost;  // not necessary to copy
+            System.arraycopy(this.numCaNotFilled, 0, result.numCaNotFilled, 0, this.numCaNotFilled.length);
         }
         // play - compare method play()
         final ColorAreaSet tmpFlooded = this.neighbors.getColor(nextColor);
         result.flooded.addAll(tmpFlooded);
+        result.numCaNotFilled[nextColor] -= tmpFlooded.size();
         for (final ColorArea tmpCa : tmpFlooded) {
             result.neighbors.addAll(tmpCa.getNeighborsArray(), result.flooded);
         }

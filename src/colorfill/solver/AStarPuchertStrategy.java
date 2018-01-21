@@ -30,12 +30,13 @@ public class AStarPuchertStrategy implements AStarStrategy {
 
     private final ColorAreaSet visited;
     private ColorAreaSet current, next;
-    private final int[] colorsAtDistance = new int[AbstractSolver.MAX_SEARCH_DEPTH];
+    private final int[] numCaNotFilled;
 
     AStarPuchertStrategy(final Board board) {
         this.visited = new ColorAreaSet(board);
         this.current = new ColorAreaSet(board);
         this.next = new ColorAreaSet(board);
+        this.numCaNotFilled = new int[board.getNumColors()];
     }
 
     /* (non-Javadoc)
@@ -45,57 +46,72 @@ public class AStarPuchertStrategy implements AStarStrategy {
     public void setEstimatedCost(final AStarNode node) {
 
         // quote from floodit.cpp: int State::computeValuation()
+        // (in branch "performance")
         //
-        // We observe the following: for every distance d of which we have nodes,
-        // the sum of the distance plus the number of colors of nodes of distance
-        // larger than d is a lower bound for the number of moves needed. That is
-        // because the first d moves can at most remove nodes of distance less than
-        // or equal to d, and the remaining colors have to be cleared by separate
-        // moves. The maximum of this number over all d for which we have nodes is
-        // obviously still a lower bound, hence admissible. It is also consistent.
+        // We compute an admissible heuristic recursively: If there are no nodes
+        // left, return 0. Furthermore, if a color can be eliminated in one move
+        // from the current position, that move is an optimal move and we can
+        // simply use it. Otherwise, all moves fill a subset of the neighbors of
+        // the filled nodes. Thus, filling that layer gets us at least one step
+        // closer to the end.
 
-        node.copyFloodedTo(visited);
-        //current.clear();  // clear() not necessary because it's empty
-        //next.clear();     // clear() not necessary because it's empty
+        node.copyFloodedTo(this.visited);
+        node.copyFloodedTo(this.current);
+        node.copyNumCaNotFilledTo(this.numCaNotFilled);
 
-        // collect the immediate neighbors (distance = 0)
-        int colors = node.getNeighborColors();
-        colorsAtDistance[0] = colors;
-        while (0 != colors) {
-            final int l1b = colors & -colors; // Integer.lowestOneBit()
-            final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
-            colors ^= l1b; // clear lowest one bit
-            final ColorAreaSet caSet = node.getNeighbors(31 - clz);
-            visited.addAll(caSet);
-            current.addAll(caSet);
-        }
-        // collect colors at increasing distances
-        int distance = 1;
-        while(!current.isEmpty()) {
-            for (final ColorArea thisCa : current) {
-                for (final ColorArea nextCa : thisCa.getNeighborsArray()) {
-                    if (!visited.contains(nextCa)) {
-                        visited.add(nextCa);
-                        next.add(nextCa);
-                        colors |= (1 << nextCa.getColor());
+        int completedColors = 0;
+        int distance = 0;
+        while(!this.current.isEmpty()) {
+            if (0 != completedColors) {
+                // We can eliminate colors. Do just that.
+                // We also combine all these elimination moves.
+                distance += Integer.bitCount(completedColors);
+                final int prevCompletedColors = completedColors;
+                completedColors = 0;
+                for (final ColorArea thisCa : this.current) {
+                    if ((prevCompletedColors & (1 << thisCa.getColor())) != 0) {
+                        // completed color
+                        // expandNode()
+                        for (final ColorArea nextCa : thisCa.getNeighborsArray()) {
+                            if (!this.visited.contains(nextCa)) {
+                                this.visited.add(nextCa);
+                                this.next.add(nextCa);
+                                if (--this.numCaNotFilled[nextCa.getColor()] == 0) {
+                                    completedColors |= 1 << nextCa.getColor();
+                                }
+                            }
+                        }
+                    } else {
+                        // non-completed color
+                        // move node to next layer
+                        this.next.add(thisCa);
+                    }
+                }
+            } else {
+                // Nothing found, do the color-blind pseudo-move
+                // Expand current layer of nodes.
+                ++distance;
+                for (final ColorArea thisCa : this.current) {
+                    // expandNode()
+                    for (final ColorArea nextCa : thisCa.getNeighborsArray()) {
+                        if (!this.visited.contains(nextCa)) {
+                            this.visited.add(nextCa);
+                            this.next.add(nextCa);
+                            if (--this.numCaNotFilled[nextCa.getColor()] == 0) {
+                                completedColors |= 1 << nextCa.getColor();
+                            }
+                        }
                     }
                 }
             }
-            colorsAtDistance[distance++] = colors;
-            colors = 0;
-            final ColorAreaSet tmp = current;
-            current = next;
-            next = tmp;
-            next.clear();
+
+            // Move the next layer into the current.
+            final ColorAreaSet tmp = this.current;
+            this.current = this.next;
+            this.next = tmp;
+            this.next.clear();
         }
-        // (here, the ColorAreas current and next are empty)
-        // in the collected colors, find the maximum of (distance + numcolors_at_greater_distance)
-        int max = 0;
-        for (--distance;  distance >= 0;  --distance) {
-            max = Integer.max(max, distance + Integer.bitCount(colors));  // hopefully an intrinsic function using instruction POPCNT
-            colors |= colorsAtDistance[distance];
-        }
-        node.setEstimatedCost(node.getSolutionSize() + max);
+        node.setEstimatedCost(node.getSolutionSize() + distance);
     }
 
 }
