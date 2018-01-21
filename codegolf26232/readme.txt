@@ -85,3 +85,21 @@ that has 16GB of RAM. (using "java -Xmx14800M")
 extrapolating the current, partial result, we can expect that the total number
 of steps found by exhaustive search would be less than 2,000,000.
 
+---
+updated 2018-01-21:
+output of this program, ColorFill: attempt to solve it using AStar search!
+
+steps.txt  = A* (Puchert heuristic) optimal solutions
+steps_.txt = detailed output
+
+This is work in progress!
+current partial result: first 933 test cases solved in 18,512 steps
+extrapolated total result: 1,984,137 steps
+
+The new AStarPuchertStrategy finds optimal solutions and is very fast. Thanks
+to Aaron and Simon Puchert for their solver program which served as a template!
+
+Note: test case 934 in input file floodtest is a pathological case.
+Currently it can't be solved using AStarPuchertStrategy because the algorithm
+runs for a very long time until it fails because of OutOfMemoryError.
+To be investigated...

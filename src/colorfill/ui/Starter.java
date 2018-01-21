@@ -46,7 +46,7 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill __DEV__";
-        final String version  = "1.1 (2018-01-20)";
+        final String version  = "1.1 (2018-01-21)";
         final String author   = "Copyright (C) 2018 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
@@ -109,7 +109,8 @@ public class Starter {
         if (null != firstLine) {
             if (firstLine.length() == 19) {
 //                runSolverCg26232(fileNameTestData);
-                runSolverCg26232exhaustive(fileNameTestData);
+//                runSolverCg26232exhaustive(fileNameTestData);
+                runSolverCg26232puchert(fileNameTestData);
             } else {
                 runSolverPc19(fileNameTestData);
             }
@@ -383,7 +384,6 @@ public class Starter {
             DfsGreedyStrategy.class,
             DfsGreedyNextStrategy.class,
             AStarTigrouStrategy.class,
-            AStarPuchertStrategy.class,
             DfsExhaustiveStrategy.class  // DfsExhaustiveStrategy must be last one!
         };
         DfsExhaustiveStrategy.setCodeGolf26232();
@@ -506,6 +506,87 @@ main_loop:
                     padRight("milliSeconds=" + ((stNanoTime[strategy] + 999999L) / 1000000L), 13 + 8 + 2)
                     );
         }
+        System.out.println("total steps: " + countSteps + (100000 == count ? "  (Code Golf 26232: Create a Flood Paint AI)" : ""));
+        pwSteps.close();
+        brBoards.close();
+    }
+
+
+    /**
+     * test a solver implementation using the "floodtest" file from
+     * Code Golf 26232: Create a Flood Paint AI
+     * https://codegolf.stackexchange.com/questions/26232/create-a-flood-paint-ai
+     * <br>
+     * this is the attempt to solve it once and for all using the "AStar Puchert" algorithm
+     */
+    private static void runSolverCg26232puchert(final String inputFileName) throws Exception {
+        final Class[] STRATEGIES = {
+                AStarPuchertStrategy.class
+        };
+        System.out.println("running Code Golf 26232: Create a Flood Paint AI");
+        System.out.println("SOLVER ALGORITHM \"ASTAR PUCHERT\"");
+        System.out.println("reading  input file: " + inputFileName);
+        final BufferedReader brBoards = new BufferedReader(new FileReader(inputFileName));
+        final String outputFileName = "steps.txt";
+        System.out.println("writing output file: " + outputFileName);
+        final PrintWriter pwSteps = new PrintWriter(new FileWriter(outputFileName, true));  // append to existing output file
+
+        int count = 0, countSteps = 0;
+
+        // read existing output file and fast-forward input file accordingly
+        final BufferedReader brSteps = new BufferedReader(new FileReader(outputFileName));
+        for (;;) {
+            final String steps = brSteps.readLine();
+            if (null == steps) {
+                break;  // end of output file
+            }
+            final Board board = makeBoard(brBoards);
+            if (null == board) {
+                break; // end of input file
+            }
+            ++count;
+            countSteps += steps.length();
+        }
+        if (count > 0) {
+            System.out.println("skipped existing output file content: " + count + " solutions with " + countSteps + " steps");
+        }
+        brSteps.close();
+
+        // read input file and solve boards and write to output file
+main_loop:
+        for (;;) {
+            final Board board = makeBoard(brBoards);
+            if (null == board) {
+                break; // end of input file !?
+            }
+            ++count;
+            final Solver solver = AbstractSolver.createSolver(STRATEGIES[0], board);
+            solver.execute(board.getStartPos(), null);
+            final Solution solution = solver.getSolution();
+            countSteps += solution.getNumSteps();
+            System.out.println(
+                    padRight("" + count, 6 + 1) +
+                    padRight(solution.toString() + "____________" + solution.getNumSteps(), 28 + 12 + 2 + 2) +
+                    padRight("predictedTotal=" + (100000L*countSteps/count), 24) );
+            System.out.flush();
+            pwSteps.println(solution.toString());
+            pwSteps.flush();
+
+            // look for user input on stdin - if "q" is entered then we quit
+            while (System.in.available() > 0) {
+                final int inp = System.in.read();
+                if ('q' == inp) {
+                    break main_loop;
+                }
+            }
+            if (count >= 1000) break;  // do 1% of the input file only
+        }
+
+        // print summary
+        System.out.println(
+                padRight(STRATEGIES[0].getSimpleName(), 2 + 21 + 2) +
+                padRight("steps=" + countSteps, 6 + 8 + 2)
+                );
         System.out.println("total steps: " + countSteps + (100000 == count ? "  (Code Golf 26232: Create a Flood Paint AI)" : ""));
         pwSteps.close();
         brBoards.close();

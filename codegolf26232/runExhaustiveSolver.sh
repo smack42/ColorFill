@@ -3,7 +3,7 @@
 {
 
     date -Iseconds
-    time java -Xmx14800M -jar ../colorfill.jar floodtest
+    time java -Xmx8G -jar ../colorfill.jar floodtest
     date -Iseconds
     echo
     echo
