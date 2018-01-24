@@ -30,7 +30,7 @@ public class ColorAreaSet implements Iterable<ColorArea> {
 
     private final Board board;
     private final int[] array;
-    private int size;
+    private short size;
 
     /**
      * the constructor
@@ -152,6 +152,16 @@ public class ColorAreaSet implements Iterable<ColorArea> {
     }
 
     /**
+     * add all ColorAreas in the array to this set
+     * @param caArray
+     */
+    public void addAll(final ColorArea[] caArray)  {
+        for (final ColorArea ca : caArray) {
+            this.add(ca);
+        }
+    }
+
+    /**
      * add all ColorAreas in the other set to this set
      */
     public void addAll(final ColorAreaSet other) {
@@ -160,7 +170,7 @@ public class ColorAreaSet implements Iterable<ColorArea> {
             final int a = (this.array[i] |= other.array[i]);
             sz += Integer.bitCount(a);  // hopefully an intrinsic function using instruction POPCNT
         }
-        this.size = sz;
+        this.size = (short)sz;
     }
 
     /**
@@ -172,7 +182,7 @@ public class ColorAreaSet implements Iterable<ColorArea> {
             final int a = (this.array[i] &= ~(other.array[i]));
             sz += Integer.bitCount(a);  // hopefully an intrinsic function using instruction POPCNT
         }
-        this.size = sz;
+        this.size = (short)sz;
         return sz;
     }
 

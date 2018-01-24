@@ -117,8 +117,8 @@ public class AStarSolver extends AbstractSolver {
                     final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
                     nextColors ^= l1b; // clear lowest one bit
                     final byte color = (byte)(31 - clz);
-                    if (currentNode.canPlay(color)) {
-                        final AStarNode nextNode = currentNode.copyAndPlay(color, recycleNode);
+                    final AStarNode nextNode = currentNode.copyAndPlay(color, recycleNode);
+                    if (null != nextNode) {
                         recycleNode = null;
                         this.strategy.setEstimatedCost(nextNode);
                         open.offer(nextNode);

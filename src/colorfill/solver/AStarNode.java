@@ -17,8 +17,10 @@
 
 package colorfill.solver;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Queue;
 
 import colorfill.model.Board;
@@ -30,11 +32,11 @@ import colorfill.model.ColorArea;
 public class AStarNode {
 
     private final ColorAreaSet flooded;
-    private final ColorAreaGroup neighbors;
+    private final ColorAreaSet neighbors;
     private final byte[] solution;
-    private int solutionSize;
-    private int estimatedCost;
-    private final int[] numCaNotFilled;
+    private short solutionSize;
+    private short estimatedCost;
+    private final short[] numCaNotFilled;
 
     /**
      * initial constructor.
@@ -43,13 +45,13 @@ public class AStarNode {
     public AStarNode(final Board board, final ColorArea startCa) {
         this.flooded = new ColorAreaSet(board);
         this.flooded.add(startCa);
-        this.neighbors = new ColorAreaGroup(board);
-        this.neighbors.addAll(startCa.getNeighborsArray(), this.flooded);
+        this.neighbors = new ColorAreaSet(board);
+        this.neighbors.addAll(startCa.getNeighborsArray());
         this.solution = new byte[64];  // AbstractSolver.MAX_SEARCH_DEPTH; use less memory
         this.solution[0] = startCa.getColor();
         this.solutionSize = 0;
-        this.estimatedCost = Integer.MAX_VALUE;
-        this.numCaNotFilled = new int[board.getNumColors()];
+        this.estimatedCost = Short.MAX_VALUE;
+        this.numCaNotFilled = new short[board.getNumColors()];
         for (final ColorArea ca : board.getColorAreasArray()) {
             ++this.numCaNotFilled[ca.getColor()];
         }
@@ -62,7 +64,7 @@ public class AStarNode {
      */
     public AStarNode(final AStarNode other) {
         this.flooded = new ColorAreaSet(other.flooded);
-        this.neighbors = new ColorAreaGroup(other.neighbors);
+        this.neighbors = new ColorAreaSet(other.neighbors);
         this.solution = other.solution.clone();
         this.solutionSize = other.solutionSize;
         //this.estimatedCost = other.estimatedCost;  // not necessary to copy
@@ -98,16 +100,11 @@ public class AStarNode {
      * @return
      */
     public int getNeighborColors() {
-        return this.neighbors.getColorsNotEmpty();
-    }
-
-    /**
-     * get the set of neighbors of this color.
-     * @param color
-     * @return
-     */
-    public ColorAreaSet getNeighbors(final int color) {
-        return this.neighbors.getColor((byte)color);
+        int result = 0;
+        for (final ColorArea neighbor : this.neighbors) {
+            result |= 1 << neighbor.getColor();
+        }
+        return result;
     }
 
     /**
@@ -122,7 +119,7 @@ public class AStarNode {
      * copy contents of "numCaNotFilled" array to this one.
      * @param other
      */
-    public void copyNumCaNotFilledTo(final int[] other) {
+    public void copyNumCaNotFilledTo(final short[] other) {
         System.arraycopy(this.numCaNotFilled, 0, other, 0, this.numCaNotFilled.length);
     }
 
@@ -133,9 +130,8 @@ public class AStarNode {
      * @param nextColor
      * @return
      */
-    public boolean canPlay(final byte nextColor) {
+    private boolean canPlay(final byte nextColor, final List<ColorArea> nextColorNeighbors) {
         final byte currColor = this.solution[this.solutionSize];
-        final ColorAreaSet nextColorNeighbors = this.neighbors.getColor(nextColor);
         // did the previous move add any new "nextColor" neighbors?
         boolean newNext = false;
 next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
@@ -171,13 +167,20 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
      * @param nextColor
      */
     public void play(final byte nextColor) {
-        final ColorAreaSet tmpFlooded = new ColorAreaSet(this.neighbors.getColor(nextColor));
-        this.flooded.addAll(tmpFlooded);
-        this.numCaNotFilled[nextColor] -= tmpFlooded.size();
-        this.neighbors.clearColor(nextColor);
-        for (final ColorArea tmpCa : tmpFlooded) {
-            this.neighbors.addAll(tmpCa.getNeighborsArray(), this.flooded);
+        final List<ColorArea> nextColorNeighbors = new ArrayList<ColorArea>(this.neighbors.size());
+        for (final ColorArea nextColorNeighbor : this.neighbors) {
+            if (nextColorNeighbor.getColor() == nextColor) {
+                nextColorNeighbors.add(nextColorNeighbor);
+            }
         }
+        short numCaNotFilled = this.numCaNotFilled[nextColor];
+        for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
+            this.flooded.add(nextColorNeighbor);
+            --numCaNotFilled;
+            this.neighbors.addAll(nextColorNeighbor.getNeighborsArray());
+        }
+        this.numCaNotFilled[nextColor] = numCaNotFilled;
+        this.neighbors.removeAll(this.flooded);
         this.solution[++this.solutionSize] = nextColor;
     }
 
@@ -189,29 +192,40 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
      * @return
      */
     public AStarNode copyAndPlay(final byte nextColor, final AStarNode recycleNode) {
-        final AStarNode result;
-        if (null == recycleNode) {
-            result = new AStarNode(this);
-            result.neighbors.clearColor(nextColor);
+        final List<ColorArea> nextColorNeighbors = new ArrayList<ColorArea>(this.neighbors.size());
+        for (final ColorArea nextColorNeighbor : this.neighbors) {
+            if (nextColorNeighbor.getColor() == nextColor) {
+                nextColorNeighbors.add(nextColorNeighbor);
+            }
+        }
+        if (!this.canPlay(nextColor, nextColorNeighbors)) {
+            return null;
         } else {
-            // copy - compare copy constructor
-            result = recycleNode;
-            result.flooded.copyFrom(this.flooded);
-            result.neighbors.copyFrom(this.neighbors, nextColor);
-            System.arraycopy(this.solution, 0, result.solution, 0, this.solutionSize + 1);
-            result.solutionSize = this.solutionSize;
-            //result.estimatedCost = this.estimatedCost;  // not necessary to copy
-            System.arraycopy(this.numCaNotFilled, 0, result.numCaNotFilled, 0, this.numCaNotFilled.length);
+            final AStarNode result;
+            if (null == recycleNode) {
+                result = new AStarNode(this);
+            } else {
+                // copy - compare copy constructor
+                result = recycleNode;
+                result.flooded.copyFrom(this.flooded);
+                result.neighbors.copyFrom(this.neighbors);
+                System.arraycopy(this.solution, 0, result.solution, 0, this.solutionSize + 1);
+                result.solutionSize = this.solutionSize;
+                //result.estimatedCost = this.estimatedCost;  // not necessary to copy
+                System.arraycopy(this.numCaNotFilled, 0, result.numCaNotFilled, 0, this.numCaNotFilled.length);
+            }
+            // play - compare method play()
+            short numCaNotFilled = result.numCaNotFilled[nextColor];
+            for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
+                result.flooded.add(nextColorNeighbor);
+                --numCaNotFilled;
+                result.neighbors.addAll(nextColorNeighbor.getNeighborsArray());
+            }
+            result.numCaNotFilled[nextColor] = numCaNotFilled;
+            result.neighbors.removeAll(result.flooded);
+            result.solution[++result.solutionSize] = nextColor;
+            return result;
         }
-        // play - compare method play()
-        final ColorAreaSet tmpFlooded = this.neighbors.getColor(nextColor);
-        result.flooded.addAll(tmpFlooded);
-        result.numCaNotFilled[nextColor] -= tmpFlooded.size();
-        for (final ColorArea tmpCa : tmpFlooded) {
-            result.neighbors.addAll(tmpCa.getNeighborsArray(), result.flooded);
-        }
-        result.solution[++result.solutionSize] = nextColor;
-        return result;
     }
 
     /**
@@ -249,7 +263,7 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
      * @param estimatedCost
      */
     public void setEstimatedCost(final int estimatedCost) {
-        this.estimatedCost = estimatedCost;
+        this.estimatedCost = (short)estimatedCost;
     }
     public int getEstimatedCost() {
         return this.estimatedCost;

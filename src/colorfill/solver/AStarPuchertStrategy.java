@@ -30,13 +30,13 @@ public class AStarPuchertStrategy implements AStarStrategy {
 
     private final ColorAreaSet visited;
     private ColorAreaSet current, next;
-    private final int[] numCaNotFilled;
+    private final short[] numCaNotFilled;
 
     AStarPuchertStrategy(final Board board) {
         this.visited = new ColorAreaSet(board);
         this.current = new ColorAreaSet(board);
         this.next = new ColorAreaSet(board);
-        this.numCaNotFilled = new int[board.getNumColors()];
+        this.numCaNotFilled = new short[board.getNumColors()];
     }
 
     /* (non-Javadoc)
