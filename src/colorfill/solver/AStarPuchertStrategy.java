@@ -30,12 +30,17 @@ public class AStarPuchertStrategy implements AStarStrategy {
 
     private final ColorAreaSet visited;
     private ColorAreaSet current, next;
+    private final short[] numCaNotFilledInitial;
     private final short[] numCaNotFilled;
 
-    AStarPuchertStrategy(final Board board) {
+    public AStarPuchertStrategy(final Board board) {
         this.visited = new ColorAreaSet(board);
         this.current = new ColorAreaSet(board);
         this.next = new ColorAreaSet(board);
+        this.numCaNotFilledInitial = new short[board.getNumColors()];
+        for (final ColorArea ca : board.getColorAreasArray()) {
+            ++this.numCaNotFilledInitial[ca.getColor()];
+        }
         this.numCaNotFilled = new short[board.getNumColors()];
     }
 
@@ -57,7 +62,10 @@ public class AStarPuchertStrategy implements AStarStrategy {
 
         node.copyFloodedTo(this.visited);
         node.copyFloodedTo(this.current);
-        node.copyNumCaNotFilledTo(this.numCaNotFilled);
+        System.arraycopy(this.numCaNotFilledInitial, 0, this.numCaNotFilled, 0, this.numCaNotFilledInitial.length);
+        for (final ColorArea ca : this.visited) {
+            --this.numCaNotFilled[ca.getColor()];
+        }
 
         int completedColors = 0;
         int distance = 0;

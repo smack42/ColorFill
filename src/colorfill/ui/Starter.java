@@ -22,6 +22,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -46,7 +47,7 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill __DEV__";
-        final String version  = "1.1 (2018-01-24)";
+        final String version  = "1.1 (2018-01-27)";
         final String author   = "Copyright (C) 2018 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
@@ -531,7 +532,7 @@ main_loop:
         System.out.println("writing output file: " + outputFileName);
         final PrintWriter pwSteps = new PrintWriter(new FileWriter(outputFileName, true));  // append to existing output file
 
-        int count = 0, countSteps = 0;
+        int count = 0, totalSteps = 0;
 
         // read existing output file and fast-forward input file accordingly
         final BufferedReader brSteps = new BufferedReader(new FileReader(outputFileName));
@@ -545,14 +546,17 @@ main_loop:
                 break; // end of input file
             }
             ++count;
-            countSteps += steps.length();
+            totalSteps += steps.length();
         }
         if (count > 0) {
-            System.out.println("skipped existing output file content: " + count + " solutions with " + countSteps + " steps");
+            System.out.println("skipped existing output file content: " + count + " solutions with " + totalSteps + " steps");
         }
         brSteps.close();
 
         // read input file and solve boards and write to output file
+        final List<Integer> allMilliSeconds = new ArrayList<Integer>();
+        int sessionStart = count + 1;
+        int sessionSteps = 0;
 main_loop:
         for (;;) {
             final Board board = makeBoard(brBoards);
@@ -561,13 +565,20 @@ main_loop:
             }
             ++count;
             final Solver solver = AbstractSolver.createSolver(STRATEGIES[0], board);
+            final long nanoStart = System.nanoTime();
             solver.execute(board.getStartPos(), null);
+            final long nanoEnd = System.nanoTime();
             final Solution solution = solver.getSolution();
-            countSteps += solution.getNumSteps();
+            totalSteps += solution.getNumSteps();
+            sessionSteps += solution.getNumSteps();
+            final int millis = (int)((nanoEnd - nanoStart + 999999L) / 1000000L);
+            allMilliSeconds.add(Integer.valueOf(millis));
             System.out.println(
                     padRight("" + count, 6 + 1) +
                     padRight(solution.toString() + "____________" + solution.getNumSteps(), 28 + 12 + 2 + 2) +
-                    padRight("predictedTotal=" + (100000L*countSteps/count), 24) );
+                    padRight("milliSeconds=" + millis, 13 + 8 + 2) +
+                    "predictedTotal=" + (100000L*totalSteps/count)
+                    );
             System.out.flush();
             pwSteps.println(solution.toString());
             pwSteps.flush();
@@ -583,11 +594,24 @@ main_loop:
         }
 
         // print summary
+        int minMillis = Integer.MAX_VALUE;
+        int maxMillis = Integer.MIN_VALUE;
+        long avgMillis = 0;
+        for (final int millis : allMilliSeconds) {
+            minMillis = Math.min(minMillis, millis);
+            maxMillis = Math.max(maxMillis, millis);
+            avgMillis += millis;
+        }
+        Collections.sort(allMilliSeconds);
+        int medianMillis = allMilliSeconds.isEmpty() ? 0 : allMilliSeconds.get(Math.min(allMilliSeconds.size()/2, allMilliSeconds.size()-1)).intValue();
+        avgMillis = avgMillis / (allMilliSeconds.isEmpty() ? 1 : allMilliSeconds.size());
         System.out.println(
-                padRight(STRATEGIES[0].getSimpleName(), 2 + 21 + 2) +
-                padRight("steps=" + countSteps, 6 + 8 + 2)
+                STRATEGIES[0].getSimpleName() + "   " +
+                "session(" + sessionStart + "," + count + ")=" + (count-sessionStart+1) + "   " +
+                "steps=" + sessionSteps + "   " +
+                "milliSeconds_min/median/average/max=" + minMillis + "/" + medianMillis + "/" + avgMillis + "/" + maxMillis
                 );
-        System.out.println("total steps: " + countSteps + (100000 == count ? "  (Code Golf 26232: Create a Flood Paint AI)" : ""));
+        System.out.println("total steps: " + totalSteps + (100000 == count ? "  (Code Golf 26232: Create a Flood Paint AI)" : ""));
         pwSteps.close();
         brBoards.close();
     }

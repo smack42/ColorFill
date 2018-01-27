@@ -27,7 +27,7 @@ import colorfill.model.Board;
  */
 public abstract class AbstractSolver implements Solver {
 
-    protected static final int MAX_SEARCH_DEPTH = 150; // arbitrary limit
+    protected static final int MAX_SEARCH_DEPTH = 64; // arbitrary limit
 
     protected final Board board;
     protected final List<Solution> solutions = new ArrayList<Solution>();
