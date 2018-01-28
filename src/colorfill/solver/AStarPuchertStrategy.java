@@ -28,12 +28,14 @@ import colorfill.model.ColorArea;
  */
 public class AStarPuchertStrategy implements AStarStrategy {
 
+    private final Board board;
     private final ColorAreaSet visited;
     private ColorAreaSet current, next;
     private final short[] numCaNotFilledInitial;
     private final short[] numCaNotFilled;
 
     public AStarPuchertStrategy(final Board board) {
+        this.board = board;
         this.visited = new ColorAreaSet(board);
         this.current = new ColorAreaSet(board);
         this.next = new ColorAreaSet(board);
@@ -62,9 +64,12 @@ public class AStarPuchertStrategy implements AStarStrategy {
 
         node.copyFloodedTo(this.visited);
         node.copyFloodedTo(this.current);
-        System.arraycopy(this.numCaNotFilledInitial, 0, this.numCaNotFilled, 0, this.numCaNotFilledInitial.length);
-        for (final ColorArea ca : this.visited) {
-            --this.numCaNotFilled[ca.getColor()];
+        {
+            System.arraycopy(this.numCaNotFilledInitial, 0, this.numCaNotFilled, 0, this.numCaNotFilledInitial.length);
+            final ColorAreaSet.IteratorColorAreaId iter = this.visited.iteratorColorAreaId();
+            while (iter.hasNext()) {
+                --this.numCaNotFilled[this.board.getColor4Id(iter.next())];
+            }
         }
 
         int completedColors = 0;
@@ -76,7 +81,9 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 distance += Integer.bitCount(completedColors);
                 final int prevCompletedColors = completedColors;
                 completedColors = 0;
-                for (final ColorArea thisCa : this.current) {
+                final ColorAreaSet.IteratorColorAreaId iter = this.current.iteratorColorAreaId();
+                while (iter.hasNext()) {
+                    final ColorArea thisCa = this.board.getColorArea4Id(iter.next());
                     if ((prevCompletedColors & (1 << thisCa.getColor())) != 0) {
                         // completed color
                         // expandNode()
@@ -99,7 +106,9 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 // Nothing found, do the color-blind pseudo-move
                 // Expand current layer of nodes.
                 ++distance;
-                for (final ColorArea thisCa : this.current) {
+                final ColorAreaSet.IteratorColorAreaId iter = this.current.iteratorColorAreaId();
+                while (iter.hasNext()) {
+                    final ColorArea thisCa = this.board.getColorArea4Id(iter.next());
                     // expandNode()
                     for (final ColorArea nextCa : thisCa.getNeighborsArray()) {
                         if (!this.visited.contains(nextCa)) {

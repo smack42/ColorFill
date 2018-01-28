@@ -26,6 +26,7 @@ import colorfill.model.ColorArea;
  */
 public class ColorAreaGroup {
 
+    private final Board board;
     private final ColorAreaSet[] theArray;
     
     private int colorsNotEmptyBits;
@@ -34,6 +35,7 @@ public class ColorAreaGroup {
      * the standard constructor
      */
     public ColorAreaGroup(final Board board) {
+        this.board = board;
         this.theArray = new ColorAreaSet[board.getNumColors()];
         for (int color = 0;  color < this.theArray.length;  ++color) {
             this.theArray[color] = new ColorAreaSet(board);
@@ -46,6 +48,7 @@ public class ColorAreaGroup {
      * @param other
      */
     public ColorAreaGroup(final ColorAreaGroup other) {
+        this.board = other.board;
         this.theArray = other.theArray.clone();
         for (int color = 0;  color < this.theArray.length;  ++color) {
             this.theArray[color] = new ColorAreaSet(this.theArray[color]);
@@ -142,7 +145,9 @@ public class ColorAreaGroup {
     public int getColorsDepth(final int depth) {
         int result = 0;
         for (final ColorAreaSet caSet : this.theArray) {
-            for (final ColorArea ca : caSet) {
+            final ColorAreaSet.IteratorColorAreaId iter = caSet.iteratorColorAreaId();
+            while (iter.hasNext()) {
+                final ColorArea ca = this.board.getColorArea4Id(iter.next());
                 if (ca.getDepth() == depth) {
                     result |= 1 << ca.getColor();
                     break; // for (ca)
@@ -163,7 +168,9 @@ public class ColorAreaGroup {
         for (final ColorAreaSet caSet : this.theArray) {
             byte color = Byte.MIN_VALUE;
             int depthColor = -2;
-            for (final ColorArea ca : caSet) {
+            final ColorAreaSet.IteratorColorAreaId iter = caSet.iteratorColorAreaId();
+            while (iter.hasNext()) {
+                final ColorArea ca = this.board.getColorArea4Id(iter.next());
                 final int d = ca.getDepth();
                 if (d == depth) {
                     color = ca.getColor();
@@ -215,7 +222,9 @@ public class ColorAreaGroup {
         int maxCount = 1; // return empty collection if all colors are empty. not expected!
         for (byte color = 0;  color < this.theArray.length;  ++color) {
             int count = 0;
-            for (final ColorArea ca : this.theArray[color]) {
+            final ColorAreaSet.IteratorColorAreaId iter = this.theArray[color].iteratorColorAreaId();
+            while (iter.hasNext()) {
+                final ColorArea ca = this.board.getColorArea4Id(iter.next());
                 if (false == excludeNeighbors.containsAll(ca.getNeighborsArray())) {
                     count += ca.getMemberSize();
                 }
@@ -241,7 +250,9 @@ public class ColorAreaGroup {
         int maxCount = -1; // include colors that have zero or more next new neighbors
         for (byte color = 0;  color < this.theArray.length;  ++color) {
             int count = 0;
-            for (final ColorArea ca : this.theArray[color]) {
+            final ColorAreaSet.IteratorColorAreaId iter = this.theArray[color].iteratorColorAreaId();
+            while (iter.hasNext()) {
+                final ColorArea ca = this.board.getColorArea4Id(iter.next());
                 for (final ColorArea caNext : ca.getNeighborsArray()) {
                     if ((false == excludeNeighbors.contains(caNext))
                             && excludeNeighbors.containsNone(caNext.getNeighborsArray())) {

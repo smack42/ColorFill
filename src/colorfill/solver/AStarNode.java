@@ -93,10 +93,11 @@ public class AStarNode {
      * get the list of neighbor colors.
      * @return
      */
-    public int getNeighborColors() {
+    public int getNeighborColors(final Board board) {
         int result = 0;
-        for (final ColorArea neighbor : this.neighbors) {
-            result |= 1 << neighbor.getColor();
+        final ColorAreaSet.IteratorColorAreaId iter = this.neighbors.iteratorColorAreaId();
+        while (iter.hasNext()) {
+            result |= 1 << board.getColor4Id(iter.next());
         }
         return result;
     }
@@ -152,9 +153,11 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
      * play the given color.
      * @param nextColor
      */
-    public void play(final byte nextColor) {
-        final List<ColorArea> nextColorNeighbors = new ArrayList<ColorArea>(this.neighbors.size());
-        for (final ColorArea nextColorNeighbor : this.neighbors) {
+    public void play(final byte nextColor, final Board board) {
+        final List<ColorArea> nextColorNeighbors = new ArrayList<ColorArea>(128);  // constant, arbitrary initial capacity
+        final ColorAreaSet.IteratorColorAreaId iter = this.neighbors.iteratorColorAreaId();
+        while (iter.hasNext()) {
+            final ColorArea nextColorNeighbor = board.getColorArea4Id(iter.next());
             if (nextColorNeighbor.getColor() == nextColor) {
                 nextColorNeighbors.add(nextColorNeighbor);
             }
@@ -174,9 +177,11 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
      * @param recycleNode
      * @return
      */
-    public AStarNode copyAndPlay(final byte nextColor, final AStarNode recycleNode) {
-        final List<ColorArea> nextColorNeighbors = new ArrayList<ColorArea>(this.neighbors.size());
-        for (final ColorArea nextColorNeighbor : this.neighbors) {
+    public AStarNode copyAndPlay(final byte nextColor, final AStarNode recycleNode, final Board board) {
+        final List<ColorArea> nextColorNeighbors = new ArrayList<ColorArea>(128);  // constant, arbitrary initial capacity
+        final ColorAreaSet.IteratorColorAreaId iter = this.neighbors.iteratorColorAreaId();
+        while (iter.hasNext()) {
+            final ColorArea nextColorNeighbor = board.getColorArea4Id(iter.next());
             if (nextColorNeighbor.getColor() == nextColor) {
                 nextColorNeighbors.add(nextColorNeighbor);
             }
@@ -254,9 +259,9 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
      * @param depths an array of int; must be large enough to store a value for each ColorArea on the Board.
      * @return
      */
-    public int getSumDistances(final Queue<ColorArea> queue) {
+    public int getSumDistances(final Queue<ColorArea> queue, final Board board) {
         final int NO_DEPTH = -1;
-        for (final ColorArea ca : this.flooded.getBoard().getColorAreasArray()) {
+        for (final ColorArea ca : board.getColorAreasArray()) {
             if (this.flooded.contains(ca)) {
                 ca.tmpAStarDepth = 0;  // start
                 queue.offer(ca);

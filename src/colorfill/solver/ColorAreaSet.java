@@ -18,7 +18,6 @@
 package colorfill.solver;
 
 import java.util.Arrays;
-import java.util.Iterator;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
@@ -26,9 +25,8 @@ import colorfill.model.ColorArea;
 /**
  * this class is a bespoke implementation of a Set of ColorArea. 
  */
-public class ColorAreaSet implements Iterable<ColorArea> {
+public class ColorAreaSet {
 
-    private final Board board;
     private final int[] array;
     private short size;
 
@@ -36,7 +34,6 @@ public class ColorAreaSet implements Iterable<ColorArea> {
      * the constructor
      */
     public ColorAreaSet(final Board board) {
-        this.board = board;
         this.array = new int[(board.getSizeColorAreas8() + 3) >> 2];
         this.size = 0;
     }
@@ -46,13 +43,8 @@ public class ColorAreaSet implements Iterable<ColorArea> {
      * @param other
      */
     public ColorAreaSet(final ColorAreaSet other) {
-        this.board = other.board;
         this.array = other.array.clone();
         this.size = other.size;
-    }
-
-    public Board getBoard() {
-        return this.board;
     }
 
     /**
@@ -186,33 +178,29 @@ public class ColorAreaSet implements Iterable<ColorArea> {
         return sz;
     }
 
-    /* (non-Javadoc)
-     * @see java.lang.Iterable#iterator()
+    /**
+     * create an Iterator over this set that returns the IDs of the member ColorArea objects
+     * @return
      */
-    @Override
-    public Iterator<ColorArea> iterator() {
-        return new ColorAreaSetIterator();
+    public IteratorColorAreaId iteratorColorAreaId() {
+        return new IteratorColorAreaId();
     }
 
-    private class ColorAreaSetIterator implements Iterator<ColorArea> {
+    public class IteratorColorAreaId {
         private int count = 0;
         private final int countLimit = ColorAreaSet.this.size();
         private int intIdx = 0;
         private int buf = ColorAreaSet.this.array[0];
 
-        /* (non-Javadoc)
-         * @see java.util.Iterator#hasNext()
-         */
-        @Override
+        private IteratorColorAreaId() {
+            // private constructor
+        }
+
         public boolean hasNext() {
             return this.count < this.countLimit;
         }
 
-        /* (non-Javadoc)
-         * @see java.util.Iterator#next()
-         */
-        @Override
-        public ColorArea next() {
+        public int next() {
             // note: if (false == this.hasNext())
             // then it throws ArrayIndexOutOfBoundsException
             // instead of NoSuchElementException
@@ -224,15 +212,7 @@ public class ColorAreaSet implements Iterable<ColorArea> {
             final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
             final int caId = (this.intIdx << 5) + 31 - clz;
             this.buf ^= l1b;
-            return ColorAreaSet.this.board.getColorArea4Id(caId);
-        }
-
-        /* (non-Javadoc)
-         * @see java.util.Iterator#remove()
-         */
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
+            return caId;
         }
     }
 }

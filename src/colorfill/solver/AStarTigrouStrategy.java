@@ -20,6 +20,7 @@ package colorfill.solver;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
+import colorfill.model.Board;
 import colorfill.model.ColorArea;
 
 /**
@@ -30,10 +31,16 @@ import colorfill.model.ColorArea;
  */
 public class AStarTigrouStrategy implements AStarStrategy {
 
+    private final Board board;
+
     // queue is used in AStarNode.getSumDistances().
     // it exists here only for performance improvement.
     // (avoid construction / garbage collection inside that function)
     private final Queue<ColorArea> queue = new ArrayDeque<ColorArea>();
+
+    public AStarTigrouStrategy(final Board board) {
+        this.board = board;
+    }
 
     /* (non-Javadoc)
      * @see colorfill.solver.AStarStrategy#setEstimatedCost(colorfill.solver.AStarNode)
@@ -48,14 +55,14 @@ public class AStarTigrouStrategy implements AStarStrategy {
             int minDistance = Integer.MAX_VALUE;
             AStarNode minNode = null;
             //find color which give the minimum sum of distance from root to each other node
-            int nextColors = currentNode.getNeighborColors();
+            int nextColors = currentNode.getNeighborColors(this.board);
             while (0 != nextColors) {
                 final int l1b = nextColors & -nextColors; // Integer.lowestOneBit()
                 final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
                 nextColors ^= l1b; // clear lowest one bit
                 final AStarNode nextNode = new AStarNode(currentNode);
-                nextNode.play((byte)(31 - clz));
-                final int nextDistance = nextNode.getSumDistances(this.queue);
+                nextNode.play((byte)(31 - clz), this.board);
+                final int nextDistance = nextNode.getSumDistances(this.queue, this.board);
                 if (minDistance > nextDistance) {
                     minDistance = nextDistance;
                     minNode = nextNode;

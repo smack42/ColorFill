@@ -161,8 +161,9 @@ public class DfsSolver extends AbstractSolver {
             final ColorAreaGroup nextNeighbors = this.neighbors[depth + 1];
             nextNeighbors.copyFrom(theseNeighbors, thisColor);
             // add new neighbors
-            for (final ColorArea ca : thisFlooded) {
-                nextNeighbors.addAll(ca.getNeighborsArray(), this.allFlooded);
+            final ColorAreaSet.IteratorColorAreaId iter = thisFlooded.iteratorColorAreaId();
+            while (iter.hasNext()) {
+                nextNeighbors.addAll(this.board.getColorArea4Id(iter.next()).getNeighborsArray(), this.allFlooded);
             }
             // pick the "best" neighbor colors to go on
             int nextColors = this.strategy.selectColors(depth, this.allFlooded, this.notFlooded, nextNeighbors);

@@ -72,7 +72,7 @@ public class AStarSolver extends AbstractSolver {
     private AStarStrategy makeStrategy() {
         final AStarStrategy result;
         if (AStarTigrouStrategy.class.equals(this.strategyClass)) {
-            result = new AStarTigrouStrategy();
+            result = new AStarTigrouStrategy(this.board);
         } else if (AStarPuchertStrategy.class.equals(this.strategyClass)) {
             result = new AStarPuchertStrategy(this.board);
         } else {
@@ -111,13 +111,13 @@ public class AStarSolver extends AbstractSolver {
                 return;
             } else {
                 // play all possible colors
-                int nextColors = currentNode.getNeighborColors();
+                int nextColors = currentNode.getNeighborColors(this.board);
                 while (0 != nextColors) {
                     final int l1b = nextColors & -nextColors; // Integer.lowestOneBit()
                     final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
                     nextColors ^= l1b; // clear lowest one bit
                     final byte color = (byte)(31 - clz);
-                    final AStarNode nextNode = currentNode.copyAndPlay(color, recycleNode);
+                    final AStarNode nextNode = currentNode.copyAndPlay(color, recycleNode, this.board);
                     if (null != nextNode) {
                         recycleNode = null;
                         this.strategy.setEstimatedCost(nextNode);
@@ -145,13 +145,13 @@ public class AStarSolver extends AbstractSolver {
                     return;  // finished!
                 } else {
                     // play all possible colors
-                    int nextColors = currentNode.getNeighborColors();
+                    int nextColors = currentNode.getNeighborColors(this.board);
                     while (0 != nextColors) {
                         final int l1b = nextColors & -nextColors; // Integer.lowestOneBit()
                         final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
                         nextColors ^= l1b; // clear lowest one bit
                         final AStarNode nextNode = new AStarNode(currentNode);
-                        nextNode.play((byte)(31 - clz));
+                        nextNode.play((byte)(31 - clz), this.board);
                         this.strategy.setEstimatedCost(nextNode);
                         open.offer(nextNode);
                     }

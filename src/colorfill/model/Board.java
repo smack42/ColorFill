@@ -38,6 +38,7 @@ public class Board {
     private int startPos = -1; // -1 == none
     private int depth = -1; // -1 == not yet set
     private ColorArea[] idsColorAreas;
+    private byte[] idsColors;
     private int sizeColorAreas8;
 
     /**
@@ -196,11 +197,13 @@ public class Board {
         // set cellsColorAreas and idsColorAreas
         int id = 0;
         this.idsColorAreas = new ColorArea[result.size()];
+        this.idsColors = new byte[result.size()];
         this.sizeColorAreas8 = (result.size() + 7) >> 3; // how many bytes are needed to store them as bits?
         for (final ColorArea ca : result) {
             ca.makeNeighborsArray();
             ca.setId(id++);
             this.idsColorAreas[ca.getId()] = ca;
+            this.idsColors[ca.getId()] = ca.getColor();
             for (final int member : ca.getMembers()) {
                 this.cellsColorAreas[member] = ca;
             }
@@ -372,6 +375,10 @@ public class Board {
 
     public ColorArea getColorArea4Id(int id) {
         return this.idsColorAreas[id];
+    }
+
+    public byte getColor4Id(int id) {
+        return this.idsColors[id];
     }
 
     public ColorArea[] getColorAreasArray() {
