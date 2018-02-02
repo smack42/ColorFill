@@ -2,6 +2,20 @@ ColorFill  CHANGES
 
 
 
+1.1 (2018-02-02)
+
+- optimized DfsExhaustiveStrategy
+  * much faster then before
+  * solves Programming Challenge 19 in about 1/3 of the previous time (now 47 minutes)
+- added AStarPuchertStrategy
+  * better heuristic for AStar (A*) solver
+  * idea taken from the program "floodit" by Aaron and Simon Puchert https://github.com/aaronpuchert/floodit
+  * finds optimal solutions (shortest possible)
+  * much faster than DfsExhaustiveStrategy
+  * solves Programming Challenge 19 in less than 2 (!) minutes
+
+
+
 1.0 (2017-02-05)
 
 - program solves the challenge:  Code Golf: Create a Flood Paint AI
