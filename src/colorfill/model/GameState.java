@@ -59,7 +59,7 @@ public class GameState {
         ,DfsDeepStrategy.class
         ,DfsDeeperStrategy.class
         ,AStarPuchertStrategy.class
-        ,DfsExhaustiveStrategy.class // DfsExhaustiveStrategy must be the last entry in this array!
+        //,DfsExhaustiveStrategy.class // DfsExhaustiveStrategy must be the last entry in this array!
     };
 
     private static final String[] SOLVER_NAMES = new String[STRATEGIES.length];
