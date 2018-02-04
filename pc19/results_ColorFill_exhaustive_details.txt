@@ -1,8 +1,8 @@
 time nice java -Xms2G -Xmx2G -jar colorfill.jar pc19/tiles.txt | tee results_details.txt
 
-real	3m1.283s
-user	3m4.656s
-sys	0m0.706s
+real	2m56.893s
+user	2m59.450s
+sys	0m0.578s
 
 
 ColorFill __DEV__ 1.1 (2018-02-04)
@@ -1010,11 +1010,11 @@ writing output file: results.txt
 998  62613245412516412356____________20                     5_AStarPuchertStrategy
 999  41624253145324156____________17                        3_DfsDeeperStrategy
 1000 51325151434531624315____________20                     3_DfsDeeperStrategy
-0_DfsGreedyStrategy      steps=22833  steps25=22761  best=17    checkOK=1000  checkFAIL=0     milliSeconds=428    
-1_DfsGreedyNextStrategy  steps=22033  steps25=22012  best=67    checkOK=1000  checkFAIL=0     milliSeconds=134    
-2_DfsDeepStrategy        steps=21409  steps25=21404  best=159   checkOK=1000  checkFAIL=0     milliSeconds=4329   
-3_DfsDeeperStrategy      steps=20815  steps25=20815  best=399   checkOK=1000  checkFAIL=0     milliSeconds=27677  
-4_AStarTigrouStrategy    steps=20865  steps25=20865  best=352   checkOK=1000  checkFAIL=0     milliSeconds=51799  
-5_AStarPuchertStrategy   steps=20086  steps25=20086  best=1000  checkOK=1000  checkFAIL=0     milliSeconds=92554  
+0_DfsGreedyStrategy      steps=22833  steps25=22761  best=17    checkOK=1000  checkFAIL=0     milliSeconds=420    
+1_DfsGreedyNextStrategy  steps=22033  steps25=22012  best=67    checkOK=1000  checkFAIL=0     milliSeconds=130    
+2_DfsDeepStrategy        steps=21409  steps25=21404  best=159   checkOK=1000  checkFAIL=0     milliSeconds=4148   
+3_DfsDeeperStrategy      steps=20815  steps25=20815  best=399   checkOK=1000  checkFAIL=0     milliSeconds=27358  
+4_AStarTigrouStrategy    steps=20865  steps25=20865  best=352   checkOK=1000  checkFAIL=0     milliSeconds=53916  
+5_AStarPuchertStrategy   steps=20086  steps25=20086  best=1000  checkOK=1000  checkFAIL=0     milliSeconds=86608  
 total steps:   20086
 total steps25: 20086  (Programming Challenge 19 score)

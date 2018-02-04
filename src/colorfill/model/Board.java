@@ -200,13 +200,15 @@ public class Board {
         this.idsColors = new byte[result.size()];
         this.sizeColorAreas8 = (result.size() + 7) >> 3; // how many bytes are needed to store them as bits?
         for (final ColorArea ca : result) {
-            ca.makeNeighborsArray();
             ca.setId(id++);
             this.idsColorAreas[ca.getId()] = ca;
             this.idsColors[ca.getId()] = ca.getColor();
             for (final int member : ca.getMembers()) {
                 this.cellsColorAreas[member] = ca;
             }
+        }
+        for (final ColorArea ca : result) {
+            ca.makeNeighborsArray();
         }
         return result;
     }

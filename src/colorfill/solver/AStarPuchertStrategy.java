@@ -100,13 +100,13 @@ public class AStarPuchertStrategy implements AStarStrategy {
                     if ((prevCompletedColors & (1 << thisCa.getColor())) != 0) {
                         // completed color
                         // expandNode()
-                        for (final ColorArea nextCa : thisCa.getNeighborsArray()) {
-                            final int nextCaId = nextCa.getId();
+                        for (final int nextCaId : thisCa.getNeighborsIdArray()) {
                             if (!this.visited.contains(nextCaId)) {
                                 this.visited.add(nextCaId);
                                 this.next.add(nextCaId);
-                                if (--this.numCaNotFilled[nextCa.getColor()] == 0) {
-                                    completedColors |= 1 << nextCa.getColor();
+                                final byte nextColor = this.board.getColor4Id(nextCaId);
+                                if (--this.numCaNotFilled[nextColor] == 0) {
+                                    completedColors |= 1 << nextColor;
                                 }
                             }
                         }
@@ -123,13 +123,13 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 while (iter.hasNext()) {
                     final ColorArea thisCa = this.board.getColorArea4Id(iter.next());
                     // expandNode()
-                    for (final ColorArea nextCa : thisCa.getNeighborsArray()) {
-                        final int nextCaId = nextCa.getId();
+                    for (final int nextCaId : thisCa.getNeighborsIdArray()) {
                         if (!this.visited.contains(nextCaId)) {
                             this.visited.add(nextCaId);
                             this.next.add(nextCaId);
-                            if (--this.numCaNotFilled[nextCa.getColor()] == 0) {
-                                completedColors |= 1 << nextCa.getColor();
+                            final byte nextColor = this.board.getColor4Id(nextCaId);
+                            if (--this.numCaNotFilled[nextColor] == 0) {
+                                completedColors |= 1 << nextColor;
                             }
                         }
                     }

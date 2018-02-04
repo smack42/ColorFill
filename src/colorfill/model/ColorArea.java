@@ -33,6 +33,7 @@ public class ColorArea implements Comparable<ColorArea> {
     private final SortedSet<ColorArea> neighbors = new TreeSet<ColorArea>();
     private final SortedSet<ColorArea> neighborsUnmodifiable = Collections.unmodifiableSortedSet(this.neighbors);
     private ColorArea[] neighborsArray = null; // will be created by makeNeighborsArray()
+    private int[]     neighborsIdArray = null; // will be created by makeNeighborsArray()
     private int depth = 0;
 
     /**
@@ -159,10 +160,18 @@ public class ColorArea implements Comparable<ColorArea> {
 
     protected void makeNeighborsArray() {
         this.neighborsArray = this.neighbors.toArray(new ColorArea[0]);
+        this.neighborsIdArray = new int[this.neighborsArray.length];
+        for (int i = 0;  i < this.neighborsArray.length;  ++i) {
+            this.neighborsIdArray[i] = this.neighborsArray[i].getId();
+        }
     }
 
     public ColorArea[] getNeighborsArray() {
         return this.neighborsArray;
+    }
+
+    public int[] getNeighborsIdArray() {
+        return this.neighborsIdArray;
     }
 
     public int getDepth() {

@@ -45,7 +45,7 @@ public class AStarNode {
         this.flooded = new ColorAreaSet(board);
         this.flooded.add(startCa);
         this.neighbors = new ColorAreaSet(board);
-        this.neighbors.addAll(startCa.getNeighborsArray());
+        this.neighbors.addAll(startCa.getNeighborsIdArray());
         this.solution = new byte[AbstractSolver.MAX_SEARCH_DEPTH];
         this.solution[0] = startCa.getColor();
         this.solutionSize = 0;
@@ -172,7 +172,7 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
         }
         for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
             this.flooded.add(nextColorNeighbor);
-            this.neighbors.addAll(nextColorNeighbor.getNeighborsArray());
+            this.neighbors.addAll(nextColorNeighbor.getNeighborsIdArray());
         }
         this.neighbors.removeAll(this.flooded);
         this.solution[++this.solutionSize] = nextColor;
@@ -212,7 +212,7 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
             // play - compare method play()
             for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
                 result.flooded.add(nextColorNeighbor);
-                result.neighbors.addAll(nextColorNeighbor.getNeighborsArray());
+                result.neighbors.addAll(nextColorNeighbor.getNeighborsIdArray());
             }
             result.neighbors.removeAll(result.flooded);
             result.solution[++result.solutionSize] = nextColor;

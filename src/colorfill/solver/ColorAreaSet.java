@@ -164,11 +164,11 @@ public class ColorAreaSet {
 
     /**
      * add all ColorAreas in the array to this set
-     * @param caArray
+     * @param caIdArray
      */
-    public void addAll(final ColorArea[] caArray)  {
-        for (final ColorArea ca : caArray) {
-            this.add(ca);
+    public void addAll(final int[] caIdArray)  {
+        for (final int caId : caIdArray) {
+            this.add(caId);
         }
     }
 
