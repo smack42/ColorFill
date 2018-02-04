@@ -111,6 +111,14 @@ public class AStarNode {
     }
 
     /**
+     * copy contents of "neighbors" set to this one.
+     * @param other
+     */
+    public void copyNeighborsTo(final ColorAreaSet other) {
+        other.copyFrom(this.neighbors);
+    }
+
+    /**
      * check if this color can be played. (avoid duplicate moves)
      * the idea is taken from the program "floodit" by Aaron and Simon Puchert,
      * which can be found at <a>https://github.com/aaronpuchert/floodit</a>

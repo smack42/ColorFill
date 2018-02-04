@@ -63,34 +63,48 @@ public class AStarPuchertStrategy implements AStarStrategy {
         // closer to the end.
 
         node.copyFloodedTo(this.visited);
-        node.copyFloodedTo(this.current);
+        System.arraycopy(this.numCaNotFilledInitial, 0, this.numCaNotFilled, 0, this.numCaNotFilledInitial.length);
         {
-            System.arraycopy(this.numCaNotFilledInitial, 0, this.numCaNotFilled, 0, this.numCaNotFilledInitial.length);
             final ColorAreaSet.IteratorColorAreaId iter = this.visited.iteratorColorAreaId();
             while (iter.hasNext()) {
                 --this.numCaNotFilled[this.board.getColor4Id(iter.next())];
             }
         }
 
+        // visit the first layer of neighbors, which is never empty, i.e. the puzzle is not solved yet
+        node.copyNeighborsTo(this.current);
+        this.visited.addAll(this.current);
         int completedColors = 0;
-        int distance = 0;
+        {
+            final ColorAreaSet.IteratorColorAreaId iter = this.current.iteratorColorAreaId();
+            while (iter.hasNext()) {
+                final byte nextColor = this.board.getColor4Id(iter.next());
+                if (--this.numCaNotFilled[nextColor] == 0) {
+                    completedColors |= 1 << nextColor;
+                }
+            }
+        }
+        int distance = 1;
+
         while(!this.current.isEmpty()) {
+            this.next.clear();
+            final ColorAreaSet.IteratorColorAreaId iter = this.current.iteratorColorAreaId();
             if (0 != completedColors) {
                 // We can eliminate colors. Do just that.
                 // We also combine all these elimination moves.
                 distance += Integer.bitCount(completedColors);
                 final int prevCompletedColors = completedColors;
                 completedColors = 0;
-                final ColorAreaSet.IteratorColorAreaId iter = this.current.iteratorColorAreaId();
                 while (iter.hasNext()) {
                     final ColorArea thisCa = this.board.getColorArea4Id(iter.next());
                     if ((prevCompletedColors & (1 << thisCa.getColor())) != 0) {
                         // completed color
                         // expandNode()
                         for (final ColorArea nextCa : thisCa.getNeighborsArray()) {
-                            if (!this.visited.contains(nextCa)) {
-                                this.visited.add(nextCa);
-                                this.next.add(nextCa);
+                            final int nextCaId = nextCa.getId();
+                            if (!this.visited.contains(nextCaId)) {
+                                this.visited.add(nextCaId);
+                                this.next.add(nextCaId);
                                 if (--this.numCaNotFilled[nextCa.getColor()] == 0) {
                                     completedColors |= 1 << nextCa.getColor();
                                 }
@@ -106,14 +120,14 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 // Nothing found, do the color-blind pseudo-move
                 // Expand current layer of nodes.
                 ++distance;
-                final ColorAreaSet.IteratorColorAreaId iter = this.current.iteratorColorAreaId();
                 while (iter.hasNext()) {
                     final ColorArea thisCa = this.board.getColorArea4Id(iter.next());
                     // expandNode()
                     for (final ColorArea nextCa : thisCa.getNeighborsArray()) {
-                        if (!this.visited.contains(nextCa)) {
-                            this.visited.add(nextCa);
-                            this.next.add(nextCa);
+                        final int nextCaId = nextCa.getId();
+                        if (!this.visited.contains(nextCaId)) {
+                            this.visited.add(nextCaId);
+                            this.next.add(nextCaId);
                             if (--this.numCaNotFilled[nextCa.getColor()] == 0) {
                                 completedColors |= 1 << nextCa.getColor();
                             }
@@ -126,7 +140,6 @@ public class AStarPuchertStrategy implements AStarStrategy {
             final ColorAreaSet tmp = this.current;
             this.current = this.next;
             this.next = tmp;
-            this.next.clear();
         }
         node.setEstimatedCost(node.getSolutionSize() + distance);
     }

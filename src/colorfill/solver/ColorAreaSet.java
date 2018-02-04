@@ -83,11 +83,30 @@ public class ColorAreaSet {
     }
 
     /**
+     * add the ColorArea to this set
+     */
+    public void add(final int colorAreaId) {
+        final int i = colorAreaId >> 5;
+        final int a = this.array[i];
+        final int b = a | 1 << colorAreaId;  // implicit shift distance (id & 0x1f)
+        this.array[i] = b;
+        this.size += (a == b ? 0 : 1);
+    }
+
+    /**
      * return true if the ColorArea is in this set
      */
     public boolean contains(final ColorArea ca) {
         final int id = ca.getId();
         final int bit = this.array[id >> 5] & (1 << id);  // implicit shift distance (id & 0x1f)
+        return 0 != bit;
+    }
+
+    /**
+     * return true if the ColorArea is in this set
+     */
+    public boolean contains(final int colorAreaId) {
+        final int bit = this.array[colorAreaId >> 5] & (1 << colorAreaId);  // implicit shift distance (id & 0x1f)
         return 0 != bit;
     }
 

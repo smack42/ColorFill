@@ -46,8 +46,8 @@ import colorfill.solver.Strategy;
 public class Starter {
 
     public static void main(String[] args) throws Exception {
-        final String progname = "ColorFill";
-        final String version  = "1.1 (2018-02-02)";
+        final String progname = "ColorFill __DEV__";
+        final String version  = "1.1 (2018-02-04)";
         final String author   = "Copyright (C) 2018 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
@@ -590,7 +590,7 @@ main_loop:
                     break main_loop;
                 }
             }
-            if (count >= 1000) break;  // do 1% of the input file only
+            //if (count >= 1000) break;  // do 1% of the input file only
         }
 
         // print summary
