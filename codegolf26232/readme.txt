@@ -86,15 +86,15 @@ extrapolating the current, partial result, we can expect that the total number
 of steps found by exhaustive search would be less than 2,000,000.
 
 ---
-updated 2018-01-24:
+updated 2018-02-07:
 output of this program, ColorFill: attempt to solve it using AStar search!
 
 steps.txt  = A* (Puchert heuristic) optimal solutions
 steps_.txt = detailed output
 
 This is work in progress!
-current partial result: first 1000 test cases solved in 19845 steps
-extrapolated total result: 1984500 steps
+current partial result: first 17296 test cases solved in 343361 steps
+extrapolated total result: 1985204 steps
 
 The new AStarPuchertStrategy finds optimal solutions and is very fast. Thanks
 to Aaron and Simon Puchert for their solver program which served as a template!
