@@ -21,6 +21,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -47,7 +48,7 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill __DEV__";
-        final String version  = "1.1 (2018-02-04)";
+        final String version  = "1.1 (2018-02-11)";
         final String author   = "Copyright (C) 2018 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
@@ -632,13 +633,16 @@ main_loop:
         System.out.println("reading input file Solutions: " + inputFileNameSolutions);
         final BufferedReader brBoards = new BufferedReader(new FileReader(inputFileNameBoards));
         final BufferedReader brSolutions= new BufferedReader(new FileReader(inputFileNameSolutions));
-        int countOK = 0, countFAIL = 0;
+        final int[] countSolutionLengths = new int[1000]; // arbitrary limit
+        int countOK = 0, countFAIL = 0, totalSolutionSteps = 0;
         for (;;) {
             final Board board = makeBoard(brBoards);
             final String solutionStr = brSolutions.readLine();
             if ((null == board) || (null == solutionStr)) {
                 break;
             }
+            ++countSolutionLengths[solutionStr.length()];
+            totalSolutionSteps += solutionStr.length();
             final String checkResult = board.checkSolution(solutionStr, board.getStartPos());
             if (checkResult.isEmpty()) {
                 ++countOK;
@@ -650,8 +654,32 @@ main_loop:
                 System.out.println(checkResult);
                 System.out.println();
             }
+            if (0 == (countOK + countFAIL) % 1000) {
+                System.out.println("checked " + (countOK + countFAIL) + " ...");
+            }
         }
         System.out.println("check finished:  total=" + (countOK + countFAIL) + " checkOK=" + countOK + " checkFAIL=" + countFAIL);
+        System.out.println("solution steps:  total=" + totalSolutionSteps + " average=" + ((double)totalSolutionSteps / (countOK + countFAIL)));
+        int maxCountSolutionLengths = 0;
+        for (final int l : countSolutionLengths) {
+            maxCountSolutionLengths = Math.max(maxCountSolutionLengths, l);
+        }
+        final NumberFormat nf = NumberFormat.getPercentInstance();
+        for (int i = 0;  i < countSolutionLengths.length;  ++i) {
+            if (0 != countSolutionLengths[i]) {
+                final int BARDISPLAY = 60;
+                final StringBuilder sb = new StringBuilder(BARDISPLAY);
+                for (int j = 0;  j < (countSolutionLengths[i] * BARDISPLAY / maxCountSolutionLengths);  ++j) {
+                    sb.append('*');
+                }
+                System.out.println(
+                        "solution=" + padRight(""+ (i + 1), 2) +
+                        " " + padLeft("" + countSolutionLengths[i],  5) +
+                        " |" + padRight(sb.toString(), BARDISPLAY) + "| " +
+                        padLeft("" + nf.format((double)countSolutionLengths[i] / (countOK + countFAIL)), 2+1)
+                        );
+            }
+        }
         brBoards.close();
         brSolutions.close();
     }
