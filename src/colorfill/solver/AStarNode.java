@@ -95,9 +95,10 @@ public class AStarNode {
      */
     public int getNeighborColors(final Board board) {
         int result = 0;
-        final ColorAreaSet.IteratorColorAreaId iter = this.neighbors.iteratorColorAreaId();
-        while (iter.hasNext()) {
-            result |= 1 << board.getColor4Id(iter.next());
+        final ColorAreaSet.FastIteratorColorAreaId iter = this.neighbors.fastIteratorColorAreaId();
+        int nextId;
+        while ((nextId = iter.nextOrNegative()) >= 0) {
+            result |= 1 << board.getColor4Id(nextId);
         }
         return result;
     }
@@ -163,9 +164,10 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
      */
     public void play(final byte nextColor, final Board board) {
         final List<ColorArea> nextColorNeighbors = new ArrayList<ColorArea>(128);  // constant, arbitrary initial capacity
-        final ColorAreaSet.IteratorColorAreaId iter = this.neighbors.iteratorColorAreaId();
-        while (iter.hasNext()) {
-            final ColorArea nextColorNeighbor = board.getColorArea4Id(iter.next());
+        final ColorAreaSet.FastIteratorColorAreaId iter = this.neighbors.fastIteratorColorAreaId();
+        int nextId;
+        while ((nextId = iter.nextOrNegative()) >= 0) {
+            final ColorArea nextColorNeighbor = board.getColorArea4Id(nextId);
             if (nextColorNeighbor.getColor() == nextColor) {
                 nextColorNeighbors.add(nextColorNeighbor);
             }
@@ -187,9 +189,10 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
      */
     public AStarNode copyAndPlay(final byte nextColor, final AStarNode recycleNode, final Board board) {
         final List<ColorArea> nextColorNeighbors = new ArrayList<ColorArea>(128);  // constant, arbitrary initial capacity
-        final ColorAreaSet.IteratorColorAreaId iter = this.neighbors.iteratorColorAreaId();
-        while (iter.hasNext()) {
-            final ColorArea nextColorNeighbor = board.getColorArea4Id(iter.next());
+        final ColorAreaSet.FastIteratorColorAreaId iter = this.neighbors.fastIteratorColorAreaId();
+        int nextId;
+        while ((nextId = iter.nextOrNegative()) >= 0) {
+            final ColorArea nextColorNeighbor = board.getColorArea4Id(nextId);
             if (nextColorNeighbor.getColor() == nextColor) {
                 nextColorNeighbors.add(nextColorNeighbor);
             }

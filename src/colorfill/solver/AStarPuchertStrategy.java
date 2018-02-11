@@ -65,9 +65,10 @@ public class AStarPuchertStrategy implements AStarStrategy {
         node.copyFloodedTo(this.visited);
         System.arraycopy(this.numCaNotFilledInitial, 0, this.numCaNotFilled, 0, this.numCaNotFilledInitial.length);
         {
-            final ColorAreaSet.IteratorColorAreaId iter = this.visited.iteratorColorAreaId();
-            while (iter.hasNext()) {
-                --this.numCaNotFilled[this.board.getColor4Id(iter.next())];
+            final ColorAreaSet.FastIteratorColorAreaId iter = this.visited.fastIteratorColorAreaId();
+            int nextId;
+            while ((nextId = iter.nextOrNegative()) >= 0) {
+                --this.numCaNotFilled[this.board.getColor4Id(nextId)];
             }
         }
 
@@ -76,9 +77,10 @@ public class AStarPuchertStrategy implements AStarStrategy {
         this.visited.addAll(this.current);
         int completedColors = 0;
         {
-            final ColorAreaSet.IteratorColorAreaId iter = this.current.iteratorColorAreaId();
-            while (iter.hasNext()) {
-                final byte nextColor = this.board.getColor4Id(iter.next());
+            final ColorAreaSet.FastIteratorColorAreaId iter = this.current.fastIteratorColorAreaId();
+            int nextId;
+            while ((nextId = iter.nextOrNegative()) >= 0) {
+                final byte nextColor = this.board.getColor4Id(nextId);
                 if (--this.numCaNotFilled[nextColor] == 0) {
                     completedColors |= 1 << nextColor;
                 }
@@ -88,15 +90,16 @@ public class AStarPuchertStrategy implements AStarStrategy {
 
         while(!this.current.isEmpty()) {
             this.next.clear();
-            final ColorAreaSet.IteratorColorAreaId iter = this.current.iteratorColorAreaId();
+            final ColorAreaSet.FastIteratorColorAreaId iter = this.current.fastIteratorColorAreaId();
+            int thisCaId;
             if (0 != completedColors) {
                 // We can eliminate colors. Do just that.
                 // We also combine all these elimination moves.
                 distance += Integer.bitCount(completedColors);
                 final int prevCompletedColors = completedColors;
                 completedColors = 0;
-                while (iter.hasNext()) {
-                    final ColorArea thisCa = this.board.getColorArea4Id(iter.next());
+                while ((thisCaId = iter.nextOrNegative()) >= 0) {
+                    final ColorArea thisCa = this.board.getColorArea4Id(thisCaId);
                     if ((prevCompletedColors & (1 << thisCa.getColor())) != 0) {
                         // completed color
                         // expandNode()
@@ -113,15 +116,15 @@ public class AStarPuchertStrategy implements AStarStrategy {
                     } else {
                         // non-completed color
                         // move node to next layer
-                        this.next.add(thisCa);
+                        this.next.add(thisCaId);
                     }
                 }
             } else {
                 // Nothing found, do the color-blind pseudo-move
                 // Expand current layer of nodes.
                 ++distance;
-                while (iter.hasNext()) {
-                    final ColorArea thisCa = this.board.getColorArea4Id(iter.next());
+                while ((thisCaId = iter.nextOrNegative()) >= 0) {
+                    final ColorArea thisCa = this.board.getColorArea4Id(thisCaId);
                     // expandNode()
                     for (final int nextCaId : thisCa.getNeighborsIdArray()) {
                         if (!this.visited.contains(nextCaId)) {

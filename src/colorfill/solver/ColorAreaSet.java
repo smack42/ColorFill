@@ -75,7 +75,7 @@ public class ColorAreaSet {
      */
     public void add(final ColorArea ca) {
         final int id = ca.getId();
-        final int i = id >> 5;
+        final int i = id >>> 5;  // index is always >= 0
         final int a = this.array[i];
         final int b = a | 1 << id;  // implicit shift distance (id & 0x1f)
         this.array[i] = b;
@@ -86,7 +86,7 @@ public class ColorAreaSet {
      * add the ColorArea to this set
      */
     public void add(final int colorAreaId) {
-        final int i = colorAreaId >> 5;
+        final int i = colorAreaId >>> 5;  // index is always >= 0
         final int a = this.array[i];
         final int b = a | 1 << colorAreaId;  // implicit shift distance (id & 0x1f)
         this.array[i] = b;
@@ -98,7 +98,7 @@ public class ColorAreaSet {
      */
     public boolean contains(final ColorArea ca) {
         final int id = ca.getId();
-        final int bit = this.array[id >> 5] & (1 << id);  // implicit shift distance (id & 0x1f)
+        final int bit = this.array[id >>> 5] & (1 << id);  // index is always >= 0; implicit shift distance (id & 0x1f)
         return 0 != bit;
     }
 
@@ -106,7 +106,7 @@ public class ColorAreaSet {
      * return true if the ColorArea is in this set
      */
     public boolean contains(final int colorAreaId) {
-        final int bit = this.array[colorAreaId >> 5] & (1 << colorAreaId);  // implicit shift distance (id & 0x1f)
+        final int bit = this.array[colorAreaId >>> 5] & (1 << colorAreaId);  // index is always >= 0; implicit shift distance (id & 0x1f)
         return 0 != bit;
     }
 
@@ -228,6 +228,40 @@ public class ColorAreaSet {
             }
             final int l1b = this.buf & -this.buf; // Integer.lowestOneBit(this.buf)
             ++this.count;
+            final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
+            final int caId = (this.intIdx << 5) + 31 - clz;
+            this.buf ^= l1b;
+            return caId;
+        }
+    }
+
+    /**
+     * create an Iterator over this set that returns the IDs of the member ColorArea objects
+     * @return
+     */
+    public FastIteratorColorAreaId fastIteratorColorAreaId() {
+        return new FastIteratorColorAreaId();
+    }
+
+    public class FastIteratorColorAreaId {
+        private final int intIdxLimit = ColorAreaSet.this.array.length - 1;
+        private int intIdx = 0;
+        private int buf = ColorAreaSet.this.array[0];
+
+        /**
+         * return next value (always zero or positive),
+         * or a negative value when there is no next value.
+         * @return
+         */
+        public int nextOrNegative() {
+            while (0 == this.buf) {
+                if (this.intIdxLimit == this.intIdx) {
+                    return -1;
+                } else {
+                    this.buf = ColorAreaSet.this.array[++this.intIdx];
+                }
+            }
+            final int l1b = this.buf & -this.buf; // Integer.lowestOneBit(this.buf)
             final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
             final int caId = (this.intIdx << 5) + 31 - clz;
             this.buf ^= l1b;
