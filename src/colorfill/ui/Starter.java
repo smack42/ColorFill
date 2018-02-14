@@ -48,7 +48,7 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill __DEV__";
-        final String version  = "1.1 (2018-02-11)";
+        final String version  = "1.1 (2018-02-14)";
         final String author   = "Copyright (C) 2018 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
@@ -120,16 +120,14 @@ public class Starter {
     }
 
 
-
-    private static Board makeBoard(final BufferedReader br) throws Exception {
-        Board result = null;
+    private static String readBoard(final BufferedReader br) throws Exception {
+        String result = null;
         final String firstLine = br.readLine();
         if (null == firstLine) {
             // nothing to do
         } else if (14*14 == firstLine.length()) {
             // Programming Challenge 19
-            final int startPos = 0;
-            result = new Board(firstLine, startPos);
+            result = firstLine;
         } else if (19 == firstLine.length()) {
             // Code Golf 26232
             final StringBuilder sb = new StringBuilder(19*19);
@@ -143,11 +141,25 @@ public class Starter {
                 }
             }
             if (19*19 == sb.length()) {
-                final int startPos = (19*19-1)/2;
-                result = new Board(sb.toString(), startPos);
+                result = sb.toString();
             }
-        } else {
+        }
+        return result;
+    }
+
+    private static Board makeBoard(final BufferedReader br) throws Exception {
+        Board result = null;
+        final String boardData = readBoard(br);
+        if (null == boardData) {
             // nothing to do
+        } else if (14*14 == boardData.length()) {
+            // Programming Challenge 19
+            final int startPos = 0;
+            result = new Board(boardData, startPos);
+        } else if (19*19 == boardData.length()) {
+            // Code Golf 26232
+            final int startPos = (19*19-1)/2;
+            result = new Board(boardData, startPos);
         }
         return result;
     }
@@ -542,7 +554,7 @@ main_loop:
             if (null == steps) {
                 break;  // end of output file
             }
-            final Board board = makeBoard(brBoards);
+            final String board = readBoard(brBoards);
             if (null == board) {
                 break; // end of input file
             }
