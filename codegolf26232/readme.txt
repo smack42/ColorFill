@@ -48,21 +48,17 @@ results:
 the files:
 
 floodtest           = input file, contains the 100,000 test cases
-01_tigrou.cs        = winning program by tigrou
-steps_01_tigrou.txt = output of winning program by tigrou: 2,098,382 steps
-
-01_user1502040.c    = new, even better program by user1502040
-steps_01_user1502040.txt = output of program by user1502040: 2,075,590 steps
-(note: the original program crashed and had to be fixed; this change seems to
-produce a slightly different/worse result, 138 steps more than claimed)
 
 
+---
+added 2015-08-17:
 output of this program, ColorFill: 2,116,152 steps (would have been 2nd place)
 
 steps_ColorFill_DFS.txt         = output of ColorFill using its 4 DFS strategies
 steps_ColorFill_DFS_details.txt = detailed output (5887 CPU minutes!)
 
 
+---
 added 2015-10-20:
 output of this program, ColorFill: 2,095,015 steps (would have been 1st place!)
 
@@ -85,17 +81,30 @@ that has 16GB of RAM. (using "java -Xmx14800M")
 extrapolating the current, partial result, we can expect that the total number
 of steps found by exhaustive search would be less than 2,000,000.
 
+
 ---
-updated 2018-02-14:
+added 2018-02-17:
 output of this program, ColorFill: attempt to solve it using AStar search!
 
 steps.txt  = A* (Puchert heuristic) optimal solutions
-steps_.txt = detailed output
-
-This is work in progress!
-current partial result: first 66175 test cases solved in 1313588 steps
-extrapolated total result: 1985021 steps
+steps_.txt = detailed output (on average about 4.3 seconds per solution)
 
 The new AStarPuchertStrategy finds optimal solutions and is very fast. Thanks
 to Aaron and Simon Puchert for their solver program which served as a template!
+
+So, after many hours of coding and testing and many more hours of waiting
+for the programm to finish, we find that the optimal (shortest possible) result
+is 1,985,078 steps!
+
+solution steps distribution:
+len=16     1 |                                                            |  0%
+len=17    28 |                                                            |  0%
+len=18   671 |                                                            |  1%
+len=19  6769 |*********                                                   |  7%
+len=20 26979 |***************************************                     | 27%
+len=21 41144 |************************************************************| 41%
+len=22 21196 |******************************                              | 21%
+len=23  3108 |****                                                        |  3%
+len=24   103 |                                                            |  0%
+len=25     1 |                                                            |  0%
 
