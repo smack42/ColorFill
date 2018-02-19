@@ -48,7 +48,7 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill __DEV__";
-        final String version  = "1.1 (2018-02-14)";
+        final String version  = "1.1 (2018-02-19)";
         final String author   = "Copyright (C) 2018 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
@@ -685,7 +685,7 @@ main_loop:
                     sb.append('*');
                 }
                 System.out.println(
-                        "solution=" + padRight(""+ (i + 1), 2) +
+                        "solution=" + padRight(""+ i, 2) +
                         " " + padLeft("" + countSolutionLengths[i],  5) +
                         " |" + padRight(sb.toString(), BARDISPLAY) + "| " +
                         padLeft("" + nf.format((double)countSolutionLengths[i] / (countOK + countFAIL)), 2+1)
