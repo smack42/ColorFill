@@ -1,6 +1,6 @@
 ColorFill - yet another Flood-It clone (game and solver algorithm)
 
-Version   1.1 (2018-02-02)
+Version   1.1.1 (2018-04-15)
 Homepage  https://github.com/smack42/ColorFill/wiki
 
 
@@ -10,10 +10,10 @@ about
 The game called Flood-It has been around for some years. There are many
 clones and variants available for desktop and mobile platforms.
 
-The game board is a grid squares, colored at random in multiple colors. In each
-move the player changes the color of the "start square" (top left corner) and
-all squares of the same color that are connected to it. The objective is to
-fill the entire grid in a single color using as few moves as possible.
+The game board is a grid of squares, colored at random in multiple colors.
+In each move the player changes the color of the "start square" and all squares
+of the same color that are connected to it. The objective is to fill the entire
+grid in a single color using as few moves as possible.
 
 This program, ColorFill, is yet another clone of this game. It includes an
 interactive GUI mode which lets you play the puzzles and explore the solutions
@@ -76,3 +76,4 @@ Programming
     http://markgritter.livejournal.com/tag/floodit
     http://kunigami.wordpress.com/2012/09/16/flood-it-an-exact-approach/
     https://codegolf.stackexchange.com/questions/26232/create-a-flood-paint-ai
+    https://github.com/aaronpuchert/floodit

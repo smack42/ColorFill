@@ -2,6 +2,17 @@ ColorFill  CHANGES
 
 
 
+1.1.1 (2018-04-15)
+
+- small speedup of AStarPuchertStrategy
+- program has solved the challenge:  Code Golf: Create a Flood Paint AI
+  * https://codegolf.stackexchange.com/questions/26232/create-a-flood-paint-ai
+  * using AStarPuchertStrategy to find optimal solutions
+  * result is 1,985,078 steps
+- fixed initialization of graphical user interface, now compatible with Java 10
+
+
+
 1.1 (2018-02-02)
 
 - optimized DfsExhaustiveStrategy
