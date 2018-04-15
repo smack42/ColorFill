@@ -23,6 +23,7 @@ import java.beans.PropertyChangeListener;
 
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
 
 import colorfill.model.BoardColorNumbersEnum;
 import colorfill.model.GameProgress;
@@ -59,7 +60,12 @@ public class MainController {
     private void createAndShowGUI(final String progname, final String version, final String author) {
         try {
             //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+            for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
