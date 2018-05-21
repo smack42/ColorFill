@@ -259,6 +259,27 @@ public class GameProgress {
     }
 
     /**
+     * is the specified color in the neighbor area of the flooded area
+     * and is it completed?  (i.e. will all cells of this color be flooded?)
+     * @param color the color
+     * @return true if the color will be flooded completely
+     */
+    public boolean isFloodNeighborCellsCompleted(final int color) {
+        boolean result = true;
+        final HashSet<ColorArea> flooded = this.stepFlooded.get(this.numSteps);
+        final HashSet<ColorArea> floodNext = this.stepFloodNext.get(this.numSteps);
+        for (final ColorArea ca : this.board.getColorAreas()) {
+            if (ca.getColor() == color) {
+                if (!flooded.contains(ca) && !floodNext.contains(ca)) {
+                    result = false;
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
      * return the collection of cells matching the specified BoardColorNumbersEnum.
      * @param bcne
      * @return collection of board cells

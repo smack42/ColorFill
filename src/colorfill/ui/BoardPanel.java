@@ -47,6 +47,7 @@ public class BoardPanel extends JPanel {
     private int columns, rows, startPos;
     private int[] cellColors = new int[0];
     private boolean[] cellHighlights = new boolean[0];
+    private boolean cellHighlightSpecial;
     private boolean[] cellColorNumbers = new boolean[0];
     private GridLinesEnum gridLines;
     private HighlightColorEnum highlightColor;
@@ -164,6 +165,9 @@ public class BoardPanel extends JPanel {
                 g2d.setColor(highlight);
                 if (this.cellHighlights[index]) {
                     g2d.fillOval(x + cw4, y + ch4, cwHighlight, chHighlight);
+                    if (this.cellHighlightSpecial) {
+                        g2d.drawOval(x, y, cw1, ch1);
+                    }
                 }
                 if (index == this.startPos) {
                     g2d.fillRect(x + cellWidth * 3/8, y + cellHeight * 3/8, cw4, ch4);
@@ -189,11 +193,12 @@ public class BoardPanel extends JPanel {
      * collection are set to true, all others to false.
      * @param highlightCells
      */
-    public void highlightCells(final Collection<Integer> highlightCells) {
+    public void highlightCells(final Collection<Integer> highlightCells, final boolean highlightSpecial) {
         Arrays.fill(this.cellHighlights, false);
         for (final Integer cell : highlightCells) {
             this.cellHighlights[cell.intValue()] = true;
         }
+        this.cellHighlightSpecial = highlightSpecial;
         this.repaint();
     }
 

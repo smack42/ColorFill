@@ -48,7 +48,7 @@ public class Starter {
 
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill";
-        final String version  = "1.1.1 (2018-04-15)";
+        final String version  = "1.2_dev (2018-05-21)";
         final String author   = "Copyright (C) 2018 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);

@@ -110,12 +110,15 @@ public class BoardController {
     protected void userMovedMouseToCell(MouseEvent e, int index, int color) {
         if (this.gameState.isUserProgress()) {
             final Collection<Integer> neighborCells;
+            final boolean isCompleted;
             if (this.gameState.getSelectedProgress().isFloodNeighborCell(index)) {
                 neighborCells = this.gameState.getSelectedProgress().getFloodNeighborCells(color);
+                isCompleted = this.gameState.getSelectedProgress().isFloodNeighborCellsCompleted(color);
             } else {
                 neighborCells = Collections.emptyList();
+                isCompleted = false;
             }
-            this.boardPanel.highlightCells(neighborCells);
+            this.boardPanel.highlightCells(neighborCells, isCompleted);
         }
     }
 
@@ -125,11 +128,14 @@ public class BoardController {
      */
     protected void actionHightlightFloodNeighborCells(final int color) {
         final Collection<Integer> neighborCells;
+        final boolean isCompleted;
         if (color < 0) {
             neighborCells = Collections.emptyList();
+            isCompleted = false;
         } else {
             neighborCells = this.gameState.getSelectedProgress().getFloodNeighborCells(color);
+            isCompleted = this.gameState.getSelectedProgress().isFloodNeighborCellsCompleted(color);
         }
-        this.boardPanel.highlightCells(neighborCells);
+        this.boardPanel.highlightCells(neighborCells, isCompleted);
     }
 }
