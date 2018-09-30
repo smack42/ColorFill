@@ -139,7 +139,7 @@ public class BoardPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         final Graphics2D g2d = (Graphics2D) g.create();
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
         final Dimension size = this.getSize();
         final int cellWidth = size.width / this.columns;
         final int cellHeight = size.height / this.rows;
