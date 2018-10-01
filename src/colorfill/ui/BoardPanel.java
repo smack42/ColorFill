@@ -138,8 +138,6 @@ public class BoardPanel extends JPanel {
      */
     @Override
     protected void paintComponent(Graphics g) {
-        final Graphics2D g2d = (Graphics2D) g.create();
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
         final Dimension size = this.getSize();
         final int cellWidth = size.width / this.columns;
         final int cellHeight = size.height / this.rows;
@@ -150,39 +148,40 @@ public class BoardPanel extends JPanel {
         final int cwHighlight = cellWidth - cw4 - cw4;
         final int chHighlight = cellHeight - ch4 - ch4;
         final Color highlight;
-        if (HighlightColorEnum.WHITE == this.highlightColor) {
-            highlight = Color.WHITE;
-        } else if (HighlightColorEnum.BLACK == this.highlightColor) {
+        if (HighlightColorEnum.BLACK == this.highlightColor) {
             highlight = Color.BLACK;
-        } else {
+        } else {  // if (HighlightColorEnum.WHITE == this.highlightColor)
             highlight = Color.WHITE;
         }
+        if (g instanceof Graphics2D) ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
         for (int index = 0, y = 0, row = 0;  row < this.rows;  y += cellHeight, ++row) {
             for (int x = 0, column = 0;  column < this.columns;  x += cellWidth, ++column, ++index) {
                 final int color = this.cellColors[index];
-                g2d.setColor(this.uiColors[color]);
-                g2d.fillRect(x, y, cellWidth, cellHeight);
-                g2d.setColor(highlight);
-                if (this.cellHighlights[index]) {
-                    g2d.fillOval(x + cw4, y + ch4, cwHighlight, chHighlight);
-                    if (this.cellHighlightSpecial) {
-                        g2d.drawOval(x, y, cw1, ch1);
-                    }
-                }
+                g.setColor(this.uiColors[color]);
+                g.fillRect(x, y, cellWidth, cellHeight);
+                g.setColor(highlight);
                 if (index == this.startPos) {
-                    g2d.fillRect(x + cellWidth * 3/8, y + cellHeight * 3/8, cw4, ch4);
+                    g.fillRect(x + cellWidth * 3/8, y + cellHeight * 3/8, cw4, ch4);
                 }
                 if (GridLinesEnum.NONE != this.gridLines) {
                     if ((column < this.columns - 1) && ((GridLinesEnum.ALL == this.gridLines) || (color != this.cellColors[index + 1]))) {
-                        g2d.drawLine(x + cw1, y, x + cw1, y + ch1);
+                        g.drawLine(x + cw1, y, x + cw1, y + ch1);
                     }
                     if ((row < this.rows - 1) && ((GridLinesEnum.ALL == this.gridLines) || (color != this.cellColors[index + this.columns]))) {
-                        g2d.drawLine(x, y + ch1, x + cw1, y + ch1);
+                        g.drawLine(x, y + ch1, x + cw1, y + ch1);
                     }
                 }
                 if (this.cellColorNumbers[index]) {
                     final char[] text = { (char)('1' + color) };
-                    g2d.drawChars(text, 0, 1, x + 2, y + ch1 - 2);
+                    g.drawChars(text, 0, 1, x + 2, y + ch1 - 2);
+                }
+                if (this.cellHighlights[index]) {
+                    if (g instanceof Graphics2D) ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g.fillOval(x + cw4, y + ch4, cwHighlight, chHighlight);
+                    if (this.cellHighlightSpecial) {
+                        g.drawOval(x, y, cw1, ch1);
+                    }
+                    if (g instanceof Graphics2D) ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
                 }
             }
         }
