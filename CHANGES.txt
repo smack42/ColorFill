@@ -2,6 +2,13 @@ ColorFill  CHANGES
 
 
 
+1.1.2 (2018-10-02)
+
+- added special highlighting of cells if this color will be completed in one move
+- improved graphics performance by using antialiasing for the circles only
+
+
+
 1.1.1 (2018-04-15)
 
 - small speedup of AStarPuchertStrategy
