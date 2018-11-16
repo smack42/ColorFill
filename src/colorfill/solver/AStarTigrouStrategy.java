@@ -22,6 +22,7 @@ import java.util.Queue;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
+import colorfill.solver.AStarSolver.SolutionTree;
 
 /**
  * a specific strategy for the AStar (A*) solver.
@@ -32,14 +33,16 @@ import colorfill.model.ColorArea;
 public class AStarTigrouStrategy implements AStarStrategy {
 
     private final Board board;
+    private final SolutionTree solutionTree;
 
     // queue is used in AStarNode.getSumDistances().
     // it exists here only for performance improvement.
     // (avoid construction / garbage collection inside that function)
     private final Queue<ColorArea> queue = new ArrayDeque<ColorArea>();
 
-    public AStarTigrouStrategy(final Board board) {
+    public AStarTigrouStrategy(final Board board, final SolutionTree solutionTree) {
         this.board = board;
+        this.solutionTree = solutionTree;
     }
 
     /* (non-Javadoc)
@@ -61,7 +64,7 @@ public class AStarTigrouStrategy implements AStarStrategy {
                 final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
                 nextColors ^= l1b; // clear lowest one bit
                 final AStarNode nextNode = new AStarNode(currentNode);
-                nextNode.play((byte)(31 - clz), this.board);
+                nextNode.play((byte)(31 - clz), this.board, this.solutionTree);
                 final int nextDistance = nextNode.getSumDistances(this.queue, this.board);
                 if (minDistance > nextDistance) {
                     minDistance = nextDistance;

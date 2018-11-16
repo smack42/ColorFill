@@ -17,6 +17,7 @@
 
 package colorfill.solver;
 
+import java.util.Arrays;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
@@ -30,6 +31,7 @@ public class AStarSolver extends AbstractSolver {
 
     private Class<? extends AStarStrategy> strategyClass = AStarTigrouStrategy.class; // default
     private AStarStrategy strategy;
+    private final SolutionTree solutionTree = new SolutionTree();
 
     /**
      * construct a new solver for this Board.
@@ -72,7 +74,7 @@ public class AStarSolver extends AbstractSolver {
     private AStarStrategy makeStrategy() {
         final AStarStrategy result;
         if (AStarTigrouStrategy.class.equals(this.strategyClass)) {
-            result = new AStarTigrouStrategy(this.board);
+            result = new AStarTigrouStrategy(this.board, this.solutionTree);
         } else if (AStarPuchertStrategy.class.equals(this.strategyClass)) {
             result = new AStarPuchertStrategy(this.board);
         } else {
@@ -101,13 +103,13 @@ public class AStarSolver extends AbstractSolver {
 
     private void executeInternalPuchert(final ColorArea startCa) throws InterruptedException {
         final Queue<AStarNode> open = new PriorityQueue<AStarNode>(AStarNode.strongerComparator());
-        open.offer(new AStarNode(this.board, startCa));
+        open.offer(new AStarNode(this.board, startCa, this.solutionTree));
         AStarNode recycleNode = null;
         while (open.size() > 0) {
             if (Thread.interrupted()) { throw new InterruptedException(); }
             final AStarNode currentNode = open.poll();
             if (currentNode.isSolved()) {
-                this.addSolution(currentNode.getSolution());
+                this.addSolution(currentNode.getSolution(this.solutionTree));
                 return;
             } else {
                 // play all possible colors
@@ -117,7 +119,7 @@ public class AStarSolver extends AbstractSolver {
                     final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
                     nextColors ^= l1b; // clear lowest one bit
                     final byte color = (byte)(31 - clz);
-                    final AStarNode nextNode = currentNode.copyAndPlay(color, recycleNode, this.board);
+                    final AStarNode nextNode = currentNode.copyAndPlay(color, recycleNode, this.board, this.solutionTree);
                     if (null != nextNode) {
                         recycleNode = null;
                         this.strategy.setEstimatedCost(nextNode);
@@ -133,12 +135,12 @@ public class AStarSolver extends AbstractSolver {
     private void executeInternalTigrou(final ColorArea startCa) throws InterruptedException {
         // use a PriorityQueue (faster!)
         final Queue<AStarNode> open = new PriorityQueue<AStarNode>(AStarNode.simpleComparator());
-        open.offer(new AStarNode(this.board, startCa));
+        open.offer(new AStarNode(this.board, startCa, this.solutionTree));
         while (open.size() > 0) {
             if (Thread.interrupted()) { throw new InterruptedException(); }
             final AStarNode currentNode = open.poll();
             if (currentNode.isSolved()) {
-                this.addSolution(currentNode.getSolution());
+                this.addSolution(currentNode.getSolution(this.solutionTree));
 //                return;
             } else {
                 if (currentNode.getEstimatedCost() > this.solutionSize) {
@@ -151,7 +153,7 @@ public class AStarSolver extends AbstractSolver {
                         final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
                         nextColors ^= l1b; // clear lowest one bit
                         final AStarNode nextNode = new AStarNode(currentNode);
-                        nextNode.play((byte)(31 - clz), this.board);
+                        nextNode.play((byte)(31 - clz), this.board, this.solutionTree);
                         this.strategy.setEstimatedCost(nextNode);
                         open.offer(nextNode);
                     }
@@ -196,5 +198,88 @@ public class AStarSolver extends AbstractSolver {
 //            }
 //        }
         // if we get here then we have not found any solution
+    }
+
+
+    /**
+     * This class stores the moves of all (partial) solutions in a compact way.
+     */
+    protected static class SolutionTree {
+        // configure this:
+        private static int MAX_NUMBER_OF_COLORS = 8;    // 8 colors = 3 bits
+        private static int MEMORY_BLOCK_SHIFT   = 20;   // 1 << 20 = 1*4 MiB
+        // derived values:
+        private static int COLOR_BIT_SHIFT      = Integer.SIZE - Integer.numberOfLeadingZeros(MAX_NUMBER_OF_COLORS - 1);
+        private static int COLOR_BIT_MASK       = (1 << COLOR_BIT_SHIFT) - 1;
+        private static int COLOR_BIT_MASK_INV   = ~COLOR_BIT_MASK;
+        private static int MEMORY_BLOCK_SIZE    = 1 << MEMORY_BLOCK_SHIFT;
+        private static int MEMORY_BLOCK_MASK    = MEMORY_BLOCK_SIZE - 1;
+
+        private int[][] memoryBlocks;
+        private int[] nextMemoryBlock;
+        private int numMemoryBlocks, nextEntry, nextEntryOffset;
+
+        /**
+         * Initialize this SolutionTree by adding the initial color, which is not part of the solution.
+         * @param color of the starting area
+         * @return initial entry
+         */
+        protected int init(final byte color) {
+            this.numMemoryBlocks = 1;
+            this.memoryBlocks = new int[this.numMemoryBlocks][MEMORY_BLOCK_SIZE];
+            this.nextMemoryBlock = this.memoryBlocks[0];
+            this.nextEntry = 0;
+            this.nextEntryOffset = 0;
+            return this.add(0, color);
+        }
+
+        /**
+         * Add the next move to this SolutionTree.
+         * @param previousEntry previous move
+         * @param color of the next move
+         * @return next entry
+         */
+        protected int add(final int previousEntry, final byte color) {
+            final int entry = (previousEntry & COLOR_BIT_MASK_INV) | color;
+            this.nextMemoryBlock[this.nextEntryOffset++] = entry;
+            final int result = (this.nextEntry++ << COLOR_BIT_SHIFT) | color;
+            if (this.nextEntryOffset == MEMORY_BLOCK_SIZE) {
+                if (0 != (Integer.rotateLeft(this.nextEntry, COLOR_BIT_SHIFT) & COLOR_BIT_MASK)) {
+                    throw new IllegalStateException(this.getClass().getSimpleName() + ".add() : memory capacity exceeded; number of entries stored=" + this.nextEntry);
+                }
+                if (this.memoryBlocks.length <= this.numMemoryBlocks) {
+                    this.memoryBlocks = Arrays.copyOf(this.memoryBlocks, this.memoryBlocks.length * 2);
+                }
+                this.nextMemoryBlock = new int[MEMORY_BLOCK_SIZE];
+                this.memoryBlocks[this.numMemoryBlocks++] = this.nextMemoryBlock;
+                this.nextEntryOffset = 0;
+            }
+            return result;
+        }
+
+        /**
+         * Extract the solution that ends with this move.
+         * @param entry of last move
+         * @param size of solution
+         * @return array of moves
+         */
+        protected byte[] materialize(int entry, final int size) {
+            final byte[] result = new byte[size];
+            for (int i = size - 1;  i >= 0;  --i) {
+                final int index = (entry >>> COLOR_BIT_SHIFT);
+                entry = this.memoryBlocks[index >>> MEMORY_BLOCK_SHIFT][index & MEMORY_BLOCK_MASK];
+                result[i] = (byte)(entry & COLOR_BIT_MASK);
+            }
+            return result;
+        }
+
+        /**
+         * Extract the color of this move.
+         * @param entry
+         * @return color of entry
+         */
+        protected byte getColor(final int entry) {
+            return (byte)(entry & COLOR_BIT_MASK);
+        }
     }
 }

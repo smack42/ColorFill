@@ -18,13 +18,13 @@
 package colorfill.solver;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Queue;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
+import colorfill.solver.AStarSolver.SolutionTree;
 
 /**
  * the node used by the AStar (A*) solver.
@@ -33,24 +33,22 @@ public class AStarNode {
 
     private final ColorAreaSet flooded;
     private final ColorAreaSet neighbors;
-    private final byte[] solution;
-    private byte solutionSize;
-    private byte estimatedCost;
+    private int solutionEntry;
+    private byte solutionSize;  // unsigned byte: 0...0xff
+    private byte estimatedCost; // unsigned byte: 0...0xff
 
     /**
      * initial constructor.
      * @param startCa
      */
-    public AStarNode(final Board board, final ColorArea startCa) {
+    public AStarNode(final Board board, final ColorArea startCa, final SolutionTree solutionTree) {
         this.flooded = new ColorAreaSet(board);
         this.flooded.add(startCa);
         this.neighbors = new ColorAreaSet(board);
         this.neighbors.addAll(startCa.getNeighborsIdArray());
-        this.solution = new byte[AbstractSolver.MAX_SEARCH_DEPTH];
-        this.solution[0] = startCa.getColor();
+        this.solutionEntry = solutionTree.init(startCa.getColor());
         this.solutionSize = 0;
-        this.estimatedCost = Byte.MAX_VALUE;
-        assert AbstractSolver.MAX_SEARCH_DEPTH < Byte.MAX_VALUE;
+        this.estimatedCost = -1; // 0xff
     }
 
     /**
@@ -60,7 +58,7 @@ public class AStarNode {
     public AStarNode(final AStarNode other) {
         this.flooded = new ColorAreaSet(other.flooded);
         this.neighbors = new ColorAreaSet(other.neighbors);
-        this.solution = other.solution.clone();
+        this.solutionEntry = other.solutionEntry;
         this.solutionSize = other.solutionSize;
         //this.estimatedCost = other.estimatedCost;  // not necessary to copy
     }
@@ -77,8 +75,8 @@ public class AStarNode {
      * get the solution stored in this node.
      * @return
      */
-    public byte[] getSolution() {
-        return Arrays.copyOfRange(this.solution, 1, this.solutionSize + 1);
+    public byte[] getSolution(final SolutionTree solutionTree) {
+        return solutionTree.materialize(this.solutionEntry, 0xff & this.solutionSize);
     }
 
     /**
@@ -86,7 +84,7 @@ public class AStarNode {
      * @return
      */
     public int getSolutionSize() {
-        return this.solutionSize;
+        return 0xff & this.solutionSize;
     }
 
     /**
@@ -126,8 +124,7 @@ public class AStarNode {
      * @param nextColor
      * @return
      */
-    private boolean canPlay(final byte nextColor, final List<ColorArea> nextColorNeighbors) {
-        final byte currColor = this.solution[this.solutionSize];
+    private boolean canPlay(final byte nextColor, final List<ColorArea> nextColorNeighbors, final byte currColor) {
         // did the previous move add any new "nextColor" neighbors?
         boolean newNext = false;
 next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
@@ -162,7 +159,7 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
      * play the given color.
      * @param nextColor
      */
-    public void play(final byte nextColor, final Board board) {
+    public void play(final byte nextColor, final Board board, final SolutionTree solutionTree) {
         final List<ColorArea> nextColorNeighbors = new ArrayList<ColorArea>(128);  // constant, arbitrary initial capacity
         final ColorAreaSet.FastIteratorColorAreaId iter = this.neighbors.fastIteratorColorAreaId();
         int nextId;
@@ -177,7 +174,8 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
             this.neighbors.addAll(nextColorNeighbor.getNeighborsIdArray());
         }
         this.neighbors.removeAll(this.flooded);
-        this.solution[++this.solutionSize] = nextColor;
+        ++this.solutionSize;
+        this.solutionEntry = solutionTree.add(this.solutionEntry, nextColor);
     }
 
     /**
@@ -187,7 +185,7 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
      * @param recycleNode
      * @return
      */
-    public AStarNode copyAndPlay(final byte nextColor, final AStarNode recycleNode, final Board board) {
+    public AStarNode copyAndPlay(final byte nextColor, final AStarNode recycleNode, final Board board, final SolutionTree solutionTree) {
         final List<ColorArea> nextColorNeighbors = new ArrayList<ColorArea>(128);  // constant, arbitrary initial capacity
         final ColorAreaSet.FastIteratorColorAreaId iter = this.neighbors.fastIteratorColorAreaId();
         int nextId;
@@ -197,7 +195,7 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
                 nextColorNeighbors.add(nextColorNeighbor);
             }
         }
-        if (!this.canPlay(nextColor, nextColorNeighbors)) {
+        if (!this.canPlay(nextColor, nextColorNeighbors, solutionTree.getColor(this.solutionEntry))) {
             return null;
         } else {
             final AStarNode result;
@@ -208,7 +206,6 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
                 result = recycleNode;
                 result.flooded.copyFrom(this.flooded);
                 result.neighbors.copyFrom(this.neighbors);
-                System.arraycopy(this.solution, 0, result.solution, 0, this.solutionSize + 1);
                 result.solutionSize = this.solutionSize;
                 //result.estimatedCost = this.estimatedCost;  // not necessary to copy
             }
@@ -218,7 +215,8 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
                 result.neighbors.addAll(nextColorNeighbor.getNeighborsIdArray());
             }
             result.neighbors.removeAll(result.flooded);
-            result.solution[++result.solutionSize] = nextColor;
+            ++result.solutionSize;
+            result.solutionEntry = solutionTree.add(this.solutionEntry, nextColor);
             return result;
         }
     }
