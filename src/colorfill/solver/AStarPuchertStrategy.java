@@ -33,6 +33,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
     private ColorAreaSet current, next;
     private final short[] numCaNotFilledInitial;
     private final short[] numCaNotFilled;
+    private final ColorAreaSet.FastIteratorColorAreaId iter;
 
     public AStarPuchertStrategy(final Board board) {
         this.board = board;
@@ -44,6 +45,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
             ++this.numCaNotFilledInitial[ca.getColor()];
         }
         this.numCaNotFilled = new short[board.getNumColors()];
+        this.iter = new ColorAreaSet(board).fastIteratorColorAreaId();
     }
 
     /* (non-Javadoc)
@@ -65,9 +67,9 @@ public class AStarPuchertStrategy implements AStarStrategy {
         node.copyFloodedTo(this.visited);
         System.arraycopy(this.numCaNotFilledInitial, 0, this.numCaNotFilled, 0, this.numCaNotFilledInitial.length);
         {
-            final ColorAreaSet.FastIteratorColorAreaId iter = this.visited.fastIteratorColorAreaId();
+            this.iter.init(this.visited);
             int nextId;
-            while ((nextId = iter.nextOrNegative()) >= 0) {
+            while ((nextId = this.iter.nextOrNegative()) >= 0) {
                 --this.numCaNotFilled[this.board.getColor4Id(nextId)];
             }
         }
@@ -77,9 +79,9 @@ public class AStarPuchertStrategy implements AStarStrategy {
         this.visited.addAll(this.current);
         int completedColors = 0;
         {
-            final ColorAreaSet.FastIteratorColorAreaId iter = this.current.fastIteratorColorAreaId();
+            this.iter.init(this.current);
             int nextId;
-            while ((nextId = iter.nextOrNegative()) >= 0) {
+            while ((nextId = this.iter.nextOrNegative()) >= 0) {
                 final byte nextColor = this.board.getColor4Id(nextId);
                 if (--this.numCaNotFilled[nextColor] == 0) {
                     completedColors |= 1 << nextColor;
@@ -90,7 +92,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
 
         while(!this.current.isEmpty()) {
             this.next.clear();
-            final ColorAreaSet.FastIteratorColorAreaId iter = this.current.fastIteratorColorAreaId();
+            this.iter.init(this.current);
             int thisCaId;
             if (0 != completedColors) {
                 // We can eliminate colors. Do just that.
@@ -98,7 +100,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 distance += Integer.bitCount(completedColors);
                 final int prevCompletedColors = completedColors;
                 completedColors = 0;
-                while ((thisCaId = iter.nextOrNegative()) >= 0) {
+                while ((thisCaId = this.iter.nextOrNegative()) >= 0) {
                     final ColorArea thisCa = this.board.getColorArea4Id(thisCaId);
                     if ((prevCompletedColors & (1 << thisCa.getColor())) != 0) {
                         // completed color
@@ -123,7 +125,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 // Nothing found, do the color-blind pseudo-move
                 // Expand current layer of nodes.
                 ++distance;
-                while ((thisCaId = iter.nextOrNegative()) >= 0) {
+                while ((thisCaId = this.iter.nextOrNegative()) >= 0) {
                     final ColorArea thisCa = this.board.getColorArea4Id(thisCaId);
                     // expandNode()
                     for (final int nextCaId : thisCa.getNeighborsIdArray()) {

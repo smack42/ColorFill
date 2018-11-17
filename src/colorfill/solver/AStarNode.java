@@ -17,9 +17,7 @@
 
 package colorfill.solver;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Queue;
 
 import colorfill.model.Board;
@@ -88,17 +86,11 @@ public class AStarNode {
     }
 
     /**
-     * get the list of neighbor colors.
+     * get the set of neighbors.
      * @return
      */
-    public int getNeighborColors(final Board board) {
-        int result = 0;
-        final ColorAreaSet.FastIteratorColorAreaId iter = this.neighbors.fastIteratorColorAreaId();
-        int nextId;
-        while ((nextId = iter.nextOrNegative()) >= 0) {
-            result |= 1 << board.getColor4Id(nextId);
-        }
-        return result;
+    public ColorAreaSet getNeighbors() {
+        return this.neighbors;
     }
 
     /**
@@ -124,10 +116,11 @@ public class AStarNode {
      * @param nextColor
      * @return
      */
-    private boolean canPlay(final byte nextColor, final List<ColorArea> nextColorNeighbors, final byte currColor) {
+    private boolean canPlay(final byte nextColor, final ColorArea[] nextColorNeighbors, final byte currColor) {
         // did the previous move add any new "nextColor" neighbors?
         boolean newNext = false;
 next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
+            if (null == nextColorNeighbor) break;
             for (final ColorArea prevNeighbor : nextColorNeighbor.getNeighborsArray()) {
                 if ((prevNeighbor.getColor() != currColor) && this.flooded.contains(prevNeighbor)) {
                     continue next;
@@ -142,6 +135,7 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
             } else {
                 // should nextColor have been played before currColor?
                 for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
+                    if (null == nextColorNeighbor) break;
                     for (final ColorArea prevNeighbor : nextColorNeighbor.getNeighborsArray()) {
                         if ((prevNeighbor.getColor() == currColor) && !this.flooded.contains(prevNeighbor)) {
                             return false;
@@ -159,17 +153,9 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
      * play the given color.
      * @param nextColor
      */
-    public void play(final byte nextColor, final Board board, final SolutionTree solutionTree) {
-        final List<ColorArea> nextColorNeighbors = new ArrayList<ColorArea>(128);  // constant, arbitrary initial capacity
-        final ColorAreaSet.FastIteratorColorAreaId iter = this.neighbors.fastIteratorColorAreaId();
-        int nextId;
-        while ((nextId = iter.nextOrNegative()) >= 0) {
-            final ColorArea nextColorNeighbor = board.getColorArea4Id(nextId);
-            if (nextColorNeighbor.getColor() == nextColor) {
-                nextColorNeighbors.add(nextColorNeighbor);
-            }
-        }
+    public void play(final byte nextColor, final ColorArea[] nextColorNeighbors, final SolutionTree solutionTree) {
         for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
+            if (null == nextColorNeighbor) break;
             this.flooded.add(nextColorNeighbor);
             this.neighbors.addAll(nextColorNeighbor.getNeighborsIdArray());
         }
@@ -185,16 +171,7 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
      * @param recycleNode
      * @return
      */
-    public AStarNode copyAndPlay(final byte nextColor, final AStarNode recycleNode, final Board board, final SolutionTree solutionTree) {
-        final List<ColorArea> nextColorNeighbors = new ArrayList<ColorArea>(128);  // constant, arbitrary initial capacity
-        final ColorAreaSet.FastIteratorColorAreaId iter = this.neighbors.fastIteratorColorAreaId();
-        int nextId;
-        while ((nextId = iter.nextOrNegative()) >= 0) {
-            final ColorArea nextColorNeighbor = board.getColorArea4Id(nextId);
-            if (nextColorNeighbor.getColor() == nextColor) {
-                nextColorNeighbors.add(nextColorNeighbor);
-            }
-        }
+    public AStarNode copyAndPlay(final byte nextColor, final AStarNode recycleNode, final ColorArea[] nextColorNeighbors, final SolutionTree solutionTree) {
         if (!this.canPlay(nextColor, nextColorNeighbors, solutionTree.getColor(this.solutionEntry))) {
             return null;
         } else {
@@ -211,6 +188,7 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
             }
             // play - compare method play()
             for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
+                if (null == nextColorNeighbor) break;
                 result.flooded.add(nextColorNeighbor);
                 result.neighbors.addAll(nextColorNeighbor.getNeighborsIdArray());
             }

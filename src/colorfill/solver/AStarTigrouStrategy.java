@@ -34,15 +34,17 @@ public class AStarTigrouStrategy implements AStarStrategy {
 
     private final Board board;
     private final SolutionTree solutionTree;
+    private final AStarSolver solver;
 
     // queue is used in AStarNode.getSumDistances().
     // it exists here only for performance improvement.
     // (avoid construction / garbage collection inside that function)
     private final Queue<ColorArea> queue = new ArrayDeque<ColorArea>();
 
-    public AStarTigrouStrategy(final Board board, final SolutionTree solutionTree) {
+    public AStarTigrouStrategy(final Board board, final SolutionTree solutionTree, final AStarSolver solver) {
         this.board = board;
         this.solutionTree = solutionTree;
+        this.solver = solver;
     }
 
     /* (non-Javadoc)
@@ -58,13 +60,15 @@ public class AStarTigrouStrategy implements AStarStrategy {
             int minDistance = Integer.MAX_VALUE;
             AStarNode minNode = null;
             //find color which give the minimum sum of distance from root to each other node
-            int nextColors = currentNode.getNeighborColors(this.board);
+            final ColorAreaSet neighbors = currentNode.getNeighbors();
+            int nextColors = this.solver.getColors(neighbors);
             while (0 != nextColors) {
                 final int l1b = nextColors & -nextColors; // Integer.lowestOneBit()
                 final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
                 nextColors ^= l1b; // clear lowest one bit
                 final AStarNode nextNode = new AStarNode(currentNode);
-                nextNode.play((byte)(31 - clz), this.board, this.solutionTree);
+                final byte color = (byte)(31 - clz);
+                nextNode.play(color, this.solver.getColorAreas(neighbors, color), this.solutionTree);
                 final int nextDistance = nextNode.getSumDistances(this.queue, this.board);
                 if (minDistance > nextDistance) {
                     minDistance = nextDistance;

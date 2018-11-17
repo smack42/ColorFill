@@ -32,6 +32,8 @@ public class AStarSolver extends AbstractSolver {
     private Class<? extends AStarStrategy> strategyClass = AStarTigrouStrategy.class; // default
     private AStarStrategy strategy;
     private final SolutionTree solutionTree = new SolutionTree();
+    private final ColorAreaSet.FastIteratorColorAreaId iter;
+    private final ColorArea[] caArray;
 
     /**
      * construct a new solver for this Board.
@@ -39,6 +41,8 @@ public class AStarSolver extends AbstractSolver {
      */
     protected AStarSolver(Board board) {
         super(board);
+        this.iter = new ColorAreaSet(board).fastIteratorColorAreaId();
+        this.caArray = new ColorArea[board.getColorAreasArray().length];
     }
 
     /* (non-Javadoc)
@@ -74,7 +78,7 @@ public class AStarSolver extends AbstractSolver {
     private AStarStrategy makeStrategy() {
         final AStarStrategy result;
         if (AStarTigrouStrategy.class.equals(this.strategyClass)) {
-            result = new AStarTigrouStrategy(this.board, this.solutionTree);
+            result = new AStarTigrouStrategy(this.board, this.solutionTree, this);
         } else if (AStarPuchertStrategy.class.equals(this.strategyClass)) {
             result = new AStarPuchertStrategy(this.board);
         } else {
@@ -113,13 +117,14 @@ public class AStarSolver extends AbstractSolver {
                 return;
             } else {
                 // play all possible colors
-                int nextColors = currentNode.getNeighborColors(this.board);
+                final ColorAreaSet neighbors = currentNode.getNeighbors();
+                int nextColors = this.getColors(neighbors);
                 while (0 != nextColors) {
                     final int l1b = nextColors & -nextColors; // Integer.lowestOneBit()
                     final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
                     nextColors ^= l1b; // clear lowest one bit
                     final byte color = (byte)(31 - clz);
-                    final AStarNode nextNode = currentNode.copyAndPlay(color, recycleNode, this.board, this.solutionTree);
+                    final AStarNode nextNode = currentNode.copyAndPlay(color, recycleNode, this.getColorAreas(neighbors, color), this.solutionTree);
                     if (null != nextNode) {
                         recycleNode = null;
                         this.strategy.setEstimatedCost(nextNode);
@@ -147,77 +152,82 @@ public class AStarSolver extends AbstractSolver {
                     return;  // finished!
                 } else {
                     // play all possible colors
-                    int nextColors = currentNode.getNeighborColors(this.board);
+                    final ColorAreaSet neighbors = currentNode.getNeighbors();
+                    int nextColors = this.getColors(neighbors);
                     while (0 != nextColors) {
                         final int l1b = nextColors & -nextColors; // Integer.lowestOneBit()
                         final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
                         nextColors ^= l1b; // clear lowest one bit
                         final AStarNode nextNode = new AStarNode(currentNode);
-                        nextNode.play((byte)(31 - clz), this.board, this.solutionTree);
+                        final byte color = (byte)(31 - clz);
+                        nextNode.play(color, this.getColorAreas(neighbors, color), this.solutionTree);
                         this.strategy.setEstimatedCost(nextNode);
                         open.offer(nextNode);
                     }
                 }
             }
         }
-        // use a LinkedList (slower but stronger!?)
-//        final java.util.LinkedList<AStarNode> open = new java.util.LinkedList<AStarNode>();
-//        open.addLast(new AStarNode(this.board, startCa));
-//        int solvedEstimatedCost = Integer.MAX_VALUE;
-//        while (open.size() > 0) {
-//            if (Thread.interrupted()) { throw new InterruptedException(); }
-//            final AStarNode currentNode = open.poll();
-//            if (currentNode.isSolved()) {
-//                if (this.addSolution(currentNode.getSolution())) {
-//                    solvedEstimatedCost = currentNode.getEstimatedCost();
-//                }
-//            } else {
-//                if (currentNode.getEstimatedCost() > solvedEstimatedCost) {
-//                    return;  // finished!
-//                } else {
-//                    // play all possible colors
-//                    for (final byte nextColor : currentNode.getNeighborColors()) {
-//                        AStarNode nextNode = new AStarNode(currentNode);
-//                        nextNode.play(nextColor);
-//                        this.strategy.setEstimatedCost(nextNode);
-//                        final java.util.ListIterator<AStarNode> li = open.listIterator();
-//                        while (li.hasNext()) {
-//                            final AStarNode n = li.next();
-//                            if (n.getEstimatedCost() > nextNode.getEstimatedCost()) {
-//                                li.previous();
-//                                li.add(nextNode);
-//                                nextNode = null;
-//                                break;
-//                            }
-//                        }
-//                        if (null != nextNode) {
-//                            open.addLast(nextNode);
-//                        }
-//                    }
-//                }
-//            }
-//        }
         // if we get here then we have not found any solution
     }
 
+
+    /**
+     * get the list of neighbor colors.
+     * NOTE: uses this.iter
+     * @return
+     */
+    protected int getColors(final ColorAreaSet caSet) {
+        int result = 0;
+        this.iter.init(caSet);
+        int nextId;
+        while ((nextId = this.iter.nextOrNegative()) >= 0) {
+            result |= 1 << this.board.getColor4Id(nextId);
+        }
+        return result;
+    }
+
+
+    /**
+     * extract the ColorAreas of the specified color.
+     * NOTE: uses this.iter and this.caArray
+     * @param caSet
+     * @param color
+     * @return array of ColorArea; the array is longer than the content; the end of content is indicated by a null element.
+     */
+    protected ColorArea[] getColorAreas(final ColorAreaSet caSet, final byte color) {
+        this.iter.init(caSet);
+        int caId, i = 0;
+        while ((caId = this.iter.nextOrNegative()) >= 0) {
+            final ColorArea ca = this.board.getColorArea4Id(caId);
+            if (ca.getColor() == color) {
+                this.caArray[i++] = ca;
+            }
+        }
+        this.caArray[i] = null;
+        return this.caArray;
+    }
 
     /**
      * This class stores the moves of all (partial) solutions in a compact way.
      */
     protected static class SolutionTree {
         // configure this:
-        private static int MAX_NUMBER_OF_COLORS = 8;    // 8 colors = 3 bits
-        private static int MEMORY_BLOCK_SHIFT   = 20;   // 1 << 20 = 1*4 MiB
+        private static final int MAX_NUMBER_OF_COLORS = 8;    // 8 colors = 3 bits
+        private static final int MEMORY_BLOCK_SHIFT   = 20;   // 1 << 20 = 1*4 MiB
         // derived values:
-        private static int COLOR_BIT_SHIFT      = Integer.SIZE - Integer.numberOfLeadingZeros(MAX_NUMBER_OF_COLORS - 1);
-        private static int COLOR_BIT_MASK       = (1 << COLOR_BIT_SHIFT) - 1;
-        private static int COLOR_BIT_MASK_INV   = ~COLOR_BIT_MASK;
-        private static int MEMORY_BLOCK_SIZE    = 1 << MEMORY_BLOCK_SHIFT;
-        private static int MEMORY_BLOCK_MASK    = MEMORY_BLOCK_SIZE - 1;
+        private static final int COLOR_BIT_SHIFT      = Integer.SIZE - Integer.numberOfLeadingZeros(MAX_NUMBER_OF_COLORS - 1);
+        private static final int COLOR_BIT_MASK       = (1 << COLOR_BIT_SHIFT) - 1;
+        private static final int COLOR_BIT_MASK_INV   = ~COLOR_BIT_MASK;
+        private static final int MEMORY_BLOCK_SIZE    = 1 << MEMORY_BLOCK_SHIFT;
+        private static final int MEMORY_BLOCK_MASK    = MEMORY_BLOCK_SIZE - 1;
 
         private int[][] memoryBlocks;
         private int[] nextMemoryBlock;
         private int numMemoryBlocks, nextEntry, nextEntryOffset;
+
+        private SolutionTree() {
+            // private constructor
+        }
 
         /**
          * Initialize this SolutionTree by adding the initial color, which is not part of the solution.

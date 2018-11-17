@@ -202,17 +202,20 @@ public class ColorAreaSet {
      * @return
      */
     public IteratorColorAreaId iteratorColorAreaId() {
-        return new IteratorColorAreaId();
+        return new IteratorColorAreaId(this);
     }
 
-    public class IteratorColorAreaId {
+    public static class IteratorColorAreaId {
+        private final int[] array;
         private int count = 0;
-        private final int countLimit = ColorAreaSet.this.size();
+        private final int countLimit;
         private int intIdx = 0;
-        private int buf = ColorAreaSet.this.array[0];
+        private int buf;
 
-        private IteratorColorAreaId() {
-            // private constructor
+        private IteratorColorAreaId(final ColorAreaSet caSet) {
+            this.array = caSet.array;
+            this.countLimit = caSet.size;
+            this.buf = this.array[0];
         }
 
         public boolean hasNext() {
@@ -224,7 +227,7 @@ public class ColorAreaSet {
             // then it throws ArrayIndexOutOfBoundsException
             // instead of NoSuchElementException
             while (0 == this.buf) {
-                this.buf = ColorAreaSet.this.array[++this.intIdx];
+                this.buf = this.array[++this.intIdx];
             }
             final int l1b = this.buf & -this.buf; // Integer.lowestOneBit(this.buf)
             ++this.count;
@@ -240,13 +243,33 @@ public class ColorAreaSet {
      * @return
      */
     public FastIteratorColorAreaId fastIteratorColorAreaId() {
-        return new FastIteratorColorAreaId();
+        return new FastIteratorColorAreaId(this);
     }
 
-    public class FastIteratorColorAreaId {
-        private final int intIdxLimit = ColorAreaSet.this.array.length - 1;
-        private int intIdx = 0;
-        private int buf = ColorAreaSet.this.array[0];
+    public static class FastIteratorColorAreaId {
+        private int[] array;
+        private int intIdxLimit;
+        private int intIdx;
+        private int buf;
+
+        /**
+         * create an Iterator for use with this ColorAreaSet.
+         * @param caSet
+         */
+        private FastIteratorColorAreaId(final ColorAreaSet caSet) {
+            this.init(caSet);
+        }
+
+        /**
+         * initialize this Iterator for use with this ColorAreaSet.
+         * @param caSet
+         */
+        public void init(final ColorAreaSet caSet) {
+            this.array = caSet.array;
+            this.intIdxLimit = this.array.length - 1;
+            this.intIdx = 0;
+            this.buf = this.array[0];
+        }
 
         /**
          * return next value (always zero or positive),
@@ -258,7 +281,7 @@ public class ColorAreaSet {
                 if (this.intIdxLimit == this.intIdx) {
                     return -1;
                 } else {
-                    this.buf = ColorAreaSet.this.array[++this.intIdx];
+                    this.buf = this.array[++this.intIdx];
                 }
             }
             final int l1b = this.buf & -this.buf; // Integer.lowestOneBit(this.buf)
