@@ -34,6 +34,7 @@ public class DfsSolver extends AbstractSolver {
     private ColorAreaSet allFlooded;
     private ColorAreaGroup notFlooded;
     private ColorAreaGroup[] neighbors;
+    private final ColorAreaSet.FastIteratorColorAreaId iter;
 
     /**
      * construct a new solver for this Board.
@@ -41,6 +42,7 @@ public class DfsSolver extends AbstractSolver {
      */
     public DfsSolver(final Board board) {
         super(board);
+        this.iter = new ColorAreaSet(board).fastIteratorColorAreaId();
     }
 
     /* (non-Javadoc)
@@ -161,9 +163,10 @@ public class DfsSolver extends AbstractSolver {
             final ColorAreaGroup nextNeighbors = this.neighbors[depth + 1];
             nextNeighbors.copyFrom(theseNeighbors, thisColor);
             // add new neighbors
-            final ColorAreaSet.IteratorColorAreaId iter = thisFlooded.iteratorColorAreaId();
-            while (iter.hasNext()) {
-                nextNeighbors.addAll(this.board.getColorArea4Id(iter.next()).getNeighborsArray(), this.allFlooded);
+            this.iter.init(thisFlooded);
+            int nextId;
+            while ((nextId = this.iter.nextOrNegative()) >= 0) {
+                nextNeighbors.addAll(this.board.getColorArea4Id(nextId).getNeighborsArray(), this.allFlooded);
             }
             // pick the "best" neighbor colors to go on
             int nextColors = this.strategy.selectColors(depth, this.allFlooded, this.notFlooded, nextNeighbors);

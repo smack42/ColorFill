@@ -27,6 +27,8 @@ import colorfill.model.ColorArea;
  */
 public class ColorAreaSet {
 
+    private static final short SIZE_UNKNOWN = -1;
+
     private final int[] array;
     private short size;
 
@@ -75,22 +77,18 @@ public class ColorAreaSet {
      */
     public void add(final ColorArea ca) {
         final int id = ca.getId();
-        final int i = id >>> 5;  // index is always >= 0
-        final int a = this.array[i];
-        final int b = a | 1 << id;  // implicit shift distance (id & 0x1f)
-        this.array[i] = b;
-        this.size += (a == b ? 0 : 1);
+        final int i = id >>> 5;     // index is always >= 0
+        this.array[i] |= 1 << id;   // implicit shift distance (id & 0x1f)
+        this.size = SIZE_UNKNOWN;
     }
 
     /**
      * add the ColorArea to this set
      */
     public void add(final int colorAreaId) {
-        final int i = colorAreaId >>> 5;  // index is always >= 0
-        final int a = this.array[i];
-        final int b = a | 1 << colorAreaId;  // implicit shift distance (id & 0x1f)
-        this.array[i] = b;
-        this.size += (a == b ? 0 : 1);
+        final int i = colorAreaId >>> 5;    // index is always >= 0
+        this.array[i] |= 1 << colorAreaId;  // implicit shift distance (id & 0x1f)
+        this.size = SIZE_UNKNOWN;
     }
 
     /**
@@ -152,6 +150,13 @@ public class ColorAreaSet {
      * return the number of ColorAreas in this set
      */
     public int size() {
+        if (SIZE_UNKNOWN == this.size) {
+            int sz = 0;
+            for (final int a : this.array) {
+                sz += Integer.bitCount(a);  // hopefully an intrinsic function using instruction POPCNT
+            }
+            this.size = (short)sz;
+        }
         return this.size;
     }
 
@@ -159,7 +164,7 @@ public class ColorAreaSet {
      * return true is this set is empty
      */
     public boolean isEmpty() {
-        return 0 == this.size;
+        return (short)0 == this.size;
     }
 
     /**
@@ -168,20 +173,20 @@ public class ColorAreaSet {
      */
     public void addAll(final int[] caIdArray)  {
         for (final int caId : caIdArray) {
-            this.add(caId);
+            final int i = caId >>> 5;   // index is always >= 0
+            this.array[i] |= 1 << caId; // implicit shift distance (id & 0x1f)
         }
+        this.size = SIZE_UNKNOWN;
     }
 
     /**
      * add all ColorAreas in the other set to this set
      */
     public void addAll(final ColorAreaSet other) {
-        int sz = 0;
         for (int i = 0;  i < this.array.length;  ++i) {
-            final int a = (this.array[i] |= other.array[i]);
-            sz += Integer.bitCount(a);  // hopefully an intrinsic function using instruction POPCNT
+            this.array[i] |= other.array[i];
         }
-        this.size = (short)sz;
+        this.size = SIZE_UNKNOWN;
     }
 
     /**
@@ -195,47 +200,6 @@ public class ColorAreaSet {
         }
         this.size = (short)sz;
         return sz;
-    }
-
-    /**
-     * create an Iterator over this set that returns the IDs of the member ColorArea objects
-     * @return
-     */
-    public IteratorColorAreaId iteratorColorAreaId() {
-        return new IteratorColorAreaId(this);
-    }
-
-    public static class IteratorColorAreaId {
-        private final int[] array;
-        private int count = 0;
-        private final int countLimit;
-        private int intIdx = 0;
-        private int buf;
-
-        private IteratorColorAreaId(final ColorAreaSet caSet) {
-            this.array = caSet.array;
-            this.countLimit = caSet.size;
-            this.buf = this.array[0];
-        }
-
-        public boolean hasNext() {
-            return this.count < this.countLimit;
-        }
-
-        public int next() {
-            // note: if (false == this.hasNext())
-            // then it throws ArrayIndexOutOfBoundsException
-            // instead of NoSuchElementException
-            while (0 == this.buf) {
-                this.buf = this.array[++this.intIdx];
-            }
-            final int l1b = this.buf & -this.buf; // Integer.lowestOneBit(this.buf)
-            ++this.count;
-            final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
-            final int caId = (this.intIdx << 5) + 31 - clz;
-            this.buf ^= l1b;
-            return caId;
-        }
     }
 
     /**
@@ -266,7 +230,7 @@ public class ColorAreaSet {
          */
         public void init(final ColorAreaSet caSet) {
             this.array = caSet.array;
-            this.intIdxLimit = this.array.length - 1;
+            this.intIdxLimit = ((short)0 == caSet.size ? 0 : this.array.length - 1);
             this.intIdx = 0;
             this.buf = this.array[0];
         }
