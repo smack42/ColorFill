@@ -126,6 +126,12 @@ public class GameState {
         this.isAutoRunSolver = isAutoRunSolver;
         if ((false == oldValue) && (true == isAutoRunSolver)) {
             new SolverRun(Integer.MAX_VALUE); // use all available solver strategies
+        } else {
+            final SolverRun running = this.activeSolverRun.get();
+            if (null != running) {
+                running.interrupt();
+            }
+            this.clearProgressSolutions();
         }
     }
 

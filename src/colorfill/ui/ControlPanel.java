@@ -20,6 +20,8 @@ package colorfill.ui;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -29,6 +31,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -68,6 +71,7 @@ public class ControlPanel extends JPanel {
     private final JButton buttonHintColor = new JButton();
     private final JLabel  hintEstimatedSteps = new JLabel();
     private boolean showHint = false;
+    private final JCheckBox checkBoxSolverResults = new JCheckBox();
 
     private final String[]          solverNames;
     private final IRow[]            solverRows1;
@@ -114,7 +118,7 @@ public class ControlPanel extends JPanel {
      * constructor
      * @param controller
      */
-    protected ControlPanel(final ControlController controller, final Color[] colors, final int numColors, final String[] solverNames) {
+    protected ControlPanel(final ControlController controller, final Color[] colors, final int numColors, final String[] solverNames, final boolean isSelectedSolverResults) {
         super();
         this.controller = controller;
         this.numColors = numColors;
@@ -142,7 +146,7 @@ public class ControlPanel extends JPanel {
         layout.row().grid().add(this.makeButtonUndo(), 3).add(this.makeButtonRedo(), 3);
         layout.row().grid().add(this.makeButtonHint(), 3).empty().add(this.makeHintEstimatedSteps()).add(this.makeButtonHintColor());
         layout.row().grid().add(new JSeparator());
-        layout.row().grid().add(new JLabel(L10N.getString("ctrl.lbl.SolverResults.txt")));
+        layout.row().grid().add(this.makeCheckBoxSolverResults(isSelectedSolverResults));
         this.makeSolverRows(bgroup, layout);
         this.add(panel);
     }
@@ -285,6 +289,19 @@ public class ControlPanel extends JPanel {
         this.hintEstimatedSteps.setText("99");
         this.hintEstimatedSteps.setVisible(this.showHint);
         return this.hintEstimatedSteps;
+    }
+
+    private JCheckBox makeCheckBoxSolverResults(final boolean isSelectedSolverResults) {
+        this.checkBoxSolverResults.setText(L10N.getString("ctrl.lbl.SolverResults.txt"));
+        this.checkBoxSolverResults.setSelected(isSelectedSolverResults);
+        this.checkBoxSolverResults.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                final boolean isSelected = (e.getStateChange() == ItemEvent.SELECTED);
+                ControlPanel.this.controller.userChangedRunSolver(isSelected);
+            }
+        });
+        return this.checkBoxSolverResults;
     }
 
     private void makeSolverRows(final ButtonGroup bgroup, final DesignGridLayout layout) {

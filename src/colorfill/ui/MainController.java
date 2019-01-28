@@ -76,7 +76,7 @@ public class MainController {
         this.controlController.actionUpdateBoardColors();
         this.mainView = new MainWindow(progname, this.boardController.getPanel(), this.controlController.getPanel());
         this.mainView.update();
-        this.gameState.setAutoRunSolver(true);
+        this.gameState.setAutoRunSolver(this.gameState.getPreferences().isRunSolver());
         this.preferencesController = new PreferencesController(this, this.gameState, this.mainView, progname, version, author);
         this.gameidController = new GameIdController(this, this.gameState, this.mainView);
     }
@@ -232,4 +232,5 @@ public class MainController {
     public void actionHighlightColor(int hintColor) {
         this.boardController.actionHightlightFloodNeighborCells(hintColor);
     }
+
 }

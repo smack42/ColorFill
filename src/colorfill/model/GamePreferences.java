@@ -33,6 +33,7 @@ public class GamePreferences {
     private static final String PREFS_HIGHLIGHT_COLOR = "highlightColor";
     private static final String PREFS_CELLSIZE  = "cellSize";
     private static final String PREFS_COLSCHEME = "colorScheme";
+    private static final String PREFS_RUNSOLVER = "runSolver";
     private static final String PREFS_GAMESTATE_BOARD    = "gameStateBoard";
     private static final String PREFS_GAMESTATE_SOLUTION = "gameStateSolution";
     private static final char   PREFS_GAMESTATE_SEPARATOR = ';';
@@ -49,6 +50,7 @@ public class GamePreferences {
     public static final HighlightColorEnum DEFAULT_UI_HIGHLIGHT_COLOR = HighlightColorEnum.WHITE;
     public static final int DEFAULT_UI_CELLSIZE = 32;
     public static final int DEFAULT_UI_COLSCHEME = 0;
+    public static final int DEFAULT_UI_RUNSOLVER = 1;
     private static final Color[][] DEFAULT_UI_COLORS = {
         { // Flood-It scheme
             new Color(0xDC4A20), // Color.RED
@@ -117,6 +119,7 @@ public class GamePreferences {
     private int uiBoardColorNumbers;
     private int highlightColor;
     private int cellSize;
+    private int runSolver;
 
     public GamePreferences() {
         this.width = DEFAULT_BOARD_WIDTH;
@@ -128,6 +131,7 @@ public class GamePreferences {
         this.cellSize = DEFAULT_UI_CELLSIZE;
         this.uiBoardColorNumbers = DEFAULT_UI_BOARD_COLOR_NUMBERS.intValue;
         this.highlightColor = DEFAULT_UI_HIGHLIGHT_COLOR.intValue;
+        this.runSolver = DEFAULT_UI_RUNSOLVER;
         this.loadPrefs();
         this.savePrefs();
     }
@@ -260,6 +264,13 @@ public class GamePreferences {
         return false; // value not changed
     }
 
+    public void setRunSolver(final boolean runSolver) {
+        this.runSolver = (runSolver ? 1 : 0);
+    }
+    public boolean isRunSolver() {
+        return 0 != this.runSolver;
+    }
+
     private void loadPrefs() {
         this.setWidth            (PREFS.getInt(PREFS_WIDTH,              DEFAULT_BOARD_WIDTH));
         this.setHeight           (PREFS.getInt(PREFS_HEIGHT,             DEFAULT_BOARD_HEIGHT));
@@ -270,6 +281,7 @@ public class GamePreferences {
         this.setBoardColorNumbers(PREFS.getInt(PREFS_BOARD_COLOR_NUMBERS,DEFAULT_UI_BOARD_COLOR_NUMBERS.intValue));
         this.setHighlightColor   (PREFS.getInt(PREFS_HIGHLIGHT_COLOR,    DEFAULT_UI_HIGHLIGHT_COLOR.intValue));
         this.setCellSize         (PREFS.getInt(PREFS_CELLSIZE,           DEFAULT_UI_CELLSIZE));
+        this.runSolver          = PREFS.getInt(PREFS_RUNSOLVER,          DEFAULT_UI_RUNSOLVER);
     }
 
     public void savePrefs() {
@@ -282,6 +294,7 @@ public class GamePreferences {
         PREFS.putInt(PREFS_BOARD_COLOR_NUMBERS,this.getBoardColorNumbers());
         PREFS.putInt(PREFS_HIGHLIGHT_COLOR,    this.getHighlightColor());
         PREFS.putInt(PREFS_CELLSIZE,           this.getCellSize());
+        PREFS.putInt(PREFS_RUNSOLVER,          this.runSolver);
     }
 
     public static void saveBoard(final Board board) {

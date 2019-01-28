@@ -36,7 +36,7 @@ public class ControlController {
     protected ControlController(final MainController mainController, final GameState gameState) {
         this.mainController = mainController;
         this.gameState = gameState;
-        this.controlPanel = new ControlPanel(this, gameState.getPreferences().getUiColors(), gameState.getPreferences().getNumColors(), gameState.getSolverNames());
+        this.controlPanel = new ControlPanel(this, gameState.getPreferences().getUiColors(), gameState.getPreferences().getNumColors(), gameState.getSolverNames(), gameState.getPreferences().isRunSolver());
     }
 
     protected JPanel getPanel() {
@@ -129,6 +129,16 @@ public class ControlController {
         if (this.gameState.isUserProgress()) {
             this.mainController.actionAddStep(color);
         }
+    }
+
+    /**
+     * called by ControlPanel when user clicks on "computed solutions" checkbox
+     * @param runSolver
+     */
+    protected void userChangedRunSolver(final boolean runSolver) {
+        this.gameState.getPreferences().setRunSolver(runSolver);
+        this.gameState.getPreferences().savePrefs();
+        this.gameState.setAutoRunSolver(runSolver);
     }
 
     /**
