@@ -18,6 +18,9 @@
 package colorfill.ui;
 
 import java.awt.Color;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.GridBagLayout;
 import java.awt.event.MouseEvent;
 import java.util.Collection;
 import java.util.Collections;
@@ -41,7 +44,28 @@ public class BoardController {
     protected BoardController(final MainController mainController, final GameState gameState) {
         this.mainController = mainController;
         this.gameState = gameState;
-        this.boardPanel = new BoardPanel(this);
+        this.boardPanel = new BoardPanel(this) {
+            private static final long serialVersionUID = 1844903047710667159L;
+            /**
+             * adjust the dimensions of BoardPanel when resizing so that it remains a square
+             */
+            @Override
+            public Dimension getPreferredSize() {
+                final Dimension result;
+                if (this.isPreferredSizeSet()) {
+                    // this is the "natural" size of BoardPanel, based on the user-configured cell size
+                    result = super.getPreferredSize();
+                    // forget the "natural" size, so next time this method will return the adapted container size
+                    this.setPreferredSize(null);
+                } else {
+                    // get the container size and use the shorter side for both, width and height
+                    final Container container = this.getParent();
+                    final int min = Math.min(container.getWidth(), container.getHeight());
+                    result = new Dimension(min, min);
+                }
+                return result;
+            }
+        };
         this.initBoardPanel();
     }
 
@@ -68,7 +92,10 @@ public class BoardController {
     }
 
     protected JPanel getPanel() {
-        return this.boardPanel;
+        // GridBagLayout calls BoardPanel.getPreferredSize() and centers it vertically and horizontally
+        final JPanel container = new JPanel(new GridBagLayout());
+        container.add(this.boardPanel);
+        return container;
     }
 
     protected Color[] getUiColors() {
