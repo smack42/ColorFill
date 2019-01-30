@@ -1,6 +1,6 @@
 ColorFill - yet another Flood-It clone (game and solver algorithm)
 
-Version   1.1.2 (2018-10-02)
+Version   1.2 (2019-01-30)
 Homepage  https://github.com/smack42/ColorFill/wiki
 
 
@@ -42,7 +42,7 @@ On the command line run it like this:
 license
 
 ColorFill game and solver
-Copyright (C) 2018 Michael Henke <smack42@gmail.com>
+Copyright (C) 2019 Michael Henke <smack42@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

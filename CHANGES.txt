@@ -2,6 +2,13 @@ ColorFill  CHANGES
 
 
 
+1.2 (2019-01-30)
+- added GUI checkbox and persistent prefs for computed solutions
+- game board remains a square when the window is resized
+- optimized AStarPuchertStrategy (faster and uses less memory)
+
+
+
 1.1.2 (2018-10-02)
 
 - added special highlighting of cells if this color will be completed in one move
