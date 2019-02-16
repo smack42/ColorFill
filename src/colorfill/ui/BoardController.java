@@ -46,8 +46,9 @@ public class BoardController {
         this.gameState = gameState;
         this.boardPanel = new BoardPanel(this) {
             private static final long serialVersionUID = 1844903047710667159L;
+            private double aspectRatio = 1.0d;
             /**
-             * adjust the dimensions of BoardPanel when resizing so that it remains a square
+             * adjust the dimensions of BoardPanel when resizing so that it keeps its natural aspect ratio
              */
             @Override
             public Dimension getPreferredSize() {
@@ -55,13 +56,18 @@ public class BoardController {
                 if (this.isPreferredSizeSet()) {
                     // this is the "natural" size of BoardPanel, based on the user-configured cell size
                     result = super.getPreferredSize();
+                    this.aspectRatio = (double)result.width / (double)result.height;
                     // forget the "natural" size, so next time this method will return the adapted container size
                     this.setPreferredSize(null);
                 } else {
-                    // get the container size and use the shorter side for both, width and height
+                    // adjust to container size while keeping aspect ratio
                     final Container container = this.getParent();
-                    final int min = Math.min(container.getWidth(), container.getHeight());
-                    result = new Dimension(min, min);
+                    final double containerAspectRatio = (double)container.getWidth() / (double)container.getHeight();
+                    if (this.aspectRatio >= containerAspectRatio) {
+                        result = new Dimension(container.getWidth(), (int)Math.round(container.getWidth() / this.aspectRatio));
+                    } else {
+                        result = new Dimension((int)Math.round(container.getHeight() * this.aspectRatio), container.getHeight());
+                    }
                 }
                 return result;
             }
