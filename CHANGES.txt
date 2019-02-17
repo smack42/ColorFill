@@ -2,6 +2,11 @@ ColorFill  CHANGES
 
 
 
+1.2.1 (2019-02-17)
+- game board retains its aspect ratio when the window is resized
+
+
+
 1.2 (2019-01-30)
 - added GUI checkbox and persistent prefs for computed solutions
 - game board remains a square when the window is resized

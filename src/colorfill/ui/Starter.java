@@ -43,12 +43,11 @@ import colorfill.solver.Solution;
 import colorfill.solver.Solver;
 import colorfill.solver.Strategy;
 
-
 public class Starter {
     
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill";
-        final String version  = "1.2 (2019-01-30)";
+        final String version  = "1.2.1 (2019-02-17)";
         final String author   = "Copyright (C) 2019 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
