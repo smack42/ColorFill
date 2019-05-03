@@ -34,6 +34,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
     private final short[] numCaNotFilledInitial;
     private final short[] numCaNotFilled;
     private final ColorAreaSet.FastIteratorColorAreaId iter;
+    private final int allColors;
 
     public AStarPuchertStrategy(final Board board) {
         this.board = board;
@@ -46,6 +47,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
         }
         this.numCaNotFilled = new short[board.getNumColors()];
         this.iter = new ColorAreaSet(board).fastIteratorColorAreaId();
+        this.allColors = (1 << board.getNumColors()) - 1;
     }
 
     /* (non-Javadoc)
@@ -66,53 +68,59 @@ public class AStarPuchertStrategy implements AStarStrategy {
 
         node.copyFloodedTo(this.visited);
         System.arraycopy(this.numCaNotFilledInitial, 0, this.numCaNotFilled, 0, this.numCaNotFilledInitial.length);
+        node.copyNeighborsTo(this.current);
+        int nonCompletedColors = this.allColors;
         {
             this.iter.init(this.visited);
             int nextId;
             while ((nextId = this.iter.nextOrNegative()) >= 0) {
                 --this.numCaNotFilled[this.board.getColor4Id(nextId)];
             }
+            for (int color = 0;  color < this.numCaNotFilled.length;  ++color) {
+                if (this.numCaNotFilled[color] == 0) {
+                    this.numCaNotFilled[color] = -1; // don't detect this completed color again
+                    nonCompletedColors ^= 1 << color;
+                }
+            }
         }
 
         // visit the first layer of neighbors, which is never empty, i.e. the puzzle is not solved yet
-        node.copyNeighborsTo(this.current);
         this.visited.addAll(this.current);
-        int completedColors = 0;
         {
             this.iter.init(this.current);
             int nextId;
             while ((nextId = this.iter.nextOrNegative()) >= 0) {
-                final byte nextColor = this.board.getColor4Id(nextId);
-                if (--this.numCaNotFilled[nextColor] == 0) {
-                    completedColors |= 1 << nextColor;
-                }
+                --this.numCaNotFilled[this.board.getColor4Id(nextId)];
             }
         }
-        int distance = 1;
+        int distance = 0;
 
         while(!this.current.isEmpty()) {
             this.next.clear();
-            this.iter.init(this.current);
+            int completedColors = 0;
+            for (int color = 0;  color < this.numCaNotFilled.length;  ++color) {
+                if (this.numCaNotFilled[color] == 0) {
+                    this.numCaNotFilled[color] = -1; // don't detect this completed color again
+                    completedColors |= 1 << color;
+                    nonCompletedColors ^= 1 << color;
+                }
+            }
+            this.iter.init(0 == nonCompletedColors ? this.next : this.current); // don't need to expand the final layer
             int thisCaId;
             if (0 != completedColors) {
                 // We can eliminate colors. Do just that.
                 // We also combine all these elimination moves.
                 distance += Integer.bitCount(completedColors);
-                final int prevCompletedColors = completedColors;
-                completedColors = 0;
                 while ((thisCaId = this.iter.nextOrNegative()) >= 0) {
                     final ColorArea thisCa = this.board.getColorArea4Id(thisCaId);
-                    if ((prevCompletedColors & (1 << thisCa.getColor())) != 0) {
+                    if ((completedColors & (1 << thisCa.getColor())) != 0) {
                         // completed color
                         // expandNode()
                         for (final int nextCaId : thisCa.getNeighborsIdArray()) {
                             if (!this.visited.contains(nextCaId)) {
                                 this.visited.add(nextCaId);
                                 this.next.add(nextCaId);
-                                final byte nextColor = this.board.getColor4Id(nextCaId);
-                                if (--this.numCaNotFilled[nextColor] == 0) {
-                                    completedColors |= 1 << nextColor;
-                                }
+                                --this.numCaNotFilled[this.board.getColor4Id(nextCaId)];
                             }
                         }
                     } else {
@@ -132,10 +140,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                         if (!this.visited.contains(nextCaId)) {
                             this.visited.add(nextCaId);
                             this.next.add(nextCaId);
-                            final byte nextColor = this.board.getColor4Id(nextCaId);
-                            if (--this.numCaNotFilled[nextColor] == 0) {
-                                completedColors |= 1 << nextColor;
-                            }
+                            --this.numCaNotFilled[this.board.getColor4Id(nextCaId)];
                         }
                     }
                 }
