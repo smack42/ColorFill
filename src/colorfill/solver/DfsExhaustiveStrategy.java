@@ -31,6 +31,8 @@ import colorfill.model.Board;
  * 2) all colors that are possible in the next step.
  * (hence the name "exhaustive")
  */
+//FIXME broken by moving ColorAreaSet to long[] array
+@Deprecated // superseded by AStarPuchertStrategy, which runs faster and needs less memory
 public class DfsExhaustiveStrategy implements DfsStrategy {
 
     private static final int MAX_BOARD_SIZE_NORMAL = 15*15;
@@ -139,8 +141,8 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
          */
         private boolean put(final ColorAreaSet set1, final ColorAreaSet set2, final int depth) {
             // copy state into memory at nextState
-            final int[] arr1 = set1.getArray();
-            final int[] arr2 = set2.getArray();
+            final int[] arr1 = null;  //set1.getArray(); FIXME broken by moving ColorAreaSet to long[] array
+            final int[] arr2 = null;  //set2.getArray(); FIXME broken by moving ColorAreaSet to long[] array
             // performance: inline hashcode computation; copy&paste from hashStrategyHashCode()
             int h32 = SEED + PRIME5;
             for (int b = this.nextStateOffset, i = 0, len = arr1.length;  i < len;  ++i, ++b) {

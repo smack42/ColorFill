@@ -29,14 +29,14 @@ public class ColorAreaSet {
 
     private static final short SIZE_UNKNOWN = -1;
 
-    private final int[] array;
+    private final long[] array;
     private short size;
 
     /**
      * the constructor
      */
     public ColorAreaSet(final Board board) {
-        this.array = new int[(board.getSizeColorAreas8() + 3) >> 2];
+        this.array = new long[(board.getSizeColorAreas8() + 7) >> 3];
         this.size = 0;
     }
 
@@ -65,29 +65,30 @@ public class ColorAreaSet {
         this.size = 0;
     }
 
-    /**
-     * get the reference of the internal array
-     */
-    public int[] getArray() {
-        return this.array;
-    }
+//FIXME the move from int[] to long[] array here (for a performance improvement) broke DfsExhaustiveStrategy
+//    /**
+//     * get the reference of the internal array
+//     */
+//    public int[] getArray() {
+//        return this.array;
+//    }
 
     /**
      * add the ColorArea to this set
      */
     public void add(final ColorArea ca) {
-        final int id = ca.getId();
-        final int i = id >>> 5;     // index is always >= 0
-        this.array[i] |= 1 << id;   // implicit shift distance (id & 0x1f)
+        final int caId = ca.getId();
+        final int i = caId >>> 6;       // index is always >= 0
+        this.array[i] |= 1L << caId;    // implicit shift distance (caId & 0x3f)
         this.size = SIZE_UNKNOWN;
     }
 
     /**
      * add the ColorArea to this set
      */
-    public void add(final int colorAreaId) {
-        final int i = colorAreaId >>> 5;    // index is always >= 0
-        this.array[i] |= 1 << colorAreaId;  // implicit shift distance (id & 0x1f)
+    public void add(final int caId) {
+        final int i = caId >>> 6;       // index is always >= 0
+        this.array[i] |= 1L << caId;    // implicit shift distance (caId & 0x3f)
         this.size = SIZE_UNKNOWN;
     }
 
@@ -95,16 +96,16 @@ public class ColorAreaSet {
      * return true if the ColorArea is in this set
      */
     public boolean contains(final ColorArea ca) {
-        final int id = ca.getId();
-        final int bit = this.array[id >>> 5] & (1 << id);  // index is always >= 0; implicit shift distance (id & 0x1f)
+        final int caId = ca.getId();
+        final long bit = this.array[caId >>> 6] & (1L << caId); // index is always >= 0; implicit shift distance (caId & 0x3f)
         return 0 != bit;
     }
 
     /**
      * return true if the ColorArea is in this set
      */
-    public boolean contains(final int colorAreaId) {
-        final int bit = this.array[colorAreaId >>> 5] & (1 << colorAreaId);  // index is always >= 0; implicit shift distance (id & 0x1f)
+    public boolean contains(final int caId) {
+        final long bit = this.array[caId >>> 6] & (1L << caId); // index is always >= 0; implicit shift distance (caId & 0x3f)
         return 0 != bit;
     }
 
@@ -113,9 +114,9 @@ public class ColorAreaSet {
      */
     public boolean containsAll(final ColorAreaSet other) {
         for (int i = 0;  i < this.array.length;  ++i) {
-            final int thisInt = this.array[i];
-            final int otherInt = other.array[i];
-            if ((thisInt & otherInt) != otherInt) {
+            final long thisLong = this.array[i];
+            final long otherLong = other.array[i];
+            if ((thisLong & otherLong) != otherLong) {
                 return false;
             }
         }
@@ -152,8 +153,8 @@ public class ColorAreaSet {
     public int size() {
         if (SIZE_UNKNOWN == this.size) {
             int sz = 0;
-            for (final int a : this.array) {
-                sz += Integer.bitCount(a);  // hopefully an intrinsic function using instruction POPCNT
+            for (final long a : this.array) {
+                sz += Long.bitCount(a); // hopefully an intrinsic function using instruction POPCNT
             }
             this.size = (short)sz;
         }
@@ -173,8 +174,8 @@ public class ColorAreaSet {
      */
     public void addAll(final int[] caIdArray)  {
         for (final int caId : caIdArray) {
-            final int i = caId >>> 5;   // index is always >= 0
-            this.array[i] |= 1 << caId; // implicit shift distance (id & 0x1f)
+            final int i = caId >>> 6;       // index is always >= 0
+            this.array[i] |= 1L << caId;    // implicit shift distance (caId & 0x3f)
         }
         this.size = SIZE_UNKNOWN;
     }
@@ -195,8 +196,8 @@ public class ColorAreaSet {
     public int removeAll(final ColorAreaSet other) {
         int sz = 0;
         for (int i = 0;  i < this.array.length;  ++i) {
-            final int a = (this.array[i] &= ~(other.array[i]));
-            sz += Integer.bitCount(a);  // hopefully an intrinsic function using instruction POPCNT
+            final long a = (this.array[i] &= ~(other.array[i]));
+            sz += Long.bitCount(a); // hopefully an intrinsic function using instruction POPCNT
         }
         this.size = (short)sz;
         return sz;
@@ -211,10 +212,10 @@ public class ColorAreaSet {
     }
 
     public static class FastIteratorColorAreaId {
-        private int[] array;
-        private int intIdxLimit;
-        private int intIdx;
-        private int buf;
+        private long[] array;
+        private int longIdxLimit;
+        private int longIdx;
+        private long buf;
 
         /**
          * create an Iterator for use with this ColorAreaSet.
@@ -230,8 +231,8 @@ public class ColorAreaSet {
          */
         public void init(final ColorAreaSet caSet) {
             this.array = caSet.array;
-            this.intIdxLimit = ((short)0 == caSet.size ? 0 : this.array.length - 1);
-            this.intIdx = 0;
+            this.longIdxLimit = ((short)0 == caSet.size ? 0 : this.array.length - 1);
+            this.longIdx = 0;
             this.buf = this.array[0];
         }
 
@@ -242,15 +243,15 @@ public class ColorAreaSet {
          */
         public int nextOrNegative() {
             while (0 == this.buf) {
-                if (this.intIdxLimit == this.intIdx) {
+                if (this.longIdxLimit == this.longIdx) {
                     return -1;
                 } else {
-                    this.buf = this.array[++this.intIdx];
+                    this.buf = this.array[++this.longIdx];
                 }
             }
-            final int l1b = this.buf & -this.buf; // Integer.lowestOneBit(this.buf)
-            final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
-            final int caId = (this.intIdx << 5) + 31 - clz;
+            final long l1b = this.buf & -this.buf;  // Long.lowestOneBit(this.buf)
+            final int clz = Long.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
+            final int caId = (this.longIdx << 6) + 63 - clz;
             this.buf ^= l1b;
             return caId;
         }
