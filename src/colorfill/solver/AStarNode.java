@@ -22,6 +22,7 @@ import java.util.Queue;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
+import colorfill.model.ColorAreaSet;
 import colorfill.solver.AStarSolver.SolutionTree;
 
 /**
@@ -43,7 +44,7 @@ public class AStarNode {
         this.flooded = new ColorAreaSet(board);
         this.flooded.add(startCa);
         this.neighbors = new ColorAreaSet(board);
-        this.neighbors.addAll(startCa.getNeighborsIdArray());
+        this.neighbors.addAll(startCa.getNeighborsColorAreaSet());
         this.solutionEntry = solutionTree.init(startCa.getColor());
         this.solutionSize = 0;
         this.estimatedCost = -1; // 0xff
@@ -157,7 +158,7 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
         for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
             if (null == nextColorNeighbor) break;
             this.flooded.add(nextColorNeighbor);
-            this.neighbors.addAll(nextColorNeighbor.getNeighborsIdArray());
+            this.neighbors.addAll(nextColorNeighbor.getNeighborsColorAreaSet());
         }
         this.neighbors.removeAll(this.flooded);
         ++this.solutionSize;
@@ -190,7 +191,7 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
             for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
                 if (null == nextColorNeighbor) break;
                 result.flooded.add(nextColorNeighbor);
-                result.neighbors.addAll(nextColorNeighbor.getNeighborsIdArray());
+                result.neighbors.addAll(nextColorNeighbor.getNeighborsColorAreaSet());
             }
             result.neighbors.removeAll(result.flooded);
             ++result.solutionSize;

@@ -23,6 +23,7 @@ import java.util.Queue;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
+import colorfill.model.ColorAreaSet;
 
 /**
  * a solver implementation that implements the AStar (A*) algorithm.

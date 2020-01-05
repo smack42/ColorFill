@@ -18,6 +18,7 @@
 package colorfill.solver;
 
 import colorfill.model.Board;
+import colorfill.model.ColorAreaSet;
 
 /**
  * this strategy results in an incomplete search.

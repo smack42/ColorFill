@@ -19,6 +19,7 @@ package colorfill.solver;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
+import colorfill.model.ColorAreaSet;
 
 /**
  * a specific strategy for the AStar (A*) solver.
@@ -29,7 +30,7 @@ import colorfill.model.ColorArea;
 public class AStarPuchertStrategy implements AStarStrategy {
 
     private final Board board;
-    private final ColorAreaSet visited;
+    private final ColorAreaSet visited, tmp;
     private ColorAreaSet current, next;
     private final short[] numCaNotFilledInitial;
     private final short[] numCaNotFilled;
@@ -39,6 +40,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
     public AStarPuchertStrategy(final Board board) {
         this.board = board;
         this.visited = new ColorAreaSet(board);
+        this.tmp = new ColorAreaSet(board);
         this.current = new ColorAreaSet(board);
         this.next = new ColorAreaSet(board);
         this.numCaNotFilledInitial = new short[board.getNumColors()];
@@ -105,46 +107,45 @@ public class AStarPuchertStrategy implements AStarStrategy {
                     nonCompletedColors ^= 1 << color;
                 }
             }
-            this.iter.init(0 == nonCompletedColors ? this.next : this.current); // don't need to expand the final layer
-            int thisCaId;
+            int caId;
+            this.iter.init(this.current);
             if (0 != completedColors) {
                 // We can eliminate colors. Do just that.
                 // We also combine all these elimination moves.
                 distance += Integer.bitCount(completedColors);
-                while ((thisCaId = this.iter.nextOrNegative()) >= 0) {
-                    final ColorArea thisCa = this.board.getColorArea4Id(thisCaId);
-                    if ((completedColors & (1 << thisCa.getColor())) != 0) {
-                        // completed color
-                        // expandNode()
-                        for (final int nextCaId : thisCa.getNeighborsIdArray()) {
-                            if (!this.visited.contains(nextCaId)) {
-                                this.visited.add(nextCaId);
-                                this.next.add(nextCaId);
-                                --this.numCaNotFilled[this.board.getColor4Id(nextCaId)];
-                            }
+                if (0 != nonCompletedColors) { // don't need to expand the final layer
+                    this.tmp.clear();
+                    while ((caId = this.iter.nextOrNegative()) >= 0) {
+                        if ((completedColors & (1 << this.board.getColor4Id(caId))) != 0) {
+                            // completed color
+                            this.next.addAll(this.board.getNeighborColorAreaSet4Id(caId));
+                        } else {
+                            // non-completed color
+                            // move node to next layer
+                            this.tmp.add(caId);
                         }
-                    } else {
-                        // non-completed color
-                        // move node to next layer
-                        this.next.add(thisCaId);
                     }
+                    this.next.removeAll(this.visited);
+                    this.iter.init(this.next);
+                    while ((caId = this.iter.nextOrNegative()) >= 0) {
+                        --this.numCaNotFilled[this.board.getColor4Id(caId)];
+                    }
+                    this.next.addAll(this.tmp);
                 }
             } else {
                 // Nothing found, do the color-blind pseudo-move
                 // Expand current layer of nodes.
                 ++distance;
-                while ((thisCaId = this.iter.nextOrNegative()) >= 0) {
-                    final ColorArea thisCa = this.board.getColorArea4Id(thisCaId);
-                    // expandNode()
-                    for (final int nextCaId : thisCa.getNeighborsIdArray()) {
-                        if (!this.visited.contains(nextCaId)) {
-                            this.visited.add(nextCaId);
-                            this.next.add(nextCaId);
-                            --this.numCaNotFilled[this.board.getColor4Id(nextCaId)];
-                        }
-                    }
+                while ((caId = this.iter.nextOrNegative()) >= 0) {
+                    this.next.addAll(this.board.getNeighborColorAreaSet4Id(caId));
+                }
+                this.next.removeAll(this.visited);
+                this.iter.init(this.next);
+                while ((caId = this.iter.nextOrNegative()) >= 0) {
+                    --this.numCaNotFilled[this.board.getColor4Id(caId)];
                 }
             }
+            this.visited.addAll(this.next);
 
             // Move the next layer into the current.
             final ColorAreaSet tmp = this.current;

@@ -39,6 +39,7 @@ public class Board {
     private int depth = -1; // -1 == not yet set
     private ColorArea[] idsColorAreas;
     private byte[] idsColors;
+    private ColorAreaSet[] idsNeighborColorAreaSets;
     private int sizeColorAreas8;
 
     /**
@@ -208,7 +209,11 @@ public class Board {
             }
         }
         for (final ColorArea ca : result) {
-            ca.makeNeighborsArray();
+            ca.makeNeighborsArray(this);
+        }
+        this.idsNeighborColorAreaSets = new ColorAreaSet[result.size()];
+        for (final ColorArea ca : result) {
+            this.idsNeighborColorAreaSets[ca.getId()] = ca.getNeighborsColorAreaSet();
         }
         return result;
     }
@@ -381,6 +386,10 @@ public class Board {
 
     public byte getColor4Id(int id) {
         return this.idsColors[id];
+    }
+
+    public ColorAreaSet getNeighborColorAreaSet4Id(int id) {
+        return this.idsNeighborColorAreaSets[id];
     }
 
     public ColorArea[] getColorAreasArray() {

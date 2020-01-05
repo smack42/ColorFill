@@ -20,6 +20,7 @@ package colorfill.solver;
 import java.util.Arrays;
 
 import colorfill.model.Board;
+import colorfill.model.ColorAreaSet;
 
 /**
  * this strategy results in a complete search.

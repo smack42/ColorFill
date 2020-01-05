@@ -17,6 +17,8 @@
 
 package colorfill.solver;
 
+import colorfill.model.ColorAreaSet;
+
 /**
  * a strategy for the depth-first search (DFS) solver.
  */

@@ -15,12 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package colorfill.solver;
+package colorfill.model;
 
 import java.util.Arrays;
-
-import colorfill.model.Board;
-import colorfill.model.ColorArea;
 
 /**
  * this class is a bespoke implementation of a Set of ColorArea. 

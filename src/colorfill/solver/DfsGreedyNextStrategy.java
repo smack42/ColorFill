@@ -17,6 +17,8 @@
 
 package colorfill.solver;
 
+import colorfill.model.ColorAreaSet;
+
 /**
  * this strategy results in an incomplete search.
  * it chooses the colors in two steps:

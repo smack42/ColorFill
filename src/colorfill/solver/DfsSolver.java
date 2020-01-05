@@ -21,6 +21,7 @@ import java.util.Arrays;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
+import colorfill.model.ColorAreaSet;
 
 /**
  * a solver implementation that performs a depth-first search using recursion.

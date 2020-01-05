@@ -19,6 +19,7 @@ package colorfill.solver;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
+import colorfill.model.ColorAreaSet;
 
 /**
  * this class contains a collection for ColorAreas, grouped by their colors.

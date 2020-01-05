@@ -22,6 +22,7 @@ import java.util.Queue;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
+import colorfill.model.ColorAreaSet;
 import colorfill.solver.AStarSolver.SolutionTree;
 
 /**
