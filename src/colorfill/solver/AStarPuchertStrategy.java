@@ -32,8 +32,9 @@ public class AStarPuchertStrategy implements AStarStrategy {
     private final Board board;
     private final ColorAreaSet visited, tmp;
     private ColorAreaSet current, next;
-    private final short[] numCaNotFilledInitial;
-    private final short[] numCaNotFilled;
+    private final ColorAreaSet[] caByColor;
+    private final int[] numCaNotFilledInitial;
+    private final int[] numCaNotFilled;
     private final ColorAreaSet.FastIteratorColorAreaId iter;
     private final int allColors;
 
@@ -43,11 +44,17 @@ public class AStarPuchertStrategy implements AStarStrategy {
         this.tmp = new ColorAreaSet(board);
         this.current = new ColorAreaSet(board);
         this.next = new ColorAreaSet(board);
-        this.numCaNotFilledInitial = new short[board.getNumColors()];
-        for (final ColorArea ca : board.getColorAreasArray()) {
-            ++this.numCaNotFilledInitial[ca.getColor()];
+        this.numCaNotFilledInitial = new int[board.getNumColors()];
+        this.caByColor = new ColorAreaSet[board.getNumColors()];
+        for (int color = 0;  color < this.caByColor.length;  ++color) {
+            this.caByColor[color] = new ColorAreaSet(board);
         }
-        this.numCaNotFilled = new short[board.getNumColors()];
+        for (final ColorArea ca : board.getColorAreasArray()) {
+            final int color = ca.getColor();
+            ++this.numCaNotFilledInitial[color];
+            this.caByColor[color].add(ca);
+        }
+        this.numCaNotFilled = new int[board.getNumColors()];
         this.iter = new ColorAreaSet(board).fastIteratorColorAreaId();
         this.allColors = (1 << board.getNumColors()) - 1;
     }
@@ -69,31 +76,19 @@ public class AStarPuchertStrategy implements AStarStrategy {
         // closer to the end.
 
         node.copyFloodedTo(this.visited);
-        System.arraycopy(this.numCaNotFilledInitial, 0, this.numCaNotFilled, 0, this.numCaNotFilledInitial.length);
-        node.copyNeighborsTo(this.current);
         int nonCompletedColors = this.allColors;
-        {
-            this.iter.init(this.visited);
-            int nextId;
-            while ((nextId = this.iter.nextOrNegative()) >= 0) {
-                --this.numCaNotFilled[this.board.getColor4Id(nextId)];
-            }
-            for (int color = 0;  color < this.numCaNotFilled.length;  ++color) {
-                if (this.numCaNotFilled[color] == 0) {
-                    this.numCaNotFilled[color] = -1; // don't detect this completed color again
-                    nonCompletedColors ^= 1 << color;
-                }
+        for (int color = 0;  color < this.numCaNotFilled.length;  ++color) {
+            if (0 == (this.numCaNotFilled[color] = this.numCaNotFilledInitial[color] - this.visited.countIntersection(this.caByColor[color]))) {
+                this.numCaNotFilled[color] = -1; // don't detect this completed color again
+                nonCompletedColors ^= 1 << color;
             }
         }
 
         // visit the first layer of neighbors, which is never empty, i.e. the puzzle is not solved yet
+        node.copyNeighborsTo(this.current);
         this.visited.addAll(this.current);
-        {
-            this.iter.init(this.current);
-            int nextId;
-            while ((nextId = this.iter.nextOrNegative()) >= 0) {
-                --this.numCaNotFilled[this.board.getColor4Id(nextId)];
-            }
+        for (int color = 0;  color < this.numCaNotFilled.length;  ++color) {
+            this.numCaNotFilled[color] -= this.current.countIntersection(this.caByColor[color]);
         }
         int distance = 0;
 
@@ -126,9 +121,8 @@ public class AStarPuchertStrategy implements AStarStrategy {
                         }
                     }
                     this.next.removeAll(this.visited);
-                    this.iter.init(this.next);
-                    while ((caId = this.iter.nextOrNegative()) >= 0) {
-                        --this.numCaNotFilled[this.board.getColor4Id(caId)];
+                    for (int color = 0;  color < this.numCaNotFilled.length;  ++color) {
+                        this.numCaNotFilled[color] -= this.next.countIntersection(this.caByColor[color]);
                     }
                     this.next.addAll(this.tmp);
                 }
@@ -140,9 +134,8 @@ public class AStarPuchertStrategy implements AStarStrategy {
                     this.next.addAll(this.board.getNeighborColorAreaSet4Id(caId));
                 }
                 this.next.removeAll(this.visited);
-                this.iter.init(this.next);
-                while ((caId = this.iter.nextOrNegative()) >= 0) {
-                    --this.numCaNotFilled[this.board.getColor4Id(caId)];
+                for (int color = 0;  color < this.numCaNotFilled.length;  ++color) {
+                    this.numCaNotFilled[color] -= this.next.countIntersection(this.caByColor[color]);
                 }
             }
             this.visited.addAll(this.next);
@@ -154,5 +147,4 @@ public class AStarPuchertStrategy implements AStarStrategy {
         }
         node.setEstimatedCost(node.getSolutionSize() + distance);
     }
-
 }

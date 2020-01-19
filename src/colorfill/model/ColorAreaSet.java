@@ -166,18 +166,6 @@ public class ColorAreaSet {
     }
 
     /**
-     * add all ColorAreas in the array to this set
-     * @param caIdArray
-     */
-    public void addAll(final int[] caIdArray)  {
-        for (final int caId : caIdArray) {
-            final int i = caId >>> 6;       // index is always >= 0
-            this.array[i] |= 1L << caId;    // implicit shift distance (caId & 0x3f)
-        }
-        this.size = SIZE_UNKNOWN;
-    }
-
-    /**
      * add all ColorAreas in the other set to this set
      */
     public void addAll(final ColorAreaSet other) {
@@ -198,6 +186,17 @@ public class ColorAreaSet {
         }
         this.size = (short)sz;
         return sz;
+    }
+
+    /**
+     * return the number of ColorAreas that are contained in both sets (this and the other)
+     */
+    public int countIntersection(final ColorAreaSet other) {
+        int num = 0;
+        for (int i = 0;  i < this.array.length;  ++i) {
+            num += Long.bitCount(this.array[i] & other.array[i]); // hopefully an intrinsic function using instruction POPCNT
+        }
+        return num;
     }
 
     /**
