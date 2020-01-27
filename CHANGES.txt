@@ -2,6 +2,11 @@ ColorFill  CHANGES
 
 
 
+1.2.2 (2020-01-27)
+- optimized AStarPuchertStrategy (more than twice as fast as version 1.1.1)
+
+
+
 1.2.1 (2019-02-17)
 - game board retains its aspect ratio when the window is resized
 
