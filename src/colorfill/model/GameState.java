@@ -269,7 +269,7 @@ public class GameState {
                             if (false == e.getCause() instanceof InterruptedException) {
                                 e.printStackTrace();
                             }
-                            solution = new Solution(new byte[0], SOLVER_NAMES[i]);
+                            solution = new Solution(this.board, new byte[0], SOLVER_NAMES[i]);
                         } catch (CancellationException e) {
                             // do nothing
                         } catch (TimeoutException e) {
@@ -302,7 +302,7 @@ public class GameState {
                     if (false == e.getCause() instanceof InterruptedException) {
                         e.printStackTrace();
                     }
-                    solution = new Solution(new byte[0], SOLVER_NAMES[strategyIdx]);
+                    solution = new Solution(this.board, new byte[0], SOLVER_NAMES[strategyIdx]);
                 } finally {
                     final String info = solver.getSolverInfo();
                     if ((null != info) && (0 != info.length())) {

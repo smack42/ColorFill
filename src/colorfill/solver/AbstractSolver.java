@@ -88,7 +88,7 @@ public abstract class AbstractSolver implements Solver {
         this.solutionSize = Integer.MAX_VALUE;
         if (null != previousSolution) {
             this.solutionSize = previousSolution.getNumSteps();
-            this.solutions.add(new Solution(previousSolution.getSteps(), this.getSolverName()));
+            this.solutions.add(new Solution(this.board, previousSolution.getSteps(), this.getSolverName()));
         }
 
         this.executeInternal(startPos);
@@ -104,7 +104,7 @@ public abstract class AbstractSolver implements Solver {
         if (this.solutions.size() > 0) {
             return this.solutions.get(0);
         } else {
-            return new Solution(new byte[0], this.getSolverName());
+            return new Solution(this.board, new byte[0], this.getSolverName());
         }
     }
 
@@ -124,7 +124,7 @@ public abstract class AbstractSolver implements Solver {
             this.solutions.clear();
         }
         if (this.solutionSize == solution.length) {
-            this.solutions.add(new Solution(solution, this.getSolverName()));
+            this.solutions.add(new Solution(this.board, solution, this.getSolverName()));
             return true;
         }
         return false;

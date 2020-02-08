@@ -19,6 +19,8 @@ package colorfill.solver;
 
 import java.util.Arrays;
 
+import colorfill.model.Board;
+
 /**
  * this class represents a solution that has been produced by a Solver.
  */
@@ -33,14 +35,10 @@ public class Solution {
      * @param steps
      * @param solverName
      */
-    public Solution(byte[] steps, String solverName) {
+    public Solution(Board board, byte[] steps, String solverName) {
         this.solverName = solverName;
         this.steps = Arrays.copyOf(steps, steps.length);
-        final StringBuilder sbSteps = new StringBuilder();
-        for (final byte step : steps) {
-            sbSteps.append(step + 1);
-        }
-        this.stepsString = sbSteps.toString();
+        this.stepsString = board.solutionToString(this.steps);
     }
 
     /**

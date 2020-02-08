@@ -20,18 +20,25 @@ package colorfill.model;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
  * The Board class represents the board (or game problem)
  */
 public class Board {
+    /** maximum number of colors supported by the most susceptible solver algorithm */
+    public static final int MAX_NUMBER_OF_COLORS = 16;
 
     private final byte[] cells;
     private final int width, height;
+    private final SortedMap<Character, Byte> char2Color;
+    private final SortedMap<Byte, Character> color2Char;
     private final int colors;
     private final ColorArea[] cellsColorAreas;
     private final SortedSet<ColorArea> colorAreas;
@@ -57,22 +64,55 @@ public class Board {
         this.colors = colors;
         this.cells = new byte[len];
         this.cellsColorAreas = new ColorArea[len];
-        this.colorAreas = new TreeSet<ColorArea>();
-        this.randomCellColors();
-        this.startPos = this.depth = -1;
-    }
-
-    /**
-     * fill all board cells with random color values.
-     */
-    private void randomCellColors() {
         final Random random = new Random();
         for (int i = 0;  i < this.cells.length;  ++i) {
             final byte color = (byte)random.nextInt(this.colors);
             this.cells[i] = color;
         }
-        this.colorAreas.clear();
+        this.startPos = this.depth = -1;
+        this.char2Color = new TreeMap<Character, Byte>();
+        this.color2Char = new TreeMap<Byte, Character>();
+        for (final byte cell : this.cells) {
+            // first color 0 is character '1'
+            final Character c = Character.valueOf(Character.forDigit(cell + 1, MAX_NUMBER_OF_COLORS + 1));
+            final Byte b = Byte.valueOf(cell);
+            this.char2Color.put(c, b);
+            this.color2Char.put(b, c);
+        }
+        this.colorAreas = new TreeSet<ColorArea>();
         this.colorAreas.addAll(this.createColorAreas());
+    }
+
+    /**
+     * fills <code>this.char2Color</code> and <code>this.color2Char</code> and <code>this.cells</code>.
+     * @throws IllegalArgumentException if there are more than MAX_NUMBER_OF_COLORS distinct character values in <code>str</code>
+     */
+    private void importString(String str) {
+        final int len = str.length();
+        this.char2Color.clear();
+        this.color2Char.clear();
+        for (int i = 0;  i < len;  ++i) {
+            this.char2Color.put(Character.valueOf(str.charAt(i)), null);
+        }
+        if (this.char2Color.size() > MAX_NUMBER_OF_COLORS) {
+            throw new IllegalArgumentException("more than " + MAX_NUMBER_OF_COLORS + " color values found in input string: " + this.char2Color.keySet().toString() + " \"" + str + "\"");
+        }
+        byte b = 0;
+        for (Map.Entry<Character, Byte> entry : this.char2Color.entrySet()) {
+            entry.setValue(Byte.valueOf(b++));
+            this.color2Char.put(entry.getValue(), entry.getKey());
+        }
+        for (int i = 0;  i < len;  ++i) {
+            this.cells[i] = this.char2Color.get(Character.valueOf(str.charAt(i))).byteValue();
+        }
+    }
+
+    public String solutionToString(byte[] steps) {
+        final StringBuilder result = new StringBuilder();
+        for (final byte color : steps) {
+            result.append(this.color2Char.get(Byte.valueOf(color)).charValue());
+        }
+        return result.toString();
     }
 
     /**
@@ -87,22 +127,20 @@ public class Board {
      */
     public Board(String str) {
         str = str.replaceAll("\\s", ""); // remove whitespace
-        final int len = str.length(); // TODO check if "len" is a square number
+        final int len = str.length();
         this.cells = new byte[len];
         this.width = (int)Math.sqrt(len);
         this.height = this.width;
-        for (int i = 0;  i < len;  ++i) {
-            final char c = str.charAt(i);
-            this.cells[i] = (byte)(Byte.parseByte(String.valueOf(c)) - 1);
+        if (this.width * this.height != len) {
+            throw new IllegalArgumentException("length of input String is not a square number: " + len + " \"" + str + "\"");
         }
+        this.char2Color = new TreeMap<Character, Byte>();
+        this.color2Char = new TreeMap<Byte, Character>();
+        this.importString(str);
+        this.colors = this.char2Color.size();
         this.cellsColorAreas = new ColorArea[len];
         this.colorAreas = new TreeSet<ColorArea>();
         this.colorAreas.addAll(this.createColorAreas());
-        int maxColor = 0;
-        for (final byte color : this.cells) {
-            maxColor = Math.max(maxColor, color);
-        }
-        this.colors = maxColor + 1;
         this.startPos = this.depth = -1;
     }
 
@@ -128,10 +166,7 @@ public class Board {
      */
     public Board(final int width, final int height, final int colors, final String strCells, final int startPos) {
         this(width, height, colors);
-        for (int i = 0;  i < this.cells.length;  ++i) {
-            final char c = strCells.charAt(i);
-            this.cells[i] = (byte)(Byte.parseByte(String.valueOf(c)) - 1);
-        }
+        this.importString(strCells);
         this.colorAreas.clear();
         this.colorAreas.addAll(this.createColorAreas());
         this.determineColorAreasDepth(startPos);
@@ -167,7 +202,7 @@ public class Board {
                 }
             }
             if (false == isAdded) {
-                final ColorArea ca = new ColorArea(color, this.width);
+                final ColorArea ca = new ColorArea(color, this.color2Char.get(Byte.valueOf(color)), this.width);
                 ca.addMember(index, color);
                 result.add(ca);
             }
@@ -234,7 +269,7 @@ public class Board {
         final byte[] solution = new byte[len];
         for (int i = 0;  i < len;  ++i) {
             final char c = str.charAt(i);
-            solution[i] = (byte)(Byte.parseByte(String.valueOf(c)) - 1);
+            solution[i] = this.char2Color.get(Character.valueOf(c)).byteValue();
         }
         final Set<ColorArea> floodAreas = new TreeSet<ColorArea>();
         final Set<ColorArea> floodNeighbors = new TreeSet<ColorArea>();
@@ -331,7 +366,7 @@ public class Board {
         final StringBuilder sb = new StringBuilder();
         for (int i = 0;  i < this.cellsColorAreas.length;  ++i) {
             final ColorArea ca = this.cellsColorAreas[i];
-            sb.append(ca.getColor() + 1).append('_').append(ca.getDepth());
+            sb.append(ca.getColorChar()).append('_').append(ca.getDepth());
             if (10 > ca.getDepth()) {
                 sb.append(' ');
             }
@@ -353,7 +388,7 @@ public class Board {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         for (int i = 0;  i < this.cells.length;  ++i) {
-            sb.append(this.cells[i] + 1);
+            sb.append(this.color2Char.get(Byte.valueOf(this.cells[i])).charValue());
             if (0 == (i + 1) % width) {
                 sb.append('\n');
             }
@@ -366,7 +401,7 @@ public class Board {
     public String toStringCells() {
         final StringBuilder sb = new StringBuilder();
         for (final byte cell : this.cells) {
-            sb.append(cell + 1);
+            sb.append(this.color2Char.get(Byte.valueOf(cell)).charValue());
         }
         return sb.toString();
     }

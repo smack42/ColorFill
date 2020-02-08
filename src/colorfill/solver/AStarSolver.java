@@ -213,10 +213,9 @@ public class AStarSolver extends AbstractSolver {
      */
     protected static class SolutionTree {
         // configure this:
-        private static final int MAX_NUMBER_OF_COLORS = 8;    // 8 colors = 3 bits
         private static final int MEMORY_BLOCK_SHIFT   = 20;   // 1 << 20 = 1*4 MiB
         // derived values:
-        private static final int COLOR_BIT_SHIFT      = Integer.SIZE - Integer.numberOfLeadingZeros(MAX_NUMBER_OF_COLORS - 1);
+        private static final int COLOR_BIT_SHIFT      = Integer.SIZE - Integer.numberOfLeadingZeros(Board.MAX_NUMBER_OF_COLORS - 1);
         private static final int COLOR_BIT_MASK       = (1 << COLOR_BIT_SHIFT) - 1;
         private static final int COLOR_BIT_MASK_INV   = ~COLOR_BIT_MASK;
         private static final int MEMORY_BLOCK_SIZE    = 1 << MEMORY_BLOCK_SHIFT;

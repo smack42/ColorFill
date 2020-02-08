@@ -27,6 +27,7 @@ import java.util.TreeSet;
 public class ColorArea implements Comparable<ColorArea> {
     private int id;
     private final byte color;
+    private final char colorChar;
     private final int boardWidth;
     private final SortedSet<Integer> members = new TreeSet<Integer>(); // sorted set - used by compareTo!
     private final SortedSet<Integer> membersUnmodifiable = Collections.unmodifiableSortedSet(this.members);
@@ -41,8 +42,9 @@ public class ColorArea implements Comparable<ColorArea> {
      */
     public int tmpAStarDepth;
 
-    protected ColorArea(final byte color, final int boardWidth) {
-        this.color = (byte)color;
+    protected ColorArea(final byte color, final Character colorChar, final int boardWidth) {
+        this.color = color;
+        this.colorChar = colorChar.charValue();
         this.boardWidth = boardWidth;
     }
 
@@ -100,9 +102,9 @@ public class ColorArea implements Comparable<ColorArea> {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append(this.color + 1).append('_').append(this.members.toString()).append("-(");
+        sb.append(this.colorChar).append('_').append(this.members.toString()).append("-(");
         for (final ColorArea ca : this.neighbors) {
-            sb.append(ca.color + 1);
+            sb.append(ca.colorChar);
         }
         sb.append(')');
         return sb.toString();
@@ -140,6 +142,10 @@ public class ColorArea implements Comparable<ColorArea> {
 
     public byte getColor() {
         return this.color;
+    }
+
+    public char getColorChar() {
+        return this.colorChar;
     }
 
     public SortedSet<Integer> getMembers() {
