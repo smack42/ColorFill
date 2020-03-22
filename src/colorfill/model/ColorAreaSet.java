@@ -90,6 +90,15 @@ public class ColorAreaSet {
     }
 
     /**
+     * remove the ColorArea from this set
+     */
+    public void remove(final int caId) {
+        final int i = caId >>> 6;       // index is always >= 0
+        this.array[i] &= ~(1L << caId); // implicit shift distance (caId & 0x3f)
+        this.size = SIZE_UNKNOWN;
+    }
+
+    /**
      * return true if the ColorArea is in this set
      */
     public boolean contains(final ColorArea ca) {
@@ -189,14 +198,16 @@ public class ColorAreaSet {
     }
 
     /**
-     * return the number of ColorAreas that are contained in both sets (this and the other)
+     * return true if the set difference (this - other) would be an empty set.
+     * note: both sets remain unchanged.
      */
-    public int countIntersection(final ColorAreaSet other) {
-        int num = 0;
+    public boolean isEmptyDifference(final ColorAreaSet other) {
         for (int i = 0;  i < this.array.length;  ++i) {
-            num += Long.bitCount(this.array[i] & other.array[i]); // hopefully an intrinsic function using instruction POPCNT
+            if (0L != (this.array[i] & ~(other.array[i]))) {
+                return false;
+            }
         }
-        return num;
+        return true;
     }
 
     /**
