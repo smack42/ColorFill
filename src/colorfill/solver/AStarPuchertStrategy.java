@@ -30,7 +30,7 @@ import colorfill.model.ColorAreaSet;
 public class AStarPuchertStrategy implements AStarStrategy {
 
     private final Board board;
-    private final ColorAreaSet visited;
+    private final ColorAreaSet visited, completed;
     private ColorAreaSet current, next;
     private final ColorAreaSet[] caByColor;
     private final ColorAreaSet.FastIteratorColorAreaId iter;
@@ -39,6 +39,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
     public AStarPuchertStrategy(final Board board) {
         this.board = board;
         this.visited = new ColorAreaSet(board);
+        this.completed = new ColorAreaSet(board);
         this.current = new ColorAreaSet(board);
         this.next = new ColorAreaSet(board);
         this.caByColor = new ColorAreaSet[board.getNumColors()];
@@ -91,9 +92,6 @@ public class AStarPuchertStrategy implements AStarStrategy {
                         nonCompletedColors ^= l1b;
                     }
                 }
-                int caId;
-                this.iter.init(this.current);
-                this.next.clear();
                 if (0 != completedColors) {
                     // We can eliminate colors. Do just that.
                     // We also combine all these elimination moves.
@@ -101,27 +99,40 @@ public class AStarPuchertStrategy implements AStarStrategy {
                     if (0 == nonCompletedColors) {
                         break; // done
                     } else {
-                        this.next.addAll(this.current);
-                        while ((caId = this.iter.nextOrNegative()) >= 0) {
-                            if ((completedColors & (1 << this.board.getColor4Id(caId))) != 0) {
-                                // completed color
-                                this.next.addAll(this.board.getNeighborColorAreaSet4Id(caId));
-                            } else {
-                                // non-completed color
-                                // move node to next layer
-                                this.visited.remove(caId);
+                        this.next.clear();
+                        // completed colors
+                        this.completed.clear();
+                        while (true) {
+                            final int l1b = completedColors & -completedColors;  // Integer.lowestOneBit(completedColors);
+                            final int color = 31 - Integer.numberOfLeadingZeros(l1b);
+                            this.completed.addAllAnd(this.current, this.caByColor[color]);
+                            if (0 == (completedColors ^= l1b)) {
+                                break;
                             }
                         }
+                        this.iter.init(this.completed);
+                        int caId;
+                        while ((caId = this.iter.nextOrNegative()) >= 0) {
+                            this.next.addAll(this.board.getNeighborColorAreaSet4Id(caId));
+                        }
+                        this.next.removeAll(this.visited);
+                        // non-completed colors
+                        // move nodes to next layer
+                        this.current.removeAll(this.completed);
+                        this.next.addAll(this.current);
                     }
                 } else {
+                    this.next.clear();
                     // Nothing found, do the color-blind pseudo-move
                     // Expand current layer of nodes.
                     ++distance;
+                    this.iter.init(this.current);
+                    int caId;
                     while ((caId = this.iter.nextOrNegative()) >= 0) {
                         this.next.addAll(this.board.getNeighborColorAreaSet4Id(caId));
                     }
+                    this.next.removeAll(this.visited);
                 }
-                this.next.removeAll(this.visited);
 
                 // Move the next layer into the current.
                 final ColorAreaSet t = this.current;

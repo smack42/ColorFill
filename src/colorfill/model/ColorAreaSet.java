@@ -185,6 +185,16 @@ public class ColorAreaSet {
     }
 
     /**
+     * add all ColorAreas in the and-combined other sets to this set
+     */
+    public void addAllAnd(final ColorAreaSet other1, final ColorAreaSet other2) {
+        for (int i = 0;  i < this.array.length;  ++i) {
+            this.array[i] |= (other1.array[i] & other2.array[i]);
+        }
+        this.size = SIZE_UNKNOWN;
+    }
+
+    /**
      * remove all ColorAreas in the other set from this set
      */
     public int removeAll(final ColorAreaSet other) {
