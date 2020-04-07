@@ -35,7 +35,7 @@ public class DfsSolver extends AbstractSolver {
     private ColorAreaSet allFlooded;
     private ColorAreaGroup notFlooded;
     private ColorAreaGroup[] neighbors;
-    private final ColorAreaSet.FastIteratorColorAreaId iter;
+    private final ColorAreaSet.Iterator iter;
 
     /**
      * construct a new solver for this Board.
@@ -43,7 +43,7 @@ public class DfsSolver extends AbstractSolver {
      */
     public DfsSolver(final Board board) {
         super(board);
-        this.iter = new ColorAreaSet(board).fastIteratorColorAreaId();
+        this.iter = new ColorAreaSet.Iterator();
     }
 
     /* (non-Javadoc)

@@ -33,7 +33,7 @@ public class AStarSolver extends AbstractSolver {
     private Class<? extends AStarStrategy> strategyClass = AStarTigrouStrategy.class; // default
     private AStarStrategy strategy;
     private final SolutionTree solutionTree = new SolutionTree();
-    private final ColorAreaSet.FastIteratorColorAreaId iter;
+    private final ColorAreaSet.Iterator iter;
     private final ColorArea[] caArray;
 
     /**
@@ -42,7 +42,7 @@ public class AStarSolver extends AbstractSolver {
      */
     protected AStarSolver(Board board) {
         super(board);
-        this.iter = new ColorAreaSet(board).fastIteratorColorAreaId();
+        this.iter = new ColorAreaSet.Iterator();
         this.caArray = new ColorArea[board.getColorAreasArray().length];
     }
 

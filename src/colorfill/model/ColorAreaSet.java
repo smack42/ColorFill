@@ -185,16 +185,6 @@ public class ColorAreaSet {
     }
 
     /**
-     * add all ColorAreas in the and-combined other sets to this set
-     */
-    public void addAllAnd(final ColorAreaSet other1, final ColorAreaSet other2) {
-        for (int i = 0;  i < this.array.length;  ++i) {
-            this.array[i] |= (other1.array[i] & other2.array[i]);
-        }
-        this.size = SIZE_UNKNOWN;
-    }
-
-    /**
      * remove all ColorAreas in the other set from this set
      */
     public int removeAll(final ColorAreaSet other) {
@@ -221,26 +211,13 @@ public class ColorAreaSet {
     }
 
     /**
-     * create an Iterator over this set that returns the IDs of the member ColorArea objects
-     * @return
+     * an Iterator over one ColorAreaSet that returns the IDs of the member ColorArea objects
      */
-    public FastIteratorColorAreaId fastIteratorColorAreaId() {
-        return new FastIteratorColorAreaId(this);
-    }
-
-    public static class FastIteratorColorAreaId {
+    public static class Iterator {
         private long[] array;
         private int longIdxLimit;
         private int longIdx;
         private long buf;
-
-        /**
-         * create an Iterator for use with this ColorAreaSet.
-         * @param caSet
-         */
-        private FastIteratorColorAreaId(final ColorAreaSet caSet) {
-            this.init(caSet);
-        }
 
         /**
          * initialize this Iterator for use with this ColorAreaSet.
@@ -264,6 +241,48 @@ public class ColorAreaSet {
                     return -1;
                 } else {
                     this.buf = this.array[++this.longIdx];
+                }
+            }
+            final long l1b = this.buf & -this.buf;  // Long.lowestOneBit(this.buf)
+            final int clz = Long.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
+            final int caId = (this.longIdx << 6) + 63 - clz;
+            this.buf ^= l1b;
+            return caId;
+        }
+    }
+
+    /**
+     * an Iterator over two ColorAreaSets combined with AND, that returns the IDs of the member ColorArea objects that are contained in both sets
+     */
+    public static class IteratorAnd {
+        private long[] array1, array2;
+        private int longIdxLimit;
+        private int longIdx;
+        private long buf;
+
+        /**
+         * initialize this Iterator for use with these ColorAreaSets.
+         */
+        public void init(final ColorAreaSet caSet1, final ColorAreaSet caSet2) {
+            this.array1 = caSet1.array;
+            this.array2 = caSet2.array;
+            this.longIdxLimit = this.array1.length - 1;
+            this.longIdx = 0;
+            this.buf = this.array1[0] & this.array2[0];
+        }
+
+        /**
+         * return next value (always zero or positive),
+         * or a negative value when there is no next value.
+         * @return
+         */
+        public int nextOrNegative() {
+            while (0 == this.buf) {
+                if (this.longIdxLimit == this.longIdx) {
+                    return -1;
+                } else {
+                    ++this.longIdx;
+                    this.buf = this.array1[this.longIdx] & this.array2[this.longIdx];
                 }
             }
             final long l1b = this.buf & -this.buf;  // Long.lowestOneBit(this.buf)

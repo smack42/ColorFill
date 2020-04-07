@@ -29,7 +29,7 @@ public class ColorAreaGroup {
 
     private final Board board;
     private final ColorAreaSet[] theArray;
-    private final ColorAreaSet.FastIteratorColorAreaId iter;
+    private final ColorAreaSet.Iterator iter;
     
     private int colorsNotEmptyBits;
 
@@ -42,7 +42,7 @@ public class ColorAreaGroup {
         for (int color = 0;  color < this.theArray.length;  ++color) {
             this.theArray[color] = new ColorAreaSet(board);
         }
-        this.iter = new ColorAreaSet(board).fastIteratorColorAreaId();
+        this.iter = new ColorAreaSet.Iterator();
         this.colorsNotEmptyBits = 0;
     }
 
