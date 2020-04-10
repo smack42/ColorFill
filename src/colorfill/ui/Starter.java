@@ -31,6 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import colorfill.model.Board;
+import colorfill.solver.AStarFlolleStrategy;
 import colorfill.solver.AStarPuchertStrategy;
 import colorfill.solver.AStarTigrouStrategy;
 import colorfill.solver.AbstractSolver;
@@ -46,8 +47,8 @@ import colorfill.solver.Strategy;
 public class Starter {
     
     public static void main(String[] args) throws Exception {
-        final String progname = "ColorFill";
-        final String version  = "1.2.2 (2020-01-27)";
+        final String progname = "ColorFill __DEV__";
+        final String version  = "1.3.0 (2020-04-10)";
         final String author   = "Copyright (C) 2020 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
@@ -62,7 +63,16 @@ public class Starter {
             runSolver(args[0]);
             break;
         case 2:
-            runValidator(args[0], args[1]);
+            if ("-benchmark".equals(args[0])) {
+                runBenchmark(args);
+            } else {
+                runValidator(args[0], args[1]);
+            }
+            break;
+        case 3:
+            if ("-benchmark".equals(args[0])) {
+                runBenchmark(args);
+            }
             break;
         default:
             // print command line help?
@@ -82,6 +92,7 @@ public class Starter {
 //        final String s = "6345215456513263145";
         final String b = "1464232256454151265361121333134355423464254633453256562522536212626562361214311523421215254461265111331145426131342543161111561256314564465566551321526616635335534461614344546336223551453241656312";
         final String s = "46465321364162543614523";
+
         final int startPos = 0;
 
         final Board board = new Board(b);
@@ -124,9 +135,6 @@ public class Starter {
         final String firstLine = br.readLine();
         if (null == firstLine) {
             // nothing to do
-        } else if (14*14 == firstLine.length()) {
-            // Programming Challenge 19
-            result = firstLine;
         } else if (19 == firstLine.length()) {
             // Code Golf 26232
             final StringBuilder sb = new StringBuilder(19*19);
@@ -142,6 +150,8 @@ public class Starter {
             if (19*19 == sb.length()) {
                 result = sb.toString();
             }
+        } else {
+            result = firstLine;
         }
         return result;
     }
@@ -149,15 +159,14 @@ public class Starter {
     private static Board makeBoard(final BufferedReader br) throws Exception {
         Board result = null;
         final String boardData = readBoard(br);
-        if (null == boardData) {
-            // nothing to do
-        } else if (14*14 == boardData.length()) {
-            // Programming Challenge 19
-            final int startPos = 0;
-            result = new Board(boardData, startPos);
-        } else if (19*19 == boardData.length()) {
-            // Code Golf 26232
-            final int startPos = (19*19-1)/2;
+        if (null != boardData) {
+            final int startPos;
+            if (19*19 == boardData.length()) {
+                // Code Golf 26232
+                startPos = (19*19-1)/2;
+            } else {
+                startPos = 0;
+            }
             result = new Board(boardData, startPos);
         }
         return result;
@@ -179,6 +188,7 @@ public class Starter {
             DfsDeepStrategy.class,
             DfsDeeperStrategy.class,
             AStarTigrouStrategy.class,
+            AStarFlolleStrategy.class,
             AStarPuchertStrategy.class,
             //DfsExhaustiveStrategy.class,
         };
@@ -628,6 +638,69 @@ main_loop:
         brBoards.close();
     }
 
+
+    private static void runBenchmark(final String[] args) throws Exception {
+        final String inputFileName = args[1];
+        final Class STRATEGY;
+        if (args.length == 2) {
+            STRATEGY = AStarPuchertStrategy.class;
+        } else {
+            STRATEGY = Class.forName("colorfill.solver." + args[2]);
+        }
+        final String solverName = AbstractSolver.getSolverName(STRATEGY);
+        System.out.println("running benchmark of solver strategy " + solverName);
+        System.out.println("reading  input file: " + inputFileName);
+        final BufferedReader brBoards = new BufferedReader(new FileReader(inputFileName));
+        final String outputFileName = inputFileName + "_solution.txt";
+        System.out.println("writing output file: " + outputFileName);
+        final PrintWriter pwSteps = new PrintWriter(new FileWriter(outputFileName));
+        int count = 0, totalSteps = 0;
+        long totalNanos = 0;
+        // read input file and solve boards and write to output file
+        final List<Integer> allMilliSeconds = new ArrayList<Integer>();
+        for (;;) {
+            final long nanoStart = System.nanoTime();
+            final Board board = makeBoard(brBoards);
+            if (null == board) {
+                break; // end of input file !?
+            }
+            ++count;
+            final Solver solver = AbstractSolver.createSolver(STRATEGY, board);
+            solver.execute(board.getStartPos(), null);
+            final long nanoEnd = System.nanoTime();
+            final Solution solution = solver.getSolution();
+            totalSteps += solution.getNumSteps();
+            totalNanos += nanoEnd - nanoStart;
+            final int millis = (int)((nanoEnd - nanoStart + 999999L) / 1000000L);
+            allMilliSeconds.add(Integer.valueOf(millis));
+            System.out.println(
+                    padRight("" + count, 6 + 1) +
+                    padRight(solution.toString() + "____________" + solution.getNumSteps(), 32 + 12 + 2 + 2) +
+                    "milliSeconds=" + millis
+                    );
+//            System.out.flush();
+            pwSteps.println(solution.toString());
+            pwSteps.flush();
+        }
+
+        // print summary
+        int minMillis = Integer.MAX_VALUE;
+        int maxMillis = Integer.MIN_VALUE;
+        long avgMillis = 0;
+        for (final int millis : allMilliSeconds) {
+            minMillis = Math.min(minMillis, millis);
+            maxMillis = Math.max(maxMillis, millis);
+            avgMillis += millis;
+        }
+        Collections.sort(allMilliSeconds);
+        int medianMillis = allMilliSeconds.isEmpty() ? 0 : allMilliSeconds.get(Math.min(allMilliSeconds.size()/2, allMilliSeconds.size()-1)).intValue();
+        long totalMillis = (int)((totalNanos + 999999L) / 1000000L);
+        avgMillis = avgMillis / (allMilliSeconds.isEmpty() ? 1 : allMilliSeconds.size());
+        System.out.println(solverName + "  " + count + " solutions with  " + totalSteps + " steps");
+        System.out.println("milliSeconds_min/median/average/max=" + minMillis + "/" + medianMillis + "/" + avgMillis + "/" + maxMillis + "  total=" + totalMillis);
+        pwSteps.close();
+        brBoards.close();
+    }
 
     /**
      * read the two files and check if the boards in the first file are solved
