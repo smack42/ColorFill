@@ -34,7 +34,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
     protected ColorAreaSet current, next;
     protected final ColorAreaSet[] casByColor;
     protected final ColorAreaSet.Iterator iter;
-    protected final ColorAreaSet.IteratorAnd iterAnd;
+    private final ColorAreaSetIteratorAnd iterAnd;
     protected final int allColors;
 
     public AStarPuchertStrategy(final Board board) {
@@ -50,7 +50,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
             this.casByColor[ca.getColor()].add(ca);
         }
         this.iter = new ColorAreaSet.Iterator();
-        this.iterAnd = new ColorAreaSet.IteratorAnd();
+        this.iterAnd = new ColorAreaSetIteratorAnd();
         this.allColors = (1 << board.getNumColors()) - 1;
     }
 
@@ -141,5 +141,49 @@ public class AStarPuchertStrategy implements AStarStrategy {
             }
         }
         node.setEstimatedCost(node.getSolutionSize() + distance);
+    }
+
+
+
+    /**
+     * an Iterator over two ColorAreaSets combined with AND, that returns the IDs of the member ColorArea objects that are contained in both sets
+     */
+    private static class ColorAreaSetIteratorAnd {
+        private long[] array1, array2;
+        private int longIdxLimit;
+        private int longIdx;
+        private long buf;
+
+        /**
+         * initialize this Iterator for use with these ColorAreaSets.
+         */
+        private void init(final ColorAreaSet caSet1, final ColorAreaSet caSet2) {
+            this.array1 = caSet1.getArray();
+            this.array2 = caSet2.getArray();
+            this.longIdxLimit = this.array1.length - 1;
+            this.longIdx = 0;
+            this.buf = this.array1[0] & this.array2[0];
+        }
+
+        /**
+         * return next value (always zero or positive),
+         * or a negative value when there is no next value.
+         * @return
+         */
+        private int nextOrNegative() {
+            while (0 == this.buf) {
+                if (this.longIdxLimit == this.longIdx) {
+                    return -1;
+                } else {
+                    ++this.longIdx;
+                    this.buf = this.array1[this.longIdx] & this.array2[this.longIdx];
+                }
+            }
+            final long l1b = this.buf & -this.buf;  // Long.lowestOneBit(this.buf)
+            final int clz = Long.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
+            final int caId = (this.longIdx << 6) + 63 - clz;
+            this.buf ^= l1b;
+            return caId;
+        }
     }
 }

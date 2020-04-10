@@ -62,13 +62,12 @@ public class ColorAreaSet {
         this.size = 0;
     }
 
-//FIXME the move from int[] to long[] array here (for a performance improvement) broke DfsExhaustiveStrategy
-//    /**
-//     * get the reference of the internal array
-//     */
-//    public int[] getArray() {
-//        return this.array;
-//    }
+    /**
+     * get the reference of the internal array
+     */
+    public long[] getArray() {
+        return this.array;
+    }
 
     /**
      * add the ColorArea to this set
