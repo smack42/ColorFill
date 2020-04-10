@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015 Michael Henke
+    Copyright (C) 2014, 2020 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
+import colorfill.solver.AStarFlolleStrategy;
 import colorfill.solver.AStarPuchertStrategy;
 import colorfill.solver.AStarTigrouStrategy;
 import colorfill.solver.AbstractSolver;
@@ -53,7 +54,8 @@ import colorfill.solver.Strategy;
 public class GameState {
 
     private static final Class<?>[] STRATEGIES = { // all solver strategies, sorted by average speed (fastest first)
-        AStarTigrouStrategy.class
+        AStarFlolleStrategy.class
+        ,AStarTigrouStrategy.class
         ,DfsGreedyStrategy.class
         ,DfsGreedyNextStrategy.class
         ,DfsDeepStrategy.class

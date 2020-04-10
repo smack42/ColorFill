@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015 Michael Henke
+    Copyright (C) 2014, 2020 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -82,6 +82,8 @@ public class AStarSolver extends AbstractSolver {
             result = new AStarTigrouStrategy(this.board, this.solutionTree, this);
         } else if (AStarPuchertStrategy.class.equals(this.strategyClass)) {
             result = new AStarPuchertStrategy(this.board);
+        } else if (AStarFlolleStrategy.class.equals(this.strategyClass)) {
+            result = new AStarFlolleStrategy(this.board);
         } else {
             throw new IllegalArgumentException(
                     "unsupported strategy class " + this.strategyClass.getName());
@@ -101,6 +103,8 @@ public class AStarSolver extends AbstractSolver {
         if (this.strategy instanceof AStarTigrouStrategy) {
             this.executeInternalTigrou(startCa);
         } else if (this.strategy instanceof AStarPuchertStrategy) {
+            this.executeInternalPuchert(startCa);
+        } else if (this.strategy instanceof AStarFlolleStrategy) {
             this.executeInternalPuchert(startCa);
         }
     }

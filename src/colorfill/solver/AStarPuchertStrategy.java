@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2017 Michael Henke
+    Copyright (C) 2017, 2020 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -29,13 +29,13 @@ import colorfill.model.ColorAreaSet;
  */
 public class AStarPuchertStrategy implements AStarStrategy {
 
-    private final Board board;
-    private final ColorAreaSet visited;
-    private ColorAreaSet current, next;
-    private final ColorAreaSet[] casByColor;
-    private final ColorAreaSet.Iterator iter;
-    private final ColorAreaSet.IteratorAnd iterAnd;
-    private final int allColors;
+    protected final Board board;
+    protected final ColorAreaSet visited;
+    protected ColorAreaSet current, next;
+    protected final ColorAreaSet[] casByColor;
+    protected final ColorAreaSet.Iterator iter;
+    protected final ColorAreaSet.IteratorAnd iterAnd;
+    protected final int allColors;
 
     public AStarPuchertStrategy(final Board board) {
         this.board = board;

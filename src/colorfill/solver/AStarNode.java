@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015 Michael Henke
+    Copyright (C) 2014, 2020 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -92,6 +92,13 @@ public class AStarNode {
      */
     public ColorAreaSet getNeighbors() {
         return this.neighbors;
+    }
+
+    /**
+     * get the number of flooded color areas.
+     */
+    public int getFloodedSize() {
+        return this.flooded.size();
     }
 
     /**
