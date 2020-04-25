@@ -18,6 +18,7 @@
 package colorfill.ui;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -25,10 +26,12 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -76,6 +79,7 @@ public class ControlPanel extends JPanel {
     private final String[]          solverNames;
     private final IRow[]            solverRows1;
     private final JRadioButton[]    solverRButtons;
+    private final JCheckBox[]       solverCheckBoxes;
     private final IRow[]            solverRows2;
     private final JLabel[]          solverMoves;
     private final JButton[]         solverPrevButtons;
@@ -118,7 +122,8 @@ public class ControlPanel extends JPanel {
      * constructor
      * @param controller
      */
-    protected ControlPanel(final ControlController controller, final Color[] colors, final int numColors, final String[] solverNames, final boolean isSelectedSolverResults) {
+    protected ControlPanel(final ControlController controller, final Color[] colors, final int numColors, final String[] solverNames,
+            final boolean isSelectedSolverResults, final List<String> dontRunSolverStrategies) {
         super();
         this.controller = controller;
         this.numColors = numColors;
@@ -126,6 +131,7 @@ public class ControlPanel extends JPanel {
         this.solverNames        = solverNames;
         this.solverRows1        = new IRow[solverNames.length];
         this.solverRButtons     = new JRadioButton[solverNames.length];
+        this.solverCheckBoxes   = new JCheckBox[solverNames.length];
         this.solverRows2        = new IRow[solverNames.length];
         this.solverMoves        = new JLabel[solverNames.length];
         this.solverPrevButtons  = new JButton[solverNames.length];
@@ -146,9 +152,33 @@ public class ControlPanel extends JPanel {
         layout.row().grid().add(this.makeButtonUndo(), 3).add(this.makeButtonRedo(), 3);
         layout.row().grid().add(this.makeButtonHint(), 3).empty().add(this.makeHintEstimatedSteps()).add(this.makeButtonHintColor());
         layout.row().grid().add(new JSeparator());
-        layout.row().grid().add(this.makeCheckBoxSolverResults(isSelectedSolverResults));
-        this.makeSolverRows(bgroup, layout);
+
+        final JPanel panel2 = new JPanel();
+        final DesignGridLayout layout2 = new DesignGridLayout(panel2);
+        layout2.row().grid().add(this.makeCheckBoxSolverResults(isSelectedSolverResults));
+        this.makeSolverRows(bgroup, layout2, dontRunSolverStrategies);
+        final MouseAdapter panel2MA = new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                for (final JCheckBox cb : ControlPanel.this.solverCheckBoxes) {
+                    cb.setVisible(true);
+                }
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                for (final JCheckBox cb : ControlPanel.this.solverCheckBoxes) {
+                    cb.setVisible(false);
+                }
+            }
+        };
+        panel2.addMouseListener(panel2MA);
+        for (Component c : panel2.getComponents()) {
+            c.addMouseListener(panel2MA);
+        }
+
+        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         this.add(panel);
+        this.add(panel2);
     }
 
     private JButton makeButtonNew() {
@@ -298,13 +328,13 @@ public class ControlPanel extends JPanel {
             @Override
             public void itemStateChanged(ItemEvent e) {
                 final boolean isSelected = (e.getStateChange() == ItemEvent.SELECTED);
-                ControlPanel.this.controller.userChangedRunSolver(isSelected);
+                ControlPanel.this.controller.userChangedRunSolverAll(isSelected);
             }
         });
         return this.checkBoxSolverResults;
     }
 
-    private void makeSolverRows(final ButtonGroup bgroup, final DesignGridLayout layout) {
+    private void makeSolverRows(final ButtonGroup bgroup, final DesignGridLayout layout, final List<String> dontRunSolverStrategies) {
         for (int i = 0;  i < this.solverNames.length;  ++i) {
             this.solverRButtons[i] = new JRadioButton("?? " + this.solverNames[i]);
             this.solverRButtons[i].setEnabled(false);
@@ -317,6 +347,15 @@ public class ControlPanel extends JPanel {
                     ControlPanel.this.controller.userButtonSolution(numProgress);
                 }
             });
+            this.solverCheckBoxes[i] = new JCheckBox();
+            this.solverCheckBoxes[i].setSelected(!dontRunSolverStrategies.contains(this.solverNames[i]));
+            this.solverCheckBoxes[i].addItemListener(new ItemListener() {
+                @Override
+                public void itemStateChanged(ItemEvent e) {
+                    final boolean isSelected = (e.getStateChange() == ItemEvent.SELECTED);
+                    ControlPanel.this.controller.userChangedRunSolver(numProgress, isSelected);
+                }
+            });
             this.solverMoves[i] = new JLabel();
             this.solverMoves[i].setVisible(false);
             this.solverMoves[i].setHorizontalAlignment(SwingConstants.CENTER);
@@ -326,10 +365,8 @@ public class ControlPanel extends JPanel {
             this.solverNextButtons[i] = new JButton("+");
             this.solverNextButtons[i].setVisible(false);
             this.solverNextButtons[i].addActionListener(this.actionRedoStep);
-            this.solverRows1[i] = layout.row().grid();
-            this.solverRows1[i].add(this.solverRButtons[i]);
-            this.solverRows2[i] = layout.row().grid();
-            this.solverRows2[i].add(this.solverPrevButtons[i]).add(this.solverMoves[i]).add(this.solverNextButtons[i]).hide();
+            this.solverRows1[i] = layout.row().grid().add(this.solverRButtons[i], 5).add(this.solverCheckBoxes[i]);
+            this.solverRows2[i] = layout.row().grid().add(this.solverPrevButtons[i]).add(this.solverMoves[i]).add(this.solverNextButtons[i]).empty(3);
         }
     }
 

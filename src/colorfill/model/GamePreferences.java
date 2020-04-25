@@ -18,6 +18,10 @@
 package colorfill.model;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.StringTokenizer;
 import java.util.prefs.Preferences;
 
 public class GamePreferences {
@@ -34,6 +38,7 @@ public class GamePreferences {
     private static final String PREFS_CELLSIZE  = "cellSize";
     private static final String PREFS_COLSCHEME = "colorScheme";
     private static final String PREFS_RUNSOLVER = "runSolver";
+    private static final String PREFS_DONT_RUN_STRATEGIES = "dontRunSolverStrategies";
     private static final String PREFS_GAMESTATE_BOARD    = "gameStateBoard";
     private static final String PREFS_GAMESTATE_SOLUTION = "gameStateSolution";
     private static final char   PREFS_GAMESTATE_SEPARATOR = ';';
@@ -120,6 +125,7 @@ public class GamePreferences {
     private int highlightColor;
     private int cellSize;
     private int runSolver;
+    private final List<String> dontRunSolverStrategies;
 
     public GamePreferences() {
         this.width = DEFAULT_BOARD_WIDTH;
@@ -132,6 +138,7 @@ public class GamePreferences {
         this.uiBoardColorNumbers = DEFAULT_UI_BOARD_COLOR_NUMBERS.intValue;
         this.highlightColor = DEFAULT_UI_HIGHLIGHT_COLOR.intValue;
         this.runSolver = DEFAULT_UI_RUNSOLVER;
+        this.dontRunSolverStrategies = new ArrayList<String>();
         this.loadPrefs();
         this.savePrefs();
     }
@@ -271,6 +278,17 @@ public class GamePreferences {
         return 0 != this.runSolver;
     }
 
+    public void setRunSolverStrategy(final String strategy, final boolean runSolver) {
+        if (runSolver) {
+            this.dontRunSolverStrategies.remove(strategy);
+        } else {
+            this.dontRunSolverStrategies.add(strategy);
+        }
+    }
+    public List<String> getDontRunSolverStrategies() {
+        return Collections.unmodifiableList(this.dontRunSolverStrategies);
+    }
+
     private void loadPrefs() {
         this.setWidth            (PREFS.getInt(PREFS_WIDTH,              DEFAULT_BOARD_WIDTH));
         this.setHeight           (PREFS.getInt(PREFS_HEIGHT,             DEFAULT_BOARD_HEIGHT));
@@ -282,6 +300,11 @@ public class GamePreferences {
         this.setHighlightColor   (PREFS.getInt(PREFS_HIGHLIGHT_COLOR,    DEFAULT_UI_HIGHLIGHT_COLOR.intValue));
         this.setCellSize         (PREFS.getInt(PREFS_CELLSIZE,           DEFAULT_UI_CELLSIZE));
         this.runSolver          = PREFS.getInt(PREFS_RUNSOLVER,          DEFAULT_UI_RUNSOLVER);
+        final StringTokenizer tokDontRun = new StringTokenizer(PREFS.get(PREFS_DONT_RUN_STRATEGIES, ""), ",");
+        this.dontRunSolverStrategies.clear();
+        while (tokDontRun.hasMoreTokens()) {
+            this.dontRunSolverStrategies.add(tokDontRun.nextToken());
+        }
     }
 
     public void savePrefs() {
@@ -295,6 +318,11 @@ public class GamePreferences {
         PREFS.putInt(PREFS_HIGHLIGHT_COLOR,    this.getHighlightColor());
         PREFS.putInt(PREFS_CELLSIZE,           this.getCellSize());
         PREFS.putInt(PREFS_RUNSOLVER,          this.runSolver);
+        final StringBuffer sbDontRun = new StringBuffer();
+        for (final String dontRun : this.dontRunSolverStrategies) {
+            sbDontRun.append(',').append(dontRun);
+        }
+        PREFS.put(PREFS_DONT_RUN_STRATEGIES, sbDontRun.substring(Math.min(sbDontRun.length(), 1)));
     }
 
     public static void saveBoard(final Board board) {

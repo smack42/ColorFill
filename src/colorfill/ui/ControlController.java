@@ -36,7 +36,8 @@ public class ControlController {
     protected ControlController(final MainController mainController, final GameState gameState) {
         this.mainController = mainController;
         this.gameState = gameState;
-        this.controlPanel = new ControlPanel(this, gameState.getPreferences().getUiColors(), gameState.getPreferences().getNumColors(), gameState.getSolverNames(), gameState.getPreferences().isRunSolver());
+        this.controlPanel = new ControlPanel(this, gameState.getPreferences().getUiColors(), gameState.getPreferences().getNumColors(),
+                gameState.getSolverNames(), gameState.getPreferences().isRunSolver(), gameState.getPreferences().getDontRunSolverStrategies());
     }
 
     protected JPanel getPanel() {
@@ -135,10 +136,20 @@ public class ControlController {
      * called by ControlPanel when user clicks on "computed solutions" checkbox
      * @param runSolver
      */
-    protected void userChangedRunSolver(final boolean runSolver) {
+    protected void userChangedRunSolverAll(final boolean runSolver) {
         this.gameState.getPreferences().setRunSolver(runSolver);
         this.gameState.getPreferences().savePrefs();
         this.gameState.setAutoRunSolver(runSolver);
+    }
+
+    /**
+     * called by ControlPanel when user clicks on the checkbox next to a solver strategy
+     * @param numSolver number of the selected solution (1 ... n)
+     * @param runSolver
+     */
+    protected void userChangedRunSolver(final int numSolver, final boolean runSolver) {
+        this.gameState.getPreferences().setRunSolverStrategy(this.gameState.getSolverNames()[numSolver - 1], runSolver);
+        this.gameState.getPreferences().savePrefs();
     }
 
     /**

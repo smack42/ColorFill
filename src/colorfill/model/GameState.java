@@ -224,6 +224,7 @@ public class GameState {
                     return t;
                 }
             };
+            final List<String> dontRunSolverStrategies = GameState.this.pref.getDontRunSolverStrategies();
             final ExecutorService executor = Executors.newFixedThreadPool(numThreads, threadFactory);
             final List<Future<Solution>> futureSolutions = new ArrayList<Future<Solution>>();
             int strategyIdx;
@@ -236,20 +237,30 @@ public class GameState {
                 if (DfsExhaustiveStrategy.class.equals(STRATEGIES[strategyIdx])) {
                     break; // for()
                 }
-                final Solver solver = AbstractSolver.createSolver((Class<Strategy>)STRATEGIES[strategyIdx], this.board);
-                futureSolutions.add(executor.submit(new Callable<Solution>() {
-                    public Solution call() throws Exception {
-                        try {
-                            solver.execute(SolverRun.this.startPos, null);
-                            return solver.getSolution();
-                        } finally {
-                            final String info = solver.getSolverInfo();
-                            if ((null != info) && (0 != info.length())) {
-                                System.out.println(info);
+                if (this.numberOfSolverStrategies > STRATEGIES.length // regular solver run, not calculating a hint
+                        && dontRunSolverStrategies.contains(SOLVER_NAMES[strategyIdx])) {
+                    final Solution solution = new Solution(this.board, new byte[0], SOLVER_NAMES[strategyIdx]);
+                    futureSolutions.add(executor.submit(new Callable<Solution>() {
+                        public Solution call() throws Exception {
+                            return solution;  // don't run the solver, just return an empty solution
+                        }
+                    }));
+                } else {
+                    final Solver solver = AbstractSolver.createSolver((Class<Strategy>)STRATEGIES[strategyIdx], this.board);
+                    futureSolutions.add(executor.submit(new Callable<Solution>() {
+                        public Solution call() throws Exception {
+                            try {
+                                solver.execute(SolverRun.this.startPos, null);
+                                return solver.getSolution();
+                            } finally {
+                                final String info = solver.getSolverInfo();
+                                if ((null != info) && (0 != info.length())) {
+                                    System.out.println(info);
+                                }
                             }
                         }
-                    }
-                }));
+                    }));
+                }
             }
             Solution bestSolution = null;
             boolean interrupted = false;
