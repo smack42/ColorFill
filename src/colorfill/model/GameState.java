@@ -54,10 +54,10 @@ import colorfill.solver.Strategy;
 public class GameState {
 
     private static final Class<?>[] STRATEGIES = { // all solver strategies, sorted by average speed (fastest first)
-        AStarFlolleStrategy.class
-        ,AStarTigrouStrategy.class
+        DfsGreedyNextStrategy.class
         ,DfsGreedyStrategy.class
-        ,DfsGreedyNextStrategy.class
+        ,AStarFlolleStrategy.class
+        ,AStarTigrouStrategy.class
         ,DfsDeepStrategy.class
         ,DfsDeeperStrategy.class
         ,AStarPuchertStrategy.class

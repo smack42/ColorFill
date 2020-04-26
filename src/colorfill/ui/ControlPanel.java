@@ -112,6 +112,8 @@ public class ControlPanel extends JPanel {
         private static final long serialVersionUID = -6622821528552016995L;
         public void actionPerformed(ActionEvent e) {
             if (0 == ControlPanel.this.selectedSolution) {
+                ControlPanel.this.hintEstimatedSteps.setText("??");
+                ControlPanel.this.hintEstimatedSteps.setVisible(true);
                 ControlPanel.this.buttonHint.requestFocusInWindow();
                 ControlPanel.this.controller.userButtonHint();
             }
@@ -144,7 +146,7 @@ public class ControlPanel extends JPanel {
         layout.row().grid().add(this.makeButtonNew(), 3).add(this.makeButtonPrefs(), 3);
         layout.row().grid().add(this.makeButtonGameID(), 3).empty(3);
         layout.row().grid().add(new JSeparator());
-        layout.row().grid().add(this.makeRButtonUser(bgroup), 4).add(this.makeLabelMove()).empty();
+        layout.row().grid().add(this.makeRButtonUser(bgroup), 3).add(this.makeLabelMove(), 3);
         final IRow rowButtonColors = layout.row().grid();
         for (final JButton button : this.makeButtonColors(colors)) {
             rowButtonColors.add(button);
@@ -348,6 +350,7 @@ public class ControlPanel extends JPanel {
                 }
             });
             this.solverCheckBoxes[i] = new JCheckBox();
+            this.solverCheckBoxes[i].setVisible(false);
             this.solverCheckBoxes[i].setSelected(!dontRunSolverStrategies.contains(this.solverNames[i]));
             this.solverCheckBoxes[i].addItemListener(new ItemListener() {
                 @Override
