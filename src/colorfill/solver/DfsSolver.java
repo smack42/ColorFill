@@ -71,11 +71,7 @@ public class DfsSolver extends AbstractSolver {
         } else if (DfsDeeperStrategy.class.equals(this.strategyClass)) {
             result = new DfsDeeperStrategy(this.board, startPos);
         } else if (DfsExhaustiveStrategy.class.equals(this.strategyClass)) {
-            if (this.board.getSize() <= DfsExhaustiveStrategy.MAX_BOARD_SIZE) {
-                result = new DfsExhaustiveStrategy(this.board);
-            } else {
-                result = null; // do not use DfsExhaustiveStrategy for large boards
-            }
+            result = new DfsExhaustiveStrategy(this.board);
         } else {
             throw new IllegalArgumentException(
                     "unsupported strategy class " + this.strategyClass.getName());

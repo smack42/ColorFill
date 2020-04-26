@@ -53,9 +53,10 @@ public class GamePreferences {
     public static final GridLinesEnum DEFAULT_UI_GRIDLINES = GridLinesEnum.NONE;
     public static final BoardColorNumbersEnum DEFAULT_UI_BOARD_COLOR_NUMBERS = BoardColorNumbersEnum.NONE;
     public static final HighlightColorEnum DEFAULT_UI_HIGHLIGHT_COLOR = HighlightColorEnum.WHITE;
-    public static final int DEFAULT_UI_CELLSIZE = 32;
+    public static final int DEFAULT_UI_CELLSIZE = 36;
     public static final int DEFAULT_UI_COLSCHEME = 0;
     public static final int DEFAULT_UI_RUNSOLVER = 1;
+    public static final String DEFAULT_UI_DONT_RUN_STRATEGIES = GameState.getSolverNames()[GameState.getSolverNames().length - 1]; // DfsExhaustiveStrategy
     private static final Color[][] DEFAULT_UI_COLORS = {
         { // Flood-It scheme
             new Color(0xDC4A20), // Color.RED
@@ -139,6 +140,7 @@ public class GamePreferences {
         this.highlightColor = DEFAULT_UI_HIGHLIGHT_COLOR.intValue;
         this.runSolver = DEFAULT_UI_RUNSOLVER;
         this.dontRunSolverStrategies = new ArrayList<String>();
+        this.dontRunSolverStrategies.add(DEFAULT_UI_DONT_RUN_STRATEGIES);
         this.loadPrefs();
         this.savePrefs();
     }
@@ -300,7 +302,7 @@ public class GamePreferences {
         this.setHighlightColor   (PREFS.getInt(PREFS_HIGHLIGHT_COLOR,    DEFAULT_UI_HIGHLIGHT_COLOR.intValue));
         this.setCellSize         (PREFS.getInt(PREFS_CELLSIZE,           DEFAULT_UI_CELLSIZE));
         this.runSolver          = PREFS.getInt(PREFS_RUNSOLVER,          DEFAULT_UI_RUNSOLVER);
-        final StringTokenizer tokDontRun = new StringTokenizer(PREFS.get(PREFS_DONT_RUN_STRATEGIES, ""), ",");
+        final StringTokenizer tokDontRun = new StringTokenizer(PREFS.get(PREFS_DONT_RUN_STRATEGIES, DEFAULT_UI_DONT_RUN_STRATEGIES), ",");
         this.dontRunSolverStrategies.clear();
         while (tokDontRun.hasMoreTokens()) {
             this.dontRunSolverStrategies.add(tokDontRun.nextToken());

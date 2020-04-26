@@ -31,14 +31,11 @@ import colorfill.model.ColorAreaSet;
  * <p>
  * 2) all colors that are possible in the next step.
  * (hence the name "exhaustive")
+ * <p>
+ * superseded by AStarPuchertStrategy, which runs faster and needs less memory
  */
-//FIXME broken by moving ColorAreaSet to long[] array
-@Deprecated // superseded by AStarPuchertStrategy, which runs faster and needs less memory
-public class DfsExhaustiveStrategy implements DfsStrategy {
 
-    private static final int MAX_BOARD_SIZE_NORMAL = 15*15;
-    private static final int MAX_BOARD_SIZE_CODEGOLF26232 = 19*19;
-    static int MAX_BOARD_SIZE = MAX_BOARD_SIZE_NORMAL; // DfsExhaustiveStrategy will not run for larger boards
+public class DfsExhaustiveStrategy implements DfsStrategy {
 
     private static final float HASH_LOAD_FACTOR_FAST = 0.5f;
     private static final int HASH_EXPECTED_FAST = 100000000;
@@ -58,14 +55,13 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
     public static void setCodeGolf26232() {
         HASH_LOAD_FACTOR = HASH_LOAD_FACTOR_NORMAL;
         HASH_EXPECTED = HASH_EXPECTED_FAST;
-        MAX_BOARD_SIZE = MAX_BOARD_SIZE_CODEGOLF26232;
     }
 
     private int previousNumSteps = Integer.MAX_VALUE;
 
     public DfsExhaustiveStrategy(final Board board) {
         final int stateSizeBytes = board.getSizeColorAreas8();
-        this.stateSize = (stateSizeBytes + 3) >> 2;
+        this.stateSize = ((stateSizeBytes + 7) >> 3) << 1;
         this.f = HASH_LOAD_FACTOR;
         this.constructorInt2ByteOpenCustomHashMapPutIfLess(HASH_EXPECTED);
     }
@@ -142,13 +138,18 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
          */
         private boolean put(final ColorAreaSet set1, final ColorAreaSet set2, final int depth) {
             // copy state into memory at nextState
-            final int[] arr1 = null;  //set1.getArray(); FIXME broken by moving ColorAreaSet to long[] array
-            final int[] arr2 = null;  //set2.getArray(); FIXME broken by moving ColorAreaSet to long[] array
+            final long[] arr1 = set1.getArray();
+            final long[] arr2 = set2.getArray();
             // performance: inline hashcode computation; copy&paste from hashStrategyHashCode()
             int h32 = SEED + PRIME5;
             for (int b = this.nextStateOffset, i = 0, len = arr1.length;  i < len;  ++i, ++b) {
-                final int k = arr1[i] | arr2[i];
+                final long klong = arr1[i] | arr2[i];
+                int k = (int)klong;
                 this.nextStateMemory[b] = k;
+                h32 += k * PRIME3;
+                h32 = Integer.rotateLeft(h32, 17) * PRIME4;
+                k = (int)(klong >>> 32);
+                this.nextStateMemory[++b] = k;
                 h32 += k * PRIME3;
                 h32 = Integer.rotateLeft(h32, 17) * PRIME4;
             }

@@ -61,7 +61,7 @@ public class GameState {
         ,DfsDeepStrategy.class
         ,DfsDeeperStrategy.class
         ,AStarPuchertStrategy.class
-        //,DfsExhaustiveStrategy.class // DfsExhaustiveStrategy must be the last entry in this array!
+        ,DfsExhaustiveStrategy.class // DfsExhaustiveStrategy must be the last entry in this array!
     };
 
     private static final String[] SOLVER_NAMES = new String[STRATEGIES.length];
@@ -153,7 +153,7 @@ public class GameState {
         return this.pref;
     }
 
-    public String[] getSolverNames() {
+    public static String[] getSolverNames() {
         return SOLVER_NAMES;
     }
 
@@ -289,7 +289,7 @@ public class GameState {
                             waitMask |= iMask; // set this bit again because the solution is not ready yet
                         }
                         if (null != solution) {
-                            if ((null == bestSolution) || (solution.getNumSteps() < bestSolution.getNumSteps())) {
+                            if ((solution.getNumSteps() > 0) && ((null == bestSolution) || (solution.getNumSteps() < bestSolution.getNumSteps()))) {
                                 bestSolution = solution;
                             }
                             GameState.this.addProgressSolution(new GameProgress(this.board, this.startPos, solution));
@@ -304,30 +304,33 @@ public class GameState {
             executor.shutdown();
             // run DfsExhaustiveStrategy now
             if (!interrupted && (strategyIdx < STRATEGIES.length) && DfsExhaustiveStrategy.class.equals(STRATEGIES[strategyIdx])) {
-                final Solver solver = AbstractSolver.createSolver((Class<Strategy>)STRATEGIES[strategyIdx], this.board);
                 Solution solution = null;
-                try {
-                    solver.execute(SolverRun.this.startPos, bestSolution);
-                    solution = solver.getSolution();
-                } catch (InterruptedException e) {
-                    System.out.println("***** SolverRun interrupted *****");
-                } catch (Throwable e) {
-                    if (false == e.getCause() instanceof InterruptedException) {
-                        e.printStackTrace();
-                    }
+                if (dontRunSolverStrategies.contains(SOLVER_NAMES[strategyIdx])) {
                     solution = new Solution(this.board, new byte[0], SOLVER_NAMES[strategyIdx]);
-                } finally {
+                } else {
+                    final Solver solver = AbstractSolver.createSolver((Class<Strategy>)STRATEGIES[strategyIdx], this.board);
+                    try {
+                        solver.execute(SolverRun.this.startPos, bestSolution);
+                        solution = solver.getSolution();
+                    } catch (InterruptedException e) {
+                        System.out.println("***** SolverRun interrupted *****");
+                    } catch (Throwable e) {
+                        if (false == e.getCause() instanceof InterruptedException) {
+                            e.printStackTrace();
+                        }
+                        solution = new Solution(this.board, new byte[0], SOLVER_NAMES[strategyIdx]);
+                    }
                     final String info = solver.getSolverInfo();
                     if ((null != info) && (0 != info.length())) {
                         System.out.println(info);
                     }
-                    if (null != solution) {
-                        GameState.this.addProgressSolution(new GameProgress(this.board, this.startPos, solution));
-                        System.out.println(
-                                padRight(solution.getSolverName(), 21 + 2) // 21==max. length of strategy names
-                                + padRight("steps(" + solution.getNumSteps() + ")", 7 + 2 + 2)
-                                + "solution(" + solution + ")");
-                    }
+                }
+                if (null != solution) {
+                    GameState.this.addProgressSolution(new GameProgress(this.board, this.startPos, solution));
+                    System.out.println(
+                            padRight(solution.getSolverName(), 21 + 2) // 21==max. length of strategy names
+                            + padRight("steps(" + solution.getNumSteps() + ")", 7 + 2 + 2)
+                            + "solution(" + solution + ")");
                 }
             }
             System.out.println();

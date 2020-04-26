@@ -37,7 +37,7 @@ public class ControlController {
         this.mainController = mainController;
         this.gameState = gameState;
         this.controlPanel = new ControlPanel(this, gameState.getPreferences().getUiColors(), gameState.getPreferences().getNumColors(),
-                gameState.getSolverNames(), gameState.getPreferences().isRunSolver(), gameState.getPreferences().getDontRunSolverStrategies());
+                GameState.getSolverNames(), gameState.getPreferences().isRunSolver(), gameState.getPreferences().getDontRunSolverStrategies());
     }
 
     protected JPanel getPanel() {
@@ -148,7 +148,7 @@ public class ControlController {
      * @param runSolver
      */
     protected void userChangedRunSolver(final int numSolver, final boolean runSolver) {
-        this.gameState.getPreferences().setRunSolverStrategy(this.gameState.getSolverNames()[numSolver - 1], runSolver);
+        this.gameState.getPreferences().setRunSolverStrategy(GameState.getSolverNames()[numSolver - 1], runSolver);
         this.gameState.getPreferences().savePrefs();
     }
 
