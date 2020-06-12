@@ -191,46 +191,47 @@ public class Board {
 
     private Set<ColorArea> createColorAreas() {
         final Set<ColorArea> result = new HashSet<ColorArea>();
-        // build ColorAreas, fill with them with members: adjacent cells of the same color
-        for (int index = 0;  index < this.cells.length;  ++index) {
-            final byte color = this.cells[index];
-            boolean isAdded = false;
-            for (final ColorArea ca : result) {
-                if (ca.addMember(index, color)) {
-                    isAdded = true;
-                    break; // for()
-                }
-            }
-            if (false == isAdded) {
-                final ColorArea ca = new ColorArea(color, this.color2Char.get(Byte.valueOf(color)), this.width);
-                ca.addMember(index, color);
-                result.add(ca);
-            }
-        }
-        // merge ColorAreas that are neighbors of the same color
-        for (boolean doMergeAreas = true;  true == doMergeAreas;  ) {
-            final Set<ColorArea> mergedAreas = new HashSet<ColorArea>();
-            for (final ColorArea ca1 : result) {
-                if (false == mergedAreas.contains(ca1)) {
-                    for (final ColorArea ca2 : result) {
-                        if (false == mergedAreas.contains(ca2)) {
-                            if (true == ca1.addMembers(ca2)) {
-                                mergedAreas.add(ca2);
-                            }
+        // build ColorAreas
+        for (int cell = 0, row = 0;  row < this.height;  ++row) {
+            for (int column = 0;  column < this.width;  ++column, ++cell) {
+                final byte color = this.cells[cell];
+                final ColorArea topCa  = (0 == row    ? null : this.cellsColorAreas[cell - this.width]);
+                final ColorArea leftCa = (0 == column ? null : this.cellsColorAreas[cell - 1]);
+                final ColorArea cellCa;
+                if ((topCa != null) && (topCa.getColor() == color) && (leftCa != null) && (leftCa.getColor() == color)) {
+                    if (topCa != leftCa) { // not same object - merge leftCa into topCa
+                        for (Integer member : leftCa.getMembers()) {
+                            topCa.addMember(member.intValue());
+                            this.cellsColorAreas[member.intValue()] = topCa;
                         }
+                        result.remove(leftCa);
                     }
+                    cellCa = topCa;
+                } else if ((topCa != null) && (topCa.getColor() == color)) {
+                    cellCa = topCa;
+                } else if ((leftCa != null) && (leftCa.getColor() == color)) {
+                    cellCa = leftCa;
+                } else {
+                    cellCa = new ColorArea(color, this.color2Char.get(Byte.valueOf(color)));
+                    result.add(cellCa);
+                }
+                cellCa.addMember(cell);
+                this.cellsColorAreas[cell] = cellCa;
+            }
+        }
+        // connect neighbor ColorAreas
+        for (int cell = 0, row = 0;  row < this.height;  ++row) {
+            for (int column = 0;  column < this.width;  ++column, ++cell) {
+                final ColorArea cellCa = this.cellsColorAreas[cell];
+                if (row > 0) {
+                    cellCa.connectNeighbor(this.cellsColorAreas[cell - this.width]); // top
+                }
+                if (column > 0) {
+                    cellCa.connectNeighbor(this.cellsColorAreas[cell - 1]); // left
                 }
             }
-            result.removeAll(mergedAreas);
-            doMergeAreas = (mergedAreas.size() > 0);
         }
-        // connect all ColorAreas to all of their neighbors
-        for (final ColorArea ca1 : result) {
-            for (final ColorArea ca2 : result) {
-                ca1.addNeighbor(ca2);
-            }
-        }
-        // set cellsColorAreas and idsColorAreas
+        // set ID's of ColorAreas and prepare some lookup arrays
         int id = 0;
         this.idsColorAreas = new ColorArea[result.size()];
         this.idsColors = new byte[result.size()];
@@ -239,9 +240,6 @@ public class Board {
             ca.setId(id++);
             this.idsColorAreas[ca.getId()] = ca;
             this.idsColors[ca.getId()] = ca.getColor();
-            for (final int member : ca.getMembers()) {
-                this.cellsColorAreas[member] = ca;
-            }
         }
         for (final ColorArea ca : result) {
             ca.makeNeighborsArray(this);

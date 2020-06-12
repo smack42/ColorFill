@@ -28,7 +28,6 @@ public class ColorArea implements Comparable<ColorArea> {
     private int id;
     private final byte color;
     private final char colorChar;
-    private final int boardWidth;
     private final SortedSet<Integer> members = new TreeSet<Integer>(); // sorted set - used by compareTo!
     private final SortedSet<Integer> membersUnmodifiable = Collections.unmodifiableSortedSet(this.members);
     private final SortedSet<ColorArea> neighbors = new TreeSet<ColorArea>();
@@ -42,61 +41,20 @@ public class ColorArea implements Comparable<ColorArea> {
      */
     public int tmpAStarDepth;
 
-    protected ColorArea(final byte color, final Character colorChar, final int boardWidth) {
+    protected ColorArea(final byte color, final Character colorChar) {
         this.color = color;
         this.colorChar = colorChar.charValue();
-        this.boardWidth = boardWidth;
     }
 
-    private boolean isNeighborCell(final int index) {
-        for (final int member : this.members) {
-            if ((((index == member - 1) || (index == member + 1))
-                    && (index / this.boardWidth == member / this.boardWidth)) ||
-                (index == member - this.boardWidth) ||
-                (index == member + this.boardWidth)) {
-                return true;
-            }
-        }
-        return this.members.isEmpty();
+    void addMember(final int index) {
+        this.members.add(Integer.valueOf(index));
     }
 
-    private boolean isNeighborArea(final ColorArea other) {
-        for (final int otherMember : other.members) {
-            if (this.isNeighborCell(otherMember)) {
-                return true;
-            }
+    void connectNeighbor(final ColorArea other) {
+        if (other.color != this.color) {
+            this.neighbors.add(other);
+            other.neighbors.add(this);
         }
-        return other.members.isEmpty();
-    }
-
-    boolean addMember(final int index, final byte color) {
-        if (this.color != color) {
-            return false; // wrong (different) color
-        }
-        if (this.isNeighborCell(index)) {
-            return this.members.add(Integer.valueOf(index)); // added
-        }
-        return false; // not added
-    }
-
-    boolean addMembers(final ColorArea other) {
-        if (this.color != other.color) {
-            return false; // wrong (different) color
-        }
-        if (this.isNeighborArea(other) && (false == other.members.containsAll(this.members))) {
-            return this.members.addAll(other.members); // added
-        }
-        return false; // not added
-    }
-
-    boolean addNeighbor(final ColorArea other) {
-        if (this.color == other.color) {
-            return false; // wrong (same) color
-        }
-        if (this.isNeighborArea(other)) {
-            return this.neighbors.add(other); // added
-        }
-        return false; // not added
     }
 
     @Override
