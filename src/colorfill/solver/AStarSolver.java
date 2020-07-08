@@ -49,15 +49,14 @@ public class AStarSolver extends AbstractSolver {
     /* (non-Javadoc)
      * @see colorfill.solver.Solver#setStrategy(java.lang.Class)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    public void setStrategy(final Class<Strategy> strategyClass) {
+    public void setStrategy(final Class<? extends Strategy> strategyClass) {
         if (false == AStarStrategy.class.isAssignableFrom(strategyClass)) {
             throw new IllegalArgumentException(
                     "unsupported strategy class " + strategyClass.getName()
                     + "! " + this.getClass().getSimpleName() + " supports " + AStarStrategy.class.getSimpleName() + " only.");
         }
-        this.strategyClass = (Class<? extends AStarStrategy>) strategyClass;
+        this.strategyClass = strategyClass.asSubclass(AStarStrategy.class);
     }
 
     /* (non-Javadoc)

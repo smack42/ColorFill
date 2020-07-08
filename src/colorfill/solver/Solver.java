@@ -42,7 +42,7 @@ public interface Solver {
      * set the strategy to be used by this solver.
      * @param strategyClass the class of the strategy
      */
-    public void setStrategy(Class<Strategy> strategyClass);
+    public void setStrategy(Class<? extends Strategy> strategyClass);
 
     /**
      * get the name of the solver and / or the strategy.

@@ -65,14 +65,14 @@ public class PreferencesDialog extends JDialog {
     private final JSpinner jspinHeight = new JSpinner();
     private final JSpinner jspinNumColors = new JSpinner();
     private final JSpinner jspinCellSize = new JSpinner();
-    private final JComboBox jcomboStartPos = new JComboBox(); // Java 6: rawtype JComboBox
+    private final JComboBox<StartPosItem> jcomboStartPos = new JComboBox<>();
     private final JButton buttonOk = new JButton();
     private final JButton buttonCancel = new JButton();
     private final JButton buttonDefaults = new JButton();
-    private final JComboBox jcomboColorSchemes = new JComboBox(); // Java 6: rawtype JComboBox
-    private final JComboBox jcomboGridLines = new JComboBox(); // Java 6: rawtype JComboBox
-    private final JComboBox jcomboBoardColorNumbers = new JComboBox(); // Java 6: rawtype JComboBox
-    private final JComboBox jcomboHighlightColor = new JComboBox(); // Java 6: rawtype JComboBox
+    private final JComboBox<Integer> jcomboColorSchemes = new JComboBox<>();
+    private final JComboBox<GridLinesItem> jcomboGridLines = new JComboBox<>();
+    private final JComboBox<BoardColorNumbersItem> jcomboBoardColorNumbers = new JComboBox<>();
+    private final JComboBox<HighlightColorItem> jcomboHighlightColor = new JComboBox<>();
 
     private boolean closedByOkButton = false;
 
@@ -149,14 +149,14 @@ public class PreferencesDialog extends JDialog {
         return this.jspinCellSize;
     }
 
-    private JComboBox makeJcomboStartPos() { // Java 6: rawtype JComboBox
+    private JComboBox<StartPosItem> makeJcomboStartPos() {
         for (final StartPositionEnum spe : StartPositionEnum.values()) {
             this.jcomboStartPos.addItem(new StartPosItem(spe));
         }
         return this.jcomboStartPos;
     }
 
-    private JComboBox makeJcomboGridLines() { // Java 6: rawtype JComboBox
+    private JComboBox<GridLinesItem> makeJcomboGridLines() {
         for (final GridLinesEnum gle : GridLinesEnum.values()) {
             this.jcomboGridLines.addItem(new GridLinesItem(gle));
         }
@@ -174,7 +174,7 @@ public class PreferencesDialog extends JDialog {
         return this.jcomboGridLines;
     }
 
-    private JComboBox makeJcomboBoardColorNumbers() { // Java 6: rawtype JComboBox
+    private JComboBox<BoardColorNumbersItem> makeJcomboBoardColorNumbers() {
         for (final BoardColorNumbersEnum bcne : BoardColorNumbersEnum.values()) {
             this.jcomboBoardColorNumbers.addItem(new BoardColorNumbersItem(bcne));
         }
@@ -192,7 +192,7 @@ public class PreferencesDialog extends JDialog {
         return this.jcomboBoardColorNumbers;
     }
 
-    private JComboBox makeJcomboHighlightColor() { // Java 6: rawtype JComboBox
+    private JComboBox<HighlightColorItem> makeJcomboHighlightColor() {
         for (final HighlightColorEnum hce : HighlightColorEnum.values()) {
             this.jcomboHighlightColor.addItem(new HighlightColorItem(hce));
         }
@@ -210,10 +210,9 @@ public class PreferencesDialog extends JDialog {
         return this.jcomboHighlightColor;
     }
 
-    private JComboBox makeJcomboColorSchemes() { // Java 6: rawtype JComboBox
-        int i = 1;
-        for (final Color[] uiColors : this.allUiColors) {
-            this.jcomboColorSchemes.addItem(Integer.valueOf(i++));
+    private JComboBox<Integer> makeJcomboColorSchemes() {
+        for (int i = 1;  i <= this.allUiColors.length;  ++i) {
+            this.jcomboColorSchemes.addItem(Integer.valueOf(i));
         }
         this.jcomboColorSchemes.setRenderer(new ColorSchemeComboBoxRenderer());
         this.jcomboColorSchemes.addActionListener(new ActionListener() {
@@ -231,11 +230,12 @@ public class PreferencesDialog extends JDialog {
     }
 
 
-    private class ColorSchemeComboBoxRenderer extends JLabel implements ListCellRenderer {
+    private class ColorSchemeComboBoxRenderer extends JLabel implements ListCellRenderer<Object> {
+        private static final long serialVersionUID = -5760355417428060551L;
         private final DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
 
         @Override
-        public Component getListCellRendererComponent(final JList list, final Object value,
+        public Component getListCellRendererComponent(final JList<?> list, final Object value,
                 final int index, final boolean isSelected, final boolean cellHasFocus) {
             final JLabel renderer = (JLabel)this.defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
             final int uiColorsIndex = ((Integer)value).intValue() - 1;
@@ -279,7 +279,7 @@ public class PreferencesDialog extends JDialog {
                         ((Number)PreferencesDialog.this.jspinWidth.getValue()).intValue(),
                         ((Number)PreferencesDialog.this.jspinHeight.getValue()).intValue(),
                         PreferencesDialog.this.getNumColors(),
-                        ((StartPosItem)PreferencesDialog.this.jcomboStartPos.getSelectedItem()).spe,
+                        PreferencesDialog.this.jcomboStartPos.getItemAt(PreferencesDialog.this.jcomboStartPos.getSelectedIndex()).spe,
                         PreferencesDialog.this.getSelectedGridLinesEnum(),
                         PreferencesDialog.this.getSelectedBoardColorNumbersEnum(),
                         PreferencesDialog.this.getSelectedColorSchemeNumber(),
@@ -322,15 +322,15 @@ public class PreferencesDialog extends JDialog {
     }
 
     private GridLinesEnum getSelectedGridLinesEnum() {
-        return ((GridLinesItem)this.jcomboGridLines.getSelectedItem()).gle;
+        return this.jcomboGridLines.getItemAt(this.jcomboGridLines.getSelectedIndex()).gle;
     }
 
     private BoardColorNumbersEnum getSelectedBoardColorNumbersEnum() {
-        return ((BoardColorNumbersItem)this.jcomboBoardColorNumbers.getSelectedItem()).bcne;
+        return this.jcomboBoardColorNumbers.getItemAt(this.jcomboBoardColorNumbers.getSelectedIndex()).bcne;
     }
 
     private HighlightColorEnum getHighlightColorEnum() {
-        return ((HighlightColorItem)this.jcomboHighlightColor.getSelectedItem()).hce;
+        return this.jcomboHighlightColor.getItemAt(this.jcomboHighlightColor.getSelectedIndex()).hce;
     }
 
     private int getNumColors() {

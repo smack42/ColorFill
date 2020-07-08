@@ -67,7 +67,7 @@ public class GameState {
     private static final String[] SOLVER_NAMES = new String[STRATEGIES.length];
     static {
         for (int i = 0;  i < SOLVER_NAMES.length;  ++i) {
-            SOLVER_NAMES[i] = AbstractSolver.getSolverName((Class<Strategy>) STRATEGIES[i]);
+            SOLVER_NAMES[i] = AbstractSolver.getSolverName(STRATEGIES[i].asSubclass(Strategy.class));
         }
     }
 

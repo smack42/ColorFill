@@ -49,15 +49,14 @@ public class DfsSolver extends AbstractSolver {
     /* (non-Javadoc)
      * @see colorfill.solver.Solver#setStrategy(java.lang.Class)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    public void setStrategy(final Class<Strategy> strategyClass) {
+    public void setStrategy(final Class<? extends Strategy> strategyClass) {
         if (false == DfsStrategy.class.isAssignableFrom(strategyClass)) {
             throw new IllegalArgumentException(
                     "unsupported strategy class " + strategyClass.getName()
                     + "! " + this.getClass().getSimpleName() + " supports " + DfsStrategy.class.getSimpleName() + " only.");
         }
-        this.strategyClass = (Class<? extends DfsStrategy>) strategyClass;
+        this.strategyClass = strategyClass.asSubclass(DfsStrategy.class);
     }
 
     private DfsStrategy makeStrategy(final int startPos) {

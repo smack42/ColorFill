@@ -39,7 +39,7 @@ public abstract class AbstractSolver implements Solver {
      * @param board to be solved
      * @return
      */
-    public static Solver createSolver(final Class<Strategy> strategyClass, final Board board) {
+    public static Solver createSolver(final Class<? extends Strategy> strategyClass, final Board board) {
         final AbstractSolver solver;
         if (DfsStrategy.class.isAssignableFrom(strategyClass)) {
             solver = new DfsSolver(board);
@@ -57,7 +57,7 @@ public abstract class AbstractSolver implements Solver {
      * @param strategyClass strategy to be used
      * @return
      */
-    public static String getSolverName(final Class<Strategy> strategyClass) {
+    public static String getSolverName(final Class<? extends Strategy> strategyClass) {
         final Solver solver = createSolver(strategyClass, new Board(2, 2, 2));
         return solver.getSolverName();
     }

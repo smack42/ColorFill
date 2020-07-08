@@ -4,9 +4,10 @@
 
 -libraryjars <java.home>/lib/rt.jar
 
--target 1.6
+-target 1.8
 
--optimizationpasses 9
+-dontoptimize
+#-optimizationpasses 9
 
 -allowaccessmodification
 
