@@ -108,9 +108,10 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
                     // Expand current layer of nodes.
                     // Flolle's "terminal-flood" InadmissibleSlowStrategy: choose the two colors that give access to the most new border fields.
                     ++distance;
-                    int colors = nonCompletedColors, sizeOne = 0, colorBitOne = 0, sizeTwo = 0, colorBitTwo = 0;
-                    while (true) {
+                    int sizeOne = 0, colorBitOne = 0, sizeTwo = 0, colorBitTwo = 0;
+                    for (int colors = nonCompletedColors;  0 != colors;  ) {
                         final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
+                        colors ^= colorBit;
                         this.next.clear();
                         this.iterAnd.init(this.current, this.casByColorBits[colorBit]);
                         int caId;
@@ -138,9 +139,6 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
                             final ColorAreaSet t = this.nextTwo;
                             this.nextTwo = this.next;
                             this.next = t;
-                        }
-                        if (0 == (colors ^= colorBit)) {
-                            break;
                         }
                     }
                     final ColorAreaSet t = this.next;
