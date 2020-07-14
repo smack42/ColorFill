@@ -18,7 +18,6 @@
 package colorfill.solver;
 
 import colorfill.model.Board;
-import colorfill.model.ColorArea;
 import colorfill.model.ColorAreaSet;
 
 /**
@@ -42,13 +41,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
         this.visited = new ColorAreaSet(board);
         this.current = new ColorAreaSet(board);
         this.next = new ColorAreaSet(board);
-        this.casByColor = new ColorAreaSet[board.getNumColors()];
-        for (int color = 0;  color < this.casByColor.length;  ++color) {
-            this.casByColor[color] = new ColorAreaSet(board);
-        }
-        for (final ColorArea ca : board.getColorAreasArray()) {
-            this.casByColor[ca.getColor()].add(ca);
-        }
+        this.casByColor = board.getCasByColorArray();
         this.iter = new ColorAreaSet.Iterator();
         this.iterAnd = new ColorAreaSetIteratorAnd();
         this.allColors = (1 << board.getNumColors()) - 1;

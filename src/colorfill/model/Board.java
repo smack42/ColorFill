@@ -48,6 +48,7 @@ public class Board {
     private byte[] idsColors;
     private ColorAreaSet[] idsNeighborColorAreaSets;
     private int sizeColorAreas8;
+    private final ColorAreaSet[] casByColor;
 
     /**
      * construct a new Board using the specified parameters.
@@ -79,6 +80,7 @@ public class Board {
             this.char2Color.put(c, b);
             this.color2Char.put(b, c);
         }
+        this.casByColor = new ColorAreaSet[this.colors];
         this.colorAreas = new TreeSet<ColorArea>();
         this.colorAreas.addAll(this.createColorAreas());
     }
@@ -139,6 +141,7 @@ public class Board {
         this.importString(str);
         this.colors = this.char2Color.size();
         this.cellsColorAreas = new ColorArea[len];
+        this.casByColor = new ColorAreaSet[this.colors];
         this.colorAreas = new TreeSet<ColorArea>();
         this.colorAreas.addAll(this.createColorAreas());
         this.startPos = this.depth = -1;
@@ -236,10 +239,14 @@ public class Board {
         this.idsColorAreas = new ColorArea[result.size()];
         this.idsColors = new byte[result.size()];
         this.sizeColorAreas8 = (result.size() + 7) >> 3; // how many bytes are needed to store them as bits?
+        for (int color = 0;  color < this.casByColor.length;  ++color) {
+            this.casByColor[color] = new ColorAreaSet(this);
+        }
         for (final ColorArea ca : result) {
             ca.setId(id++);
             this.idsColorAreas[ca.getId()] = ca;
             this.idsColors[ca.getId()] = ca.getColor();
+            this.casByColor[ca.getColor()].add(ca);
         }
         for (final ColorArea ca : result) {
             ca.makeNeighborsArray(this);
@@ -459,5 +466,9 @@ public class Board {
 
     public int getSizeColorAreas8() {
         return this.sizeColorAreas8;
+    }
+
+    public ColorAreaSet[] getCasByColorArray() {
+        return this.casByColor;
     }
 }

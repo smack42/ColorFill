@@ -34,7 +34,9 @@ public class AStarSolver extends AbstractSolver {
     private AStarStrategy strategy;
     private final SolutionTree solutionTree = new SolutionTree();
     private final ColorAreaSet.Iterator iter;
+    private final ColorAreaSet.IteratorAnd iterAnd;
     private final ColorArea[] caArray;
+    private final ColorAreaSet[] casByColor;
 
     /**
      * construct a new solver for this Board.
@@ -43,7 +45,9 @@ public class AStarSolver extends AbstractSolver {
     protected AStarSolver(Board board) {
         super(board);
         this.iter = new ColorAreaSet.Iterator();
+        this.iterAnd = new ColorAreaSet.IteratorAnd();
         this.caArray = new ColorArea[board.getColorAreasArray().length];
+        this.casByColor = board.getCasByColorArray();
     }
 
     /* (non-Javadoc)
@@ -193,19 +197,16 @@ public class AStarSolver extends AbstractSolver {
 
     /**
      * extract the ColorAreas of the specified color.
-     * NOTE: uses this.iter and this.caArray
+     * NOTE: uses this.iterAnd and this.caArray
      * @param caSet
      * @param color
      * @return array of ColorArea; the array is longer than the content; the end of content is indicated by a null element.
      */
     protected ColorArea[] getColorAreas(final ColorAreaSet caSet, final byte color) {
-        this.iter.init(caSet);
+        this.iterAnd.init(caSet, this.casByColor[color]);
         int caId, i = 0;
-        while ((caId = this.iter.nextOrNegative()) >= 0) {
-            final ColorArea ca = this.board.getColorArea4Id(caId);
-            if (ca.getColor() == color) {
-                this.caArray[i++] = ca;
-            }
+        while ((caId = this.iterAnd.nextOrNegative()) >= 0) {
+            this.caArray[i++] = this.board.getColorArea4Id(caId);
         }
         this.caArray[i] = null;
         return this.caArray;
