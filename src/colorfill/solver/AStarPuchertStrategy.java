@@ -31,7 +31,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
     protected final Board board;
     protected final ColorAreaSet visited;
     protected ColorAreaSet current, next;
-    protected final ColorAreaSet[] casByColor;
+    protected final ColorAreaSet[] casByColorBits;
     protected final ColorAreaSet.Iterator iter;
     private final ColorAreaSetIteratorAnd iterAnd;
     protected final int allColors;
@@ -41,7 +41,23 @@ public class AStarPuchertStrategy implements AStarStrategy {
         this.visited = new ColorAreaSet(board);
         this.current = new ColorAreaSet(board);
         this.next = new ColorAreaSet(board);
-        this.casByColor = board.getCasByColorArray();
+        final ColorAreaSet[] casByColor = board.getCasByColorArray();
+        this.casByColorBits = new ColorAreaSet[1 << casByColor.length];
+        for (int colorBits = 1;  colorBits < this.casByColorBits.length;  ++colorBits) {
+            if (0 == (colorBits & (colorBits - 1))) { // is power of two?
+                // power of two = a single color bit is set
+                this.casByColorBits[colorBits] = casByColor[Integer.numberOfTrailingZeros(colorBits)];
+            } else {
+                // several color bits are set
+                ColorAreaSet caSet = new ColorAreaSet(board);
+                this.casByColorBits[colorBits] = caSet;
+                for (int bits = colorBits;  0 != bits;  ) {
+                    final int bit = Integer.lowestOneBit(bits);
+                    bits ^= bit;
+                    caSet.addAll(this.casByColorBits[bit]);
+                }
+            }
+        }
         this.iter = new ColorAreaSet.Iterator();
         this.iterAnd = new ColorAreaSetIteratorAnd();
         this.allColors = (1 << board.getNumColors()) - 1;
@@ -68,9 +84,9 @@ public class AStarPuchertStrategy implements AStarStrategy {
             node.copyNeighborsTo(this.current);
             node.copyFloodedTo(this.visited);
             int nonCompletedColors = this.allColors;
-            for (int color = 0;  color < this.casByColor.length;  ++color) {
-                if (this.casByColor[color].isEmptyDifference(this.visited)) {
-                    nonCompletedColors ^= 1 << color;
+            for (int colorBit = 1;  colorBit < this.casByColorBits.length;  colorBit <<= 1) {
+                if (this.casByColorBits[colorBit].isEmptyDifference(this.visited)) {
+                    nonCompletedColors ^= colorBit;
                 }
             }
 
@@ -79,9 +95,8 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 int completedColors = 0;
                 for (int colors = nonCompletedColors;  0 != colors;  ) {
                     final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
-                    final int color = 31 - Integer.numberOfLeadingZeros(colorBit);
                     colors ^= colorBit;
-                    if (this.casByColor[color].isEmptyDifference(this.visited)) {
+                    if (this.casByColorBits[colorBit].isEmptyDifference(this.visited)) {
                         completedColors |= colorBit;
                         nonCompletedColors ^= colorBit;
                     }
@@ -95,20 +110,13 @@ public class AStarPuchertStrategy implements AStarStrategy {
                     } else {
                         this.next.clear();
                         // completed colors
-                        while (true) {
-                            final int colorBit = completedColors & -completedColors;  // Integer.lowestOneBit(completedColors);
-                            final int color = 31 - Integer.numberOfLeadingZeros(colorBit);
-                            final ColorAreaSet colorCas = this.casByColor[color];
-                            this.iterAnd.init(this.current, colorCas);
-                            int caId;
-                            while ((caId = this.iterAnd.nextOrNegative()) >= 0) {
-                                this.next.addAll(this.board.getNeighborColorAreaSet4Id(caId));
-                            }
-                            this.current.removeAll(colorCas);
-                            if (0 == (completedColors ^= colorBit)) {
-                                break;
-                            }
+                        final ColorAreaSet colorCas = this.casByColorBits[completedColors];
+                        this.iterAnd.init(this.current, colorCas);
+                        int caId;
+                        while ((caId = this.iterAnd.nextOrNegative()) >= 0) {
+                            this.next.addAll(this.board.getNeighborColorAreaSet4Id(caId));
                         }
+                        this.current.removeAll(colorCas);
                         this.next.removeAll(this.visited);
                         // non-completed colors
                         // move nodes to next layer
