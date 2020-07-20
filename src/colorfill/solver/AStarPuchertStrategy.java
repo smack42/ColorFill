@@ -85,7 +85,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
             node.copyFloodedTo(this.visited);
             int nonCompletedColors = this.allColors;
             for (int colorBit = 1;  colorBit < this.casByColorBits.length;  colorBit <<= 1) {
-                if (this.casByColorBits[colorBit].isEmptyDifference(this.visited)) {
+                if (this.visited.containsAll(this.casByColorBits[colorBit])) {
                     nonCompletedColors ^= colorBit;
                 }
             }
@@ -96,7 +96,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 for (int colors = nonCompletedColors;  0 != colors;  ) {
                     final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
                     colors ^= colorBit;
-                    if (this.casByColorBits[colorBit].isEmptyDifference(this.visited)) {
+                    if (this.visited.containsAll(this.casByColorBits[colorBit])) {
                         completedColors |= colorBit;
                         nonCompletedColors ^= colorBit;
                     }
@@ -112,8 +112,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                         // completed colors
                         final ColorAreaSet colorCas = this.casByColorBits[completedColors];
                         this.iterAnd.init(this.current, colorCas);
-                        int caId;
-                        while ((caId = this.iterAnd.nextOrNegative()) >= 0) {
+                        for (int caId;  (caId = this.iterAnd.nextOrNegative()) >= 0;  ) {
                             this.next.addAll(this.board.getNeighborColorAreaSet4Id(caId));
                         }
                         this.current.removeAll(colorCas);
@@ -128,8 +127,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                     // Expand current layer of nodes.
                     ++distance;
                     this.iter.init(this.current);
-                    int caId;
-                    while ((caId = this.iter.nextOrNegative()) >= 0) {
+                    for (int caId;  (caId = this.iter.nextOrNegative()) >= 0;  ) {
                         this.next.addAll(this.board.getNeighborColorAreaSet4Id(caId));
                     }
                     this.next.removeAll(this.visited);

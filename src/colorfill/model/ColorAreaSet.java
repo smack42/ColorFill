@@ -197,19 +197,6 @@ public class ColorAreaSet {
     }
 
     /**
-     * return true if the set difference (this - other) would be an empty set.
-     * note: both sets remain unchanged.
-     */
-    public boolean isEmptyDifference(final ColorAreaSet other) {
-        for (int i = 0;  i < this.array.length;  ++i) {
-            if (0L != (this.array[i] & ~(other.array[i]))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
      * an Iterator over one ColorAreaSet that returns the IDs of the member ColorArea objects
      */
     public static class Iterator {
