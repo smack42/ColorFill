@@ -87,11 +87,27 @@ public class AStarNode {
     }
 
     /**
+     * get the current solutionEntry stored in this node. (pointer in SolutionTree)
+     * @return
+     */
+    public int getSolutionEntry() {
+        return this.solutionEntry;
+    }
+
+    /**
      * get the set of neighbors.
      * @return
      */
     public ColorAreaSet getNeighbors() {
         return this.neighbors;
+    }
+
+    /**
+     * get the set of flooded color areas.
+     * @return
+     */
+    public ColorAreaSet getFlooded() {
+        return this.flooded;
     }
 
     /**
@@ -118,54 +134,13 @@ public class AStarNode {
     }
 
     /**
-     * check if this color can be played. (avoid duplicate moves)
-     * the idea is taken from the program "floodit" by Aaron and Simon Puchert,
-     * which can be found at <a>https://github.com/aaronpuchert/floodit</a>
-     * @param nextColor
-     * @return
-     */
-    private boolean canPlay(final byte nextColor, final ColorArea[] nextColorNeighbors, final byte currColor) {
-        // did the previous move add any new "nextColor" neighbors?
-        boolean newNext = false;
-next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
-            if (null == nextColorNeighbor) break;
-            for (final ColorArea prevNeighbor : nextColorNeighbor.getNeighborsArray()) {
-                if ((prevNeighbor.getColor() != currColor) && this.flooded.contains(prevNeighbor)) {
-                    continue next;
-                }
-            }
-            newNext = true;
-            break next;
-        }
-        if (!newNext) {
-            if (nextColor < currColor) {
-                return false;
-            } else {
-                // should nextColor have been played before currColor?
-                for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
-                    if (null == nextColorNeighbor) break;
-                    for (final ColorArea prevNeighbor : nextColorNeighbor.getNeighborsArray()) {
-                        if ((prevNeighbor.getColor() == currColor) && !this.flooded.contains(prevNeighbor)) {
-                            return false;
-                        }
-                    }
-                }
-                return true;
-            }
-        } else {
-            return true;
-        }
-    }
-
-    /**
      * play the given color.
      * @param nextColor
      */
-    public void play(final byte nextColor, final ColorArea[] nextColorNeighbors, final SolutionTree solutionTree) {
-        for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
-            if (null == nextColorNeighbor) break;
+    public void play(final byte nextColor, final ColorAreaSet.IteratorAnd nextColorNeighbors, final SolutionTree solutionTree, final Board board) {
+        for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
             this.flooded.add(nextColorNeighbor);
-            this.neighbors.addAll(nextColorNeighbor.getNeighborsColorAreaSet());
+            this.neighbors.addAll(board.getNeighborColorAreaSet4Id(nextColorNeighbor));
         }
         this.neighbors.removeAll(this.flooded);
         ++this.solutionSize;
@@ -179,32 +154,27 @@ next:   for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
      * @param recycleNode
      * @return
      */
-    public AStarNode copyAndPlay(final byte nextColor, final AStarNode recycleNode, final ColorArea[] nextColorNeighbors, final SolutionTree solutionTree) {
-        if (!this.canPlay(nextColor, nextColorNeighbors, solutionTree.getColor(this.solutionEntry))) {
-            return null;
+    public AStarNode copyAndPlay(final byte nextColor, final AStarNode recycleNode, final ColorAreaSet.IteratorAnd nextColorNeighbors, final SolutionTree solutionTree, final Board board) {
+        final AStarNode result;
+        if (null == recycleNode) {
+            result = new AStarNode(this);
         } else {
-            final AStarNode result;
-            if (null == recycleNode) {
-                result = new AStarNode(this);
-            } else {
-                // copy - compare copy constructor
-                result = recycleNode;
-                result.flooded.copyFrom(this.flooded);
-                result.neighbors.copyFrom(this.neighbors);
-                result.solutionSize = this.solutionSize;
-                //result.estimatedCost = this.estimatedCost;  // not necessary to copy
-            }
-            // play - compare method play()
-            for (final ColorArea nextColorNeighbor : nextColorNeighbors) {
-                if (null == nextColorNeighbor) break;
-                result.flooded.add(nextColorNeighbor);
-                result.neighbors.addAll(nextColorNeighbor.getNeighborsColorAreaSet());
-            }
-            result.neighbors.removeAll(result.flooded);
-            ++result.solutionSize;
-            result.solutionEntry = solutionTree.add(this.solutionEntry, nextColor);
-            return result;
+            // copy - compare copy constructor
+            result = recycleNode;
+            result.flooded.copyFrom(this.flooded);
+            result.neighbors.copyFrom(this.neighbors);
+            result.solutionSize = this.solutionSize;
+            //result.estimatedCost = this.estimatedCost;  // not necessary to copy
         }
+        // play - compare method play()
+        for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
+            result.flooded.add(nextColorNeighbor);
+            result.neighbors.addAll(board.getNeighborColorAreaSet4Id(nextColorNeighbor));
+        }
+        result.neighbors.removeAll(result.flooded);
+        ++result.solutionSize;
+        result.solutionEntry = solutionTree.add(this.solutionEntry, nextColor);
+        return result;
     }
 
     /**

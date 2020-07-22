@@ -69,7 +69,7 @@ public class AStarTigrouStrategy implements AStarStrategy {
                 nextColors ^= l1b; // clear lowest one bit
                 final AStarNode nextNode = new AStarNode(currentNode);
                 final byte color = (byte)(31 - clz);
-                nextNode.play(color, this.solver.getColorAreas(neighbors, color), this.solutionTree);
+                nextNode.play(color, this.solver.getColorAreas(neighbors, color), this.solutionTree, this.board);
                 final int nextDistance = nextNode.getSumDistances(this.queue, this.board);
                 if (minDistance > nextDistance) {
                     minDistance = nextDistance;

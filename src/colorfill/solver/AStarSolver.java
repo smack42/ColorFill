@@ -35,7 +35,6 @@ public class AStarSolver extends AbstractSolver {
     private final SolutionTree solutionTree = new SolutionTree();
     private final ColorAreaSet.Iterator iter;
     private final ColorAreaSet.IteratorAnd iterAnd;
-    private final ColorArea[] caArray;
     private final ColorAreaSet[] casByColor;
 
     /**
@@ -46,7 +45,6 @@ public class AStarSolver extends AbstractSolver {
         super(board);
         this.iter = new ColorAreaSet.Iterator();
         this.iterAnd = new ColorAreaSet.IteratorAnd();
-        this.caArray = new ColorArea[board.getColorAreasArray().length];
         this.casByColor = board.getCasByColorArray();
     }
 
@@ -132,8 +130,10 @@ public class AStarSolver extends AbstractSolver {
                     final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
                     nextColors ^= l1b; // clear lowest one bit
                     final byte color = (byte)(31 - clz);
-                    final AStarNode nextNode = currentNode.copyAndPlay(color, recycleNode, this.getColorAreas(neighbors, color), this.solutionTree);
-                    if (null != nextNode) {
+                    final ColorAreaSet.IteratorAnd nextColorNeighbors = this.getColorAreas(neighbors, color);
+                    if (this.canPlay(color, nextColorNeighbors, currentNode)) {
+                        nextColorNeighbors.restart();
+                        final AStarNode nextNode = currentNode.copyAndPlay(color, recycleNode, nextColorNeighbors, this.solutionTree, this.board);
                         recycleNode = null;
                         this.strategy.setEstimatedCost(nextNode);
                         open.offer(nextNode);
@@ -168,7 +168,7 @@ public class AStarSolver extends AbstractSolver {
                         nextColors ^= l1b; // clear lowest one bit
                         final AStarNode nextNode = new AStarNode(currentNode);
                         final byte color = (byte)(31 - clz);
-                        nextNode.play(color, this.getColorAreas(neighbors, color), this.solutionTree);
+                        nextNode.play(color, this.getColorAreas(neighbors, color), this.solutionTree, this.board);
                         this.strategy.setEstimatedCost(nextNode);
                         open.offer(nextNode);
                     }
@@ -187,8 +187,7 @@ public class AStarSolver extends AbstractSolver {
     protected int getColors(final ColorAreaSet caSet) {
         int result = 0;
         this.iter.init(caSet);
-        int nextId;
-        while ((nextId = this.iter.nextOrNegative()) >= 0) {
+        for (int nextId;  (nextId = this.iter.nextOrNegative()) >= 0;  ) {
             result |= 1 << this.board.getColor4Id(nextId);
         }
         return result;
@@ -197,20 +196,55 @@ public class AStarSolver extends AbstractSolver {
 
     /**
      * extract the ColorAreas of the specified color.
-     * NOTE: uses this.iterAnd and this.caArray
-     * @param caSet
-     * @param color
-     * @return array of ColorArea; the array is longer than the content; the end of content is indicated by a null element.
+     * NOTE: uses this.iterAnd
+     * @return ColorAreaSet.IteratorAnd
      */
-    protected ColorArea[] getColorAreas(final ColorAreaSet caSet, final byte color) {
+    protected ColorAreaSet.IteratorAnd getColorAreas(final ColorAreaSet caSet, final byte color) {
         this.iterAnd.init(caSet, this.casByColor[color]);
-        int caId, i = 0;
-        while ((caId = this.iterAnd.nextOrNegative()) >= 0) {
-            this.caArray[i++] = this.board.getColorArea4Id(caId);
-        }
-        this.caArray[i] = null;
-        return this.caArray;
+        return this.iterAnd;
     }
+
+
+    /**
+     * check if this color can be played. (avoid duplicate moves)
+     * the idea is taken from the program "floodit" by Aaron and Simon Puchert,
+     * which can be found at <a>https://github.com/aaronpuchert/floodit</a>
+     * NOTE: uses this.iter
+     */
+    private boolean canPlay(final byte nextColor, final ColorAreaSet.IteratorAnd nextColorNeighbors, final AStarNode currentNode) {
+        final byte currColor = this.solutionTree.getColor(currentNode.getSolutionEntry());
+        final ColorAreaSet flooded = currentNode.getFlooded();
+        // did the previous move add any new "nextColor" neighbors?
+        boolean newNext = false;
+next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
+            for (final ColorArea prevNeighbor : this.board.getColorArea4Id(nextColorNeighbor).getNeighborsArray()) {
+                if ((prevNeighbor.getColor() != currColor) && flooded.contains(prevNeighbor)) {
+                    continue next;
+                }
+            }
+            newNext = true;
+            break next;
+        }
+        if (!newNext) {
+            if (nextColor < currColor) {
+                return false;
+            } else {
+                nextColorNeighbors.restart();
+                // should nextColor have been played before currColor?
+                for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
+                    for (final ColorArea prevNeighbor : this.board.getColorArea4Id(nextColorNeighbor).getNeighborsArray()) {
+                        if ((prevNeighbor.getColor() == currColor) && !flooded.contains(prevNeighbor)) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+        } else {
+            return true;
+        }
+    }
+
 
     /**
      * This class stores the moves of all (partial) solutions in a compact way.

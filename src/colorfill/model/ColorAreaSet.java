@@ -258,6 +258,14 @@ public class ColorAreaSet {
         }
 
         /**
+         * re-initialize this Iterator for use with the ColorAreaSets set by the previous init().
+         */
+        public void restart() {
+            this.longIdx = 0;
+            this.buf = this.array1[0] & this.array2[0];
+        }
+
+        /**
          * return next value (always zero or positive),
          * or a negative value when there is no next value.
          * @return
