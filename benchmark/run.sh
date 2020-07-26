@@ -4,19 +4,32 @@ run_benchmark () {
     {
         date -Iseconds
         echo
-        time java -Xms8G -Xmx8G -jar ../colorfill.jar -benchmark "$1" "$2"
-       # time java -Xms8G -Xmx8G -cp ../bin colorfill.ui.Starter -benchmark "$1"
+        time java -Xms12G -Xmx12G -jar ../colorfill.jar -benchmark "$1" "$2"
         echo
         date -Iseconds
         echo
-        time java -jar ../colorfill.jar "$1" "$1_solution.txt"
-       # time java -cp ../bin colorfill.ui.Starter "$1" "$1_solution.txt"
+        time java -jar ../colorfill.jar "$1" "$1_solution_$2.txt"
         echo
         date -Iseconds
-    } 2>&1 | tee "$1_solution_details.txt"
+    } 2>&1 | tee "$1_solution_$2_details.txt"
 }
 
 
-run_benchmark "pc19 tiles.txt" "AStarFlolleStrategy"
+#STRATEGY=AStarPuchertStrategy
+STRATEGY=AStarFlolleStrategy
 
-run_benchmark "floodtest 1000.txt" "AStarFlolleStrategy"
+### short runtime
+run_benchmark "dataset b10c15n1000.txt"   $STRATEGY
+run_benchmark "dataset b24c4n1000.txt"    $STRATEGY
+run_benchmark "pc19 tiles.txt"            $STRATEGY
+
+### long runtime
+run_benchmark "dataset b12c12n1000.txt"   $STRATEGY
+run_benchmark "dataset b14c8n1000.txt"    $STRATEGY
+run_benchmark "dataset b18c6n1000.txt"    $STRATEGY
+run_benchmark "floodtest 1000.txt"        $STRATEGY
+
+### very long runtime
+#run_benchmark "dataset b24c6n1000.txt"    $STRATEGY
+#run_benchmark "floodtest.txt"             $STRATEGY
+

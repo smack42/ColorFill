@@ -43,7 +43,7 @@ public class Starter {
     
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill __DEV__";
-        final String version  = "1.3.0 (2020-07-14)";
+        final String version  = "1.3.0 (2020-07-26)";
         final String author   = "Copyright (C) 2020 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
@@ -536,7 +536,7 @@ public class Starter {
         final String solverName = AbstractSolver.getSolverName(STRATEGY.asSubclass(Strategy.class));
         System.out.println("running benchmark of solver strategy " + solverName);
         System.out.println("reading  input file: " + inputFileName);
-        final String outputFileName = inputFileName + "_solution.txt";
+        final String outputFileName = inputFileName + "_solution_" + solverName + ".txt";
         System.out.println("writing output file: " + outputFileName);
         try (   final BufferedReader brBoards = new BufferedReader(new FileReader(inputFileName));
                 final PrintWriter pwSteps = new PrintWriter(new FileWriter(outputFileName));
