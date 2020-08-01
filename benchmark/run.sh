@@ -15,8 +15,8 @@ run_benchmark () {
 }
 
 
-#STRATEGY=AStarPuchertStrategy
-STRATEGY=AStarFlolleStrategy
+STRATEGY=AStarPuchertStrategy
+#STRATEGY=AStarFlolleStrategy
 
 ### short runtime
 run_benchmark "dataset b10c15n1000.txt"   $STRATEGY

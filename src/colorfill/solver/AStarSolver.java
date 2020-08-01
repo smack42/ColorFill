@@ -18,6 +18,8 @@
 package colorfill.solver;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
@@ -113,6 +115,7 @@ public class AStarSolver extends AbstractSolver {
 
     private void executeInternalPuchert(final ColorArea startCa) throws InterruptedException {
         final Queue<AStarNode> open = new PriorityQueue<AStarNode>(AStarNode.strongerComparator());
+        final KnownStates knownStates = new KnownStates();
         open.offer(new AStarNode(this.board, startCa, this.solutionTree));
         AStarNode recycleNode = null;
         while (open.size() > 0) {
@@ -120,6 +123,7 @@ public class AStarSolver extends AbstractSolver {
             final AStarNode currentNode = open.poll();
             if (currentNode.isSolved()) {
                 this.addSolution(currentNode.getSolution(this.solutionTree));
+//                System.out.println(knownStates.printStats());
                 return;
             } else {
                 // play all possible colors
@@ -133,10 +137,13 @@ public class AStarSolver extends AbstractSolver {
                     final ColorAreaSet.IteratorAnd nextColorNeighbors = this.getColorAreas(neighbors, color);
                     if (this.canPlay(color, nextColorNeighbors, currentNode)) {
                         nextColorNeighbors.restart();
-                        final AStarNode nextNode = currentNode.copyAndPlay(color, recycleNode, nextColorNeighbors, this.solutionTree, this.board);
-                        recycleNode = null;
-                        this.strategy.setEstimatedCost(nextNode);
-                        open.offer(nextNode);
+                        final AStarNode nextNode = currentNode.copyAndPlay(color, recycleNode, nextColorNeighbors, this.board);
+                        if (knownStates.addIfLess(nextNode)) {
+                            recycleNode = null;
+                            nextNode.addSolutionEntry(color, this.solutionTree);
+                            this.strategy.setEstimatedCost(nextNode);
+                            open.offer(nextNode);
+                        }
                     }
                 }
             }
@@ -329,5 +336,46 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
         protected byte getColor(final int entry) {
             return (byte)(entry & COLOR_BIT_MASK);
         }
+    }
+
+
+    /**
+     * This class stores all partially flooded board states and the minimum number of moves that were required to reach each of them.
+     */
+    private static class KnownStates {
+        private final Map<ColorAreaSet, Integer> map = new HashMap<>(10000);  // initialCapacity
+//        private int countAdded = 0, countNotAdded = 0;
+
+        private KnownStates() {
+            // private constructor
+        }
+
+        /**
+         * try to add the board state in this AStarNode to the map.
+         * @param node
+         * @return true if the board state was stored, false if it was already stored with the same or or lower number of moves.
+         */
+        private boolean addIfLess(final AStarNode node) {
+            final ColorAreaSet caSet = node.getFlooded();
+            final int newMoves = node.getSolutionSize();
+            final Integer oldMoves = this.map.get(caSet);
+            if ((null == oldMoves) || (oldMoves.intValue() > newMoves)) {
+                this.map.put(new ColorAreaSet(caSet), Integer.valueOf(newMoves));
+//                ++this.countAdded;
+                return true;
+            } else {
+//                ++this.countNotAdded;
+                return false;
+            }
+        }
+
+//        private String printStats() {
+//            final int countTotal = countAdded + countNotAdded;
+//            return "KnownStates:  size=" + map.size() + " (" + ((map.size() * 100) / countTotal) + "%)"
+//                    + "  countAdded=" + countAdded + " (" + ((countAdded * 100) / countTotal) + "%)"
+//                    + "  countUpdated=" + (countAdded - map.size()) + " (" + (((countAdded - map.size()) * 100) / countTotal) + "%)"
+//                    + "  countNotAdded=" + countNotAdded + " (" + ((countNotAdded * 100) / countTotal) + "%)"
+//                    ;
+//        }
     }
 }

@@ -154,7 +154,7 @@ public class AStarNode {
      * @param recycleNode
      * @return
      */
-    public AStarNode copyAndPlay(final byte nextColor, final AStarNode recycleNode, final ColorAreaSet.IteratorAnd nextColorNeighbors, final SolutionTree solutionTree, final Board board) {
+    public AStarNode copyAndPlay(final byte nextColor, final AStarNode recycleNode, final ColorAreaSet.IteratorAnd nextColorNeighbors, final Board board) {
         final AStarNode result;
         if (null == recycleNode) {
             result = new AStarNode(this);
@@ -172,9 +172,13 @@ public class AStarNode {
             result.neighbors.addAll(board.getNeighborColorAreaSet4Id(nextColorNeighbor));
         }
         result.neighbors.removeAll(result.flooded);
-        ++result.solutionSize;
-        result.solutionEntry = solutionTree.add(this.solutionEntry, nextColor);
+        result.solutionEntry = this.solutionEntry;
         return result;
+    }
+
+    public void addSolutionEntry(final byte nextColor, final SolutionTree solutionTree) {
+        ++this.solutionSize;
+        this.solutionEntry = solutionTree.add(this.solutionEntry, nextColor);
     }
 
     /**

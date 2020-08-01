@@ -196,6 +196,20 @@ public class ColorAreaSet {
         return sz;
     }
 
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(this.array);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ColorAreaSet) {
+            return Arrays.equals(this.array, ((ColorAreaSet)obj).array);
+        } else {
+            return false;
+        }
+    }
+
     /**
      * an Iterator over one ColorAreaSet that returns the IDs of the member ColorArea objects
      */
