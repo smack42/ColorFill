@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.Random;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
@@ -115,7 +116,7 @@ public class AStarSolver extends AbstractSolver {
 
     private void executeInternalPuchert(final ColorArea startCa) throws InterruptedException {
         final Queue<AStarNode> open = new PriorityQueue<AStarNode>(AStarNode.strongerComparator());
-        final KnownStates knownStates = new KnownStates();
+        final KnownStates knownStates = new KnownStates(this.board);
         open.offer(new AStarNode(this.board, startCa, this.solutionTree));
         AStarNode recycleNode = null;
         while (open.size() > 0) {
@@ -343,30 +344,36 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
      * This class stores all partially flooded board states and the minimum number of moves that were required to reach each of them.
      */
     private static class KnownStates {
-        private final Map<ColorAreaSet, Integer> map = new HashMap<>(10000);  // initialCapacity
+//        private final Map<ColorAreaSet, Integer> map = new HashMap<>(10000);  // initialCapacity
+        private final HashMapLongArray2Byte map2;
 //        private int countAdded = 0, countNotAdded = 0;
 
-        private KnownStates() {
-            // private constructor
+        public KnownStates(final Board board) {
+            this.map2 = new HashMapLongArray2Byte(board);
         }
 
         /**
          * try to add the board state in this AStarNode to the map.
          * @param node
-         * @return true if the board state was stored, false if it was already stored with the same or or lower number of moves.
+         * @return true if the board state was stored, false if it was already stored with the same or lower number of moves.
          */
-        private boolean addIfLess(final AStarNode node) {
-            final ColorAreaSet caSet = node.getFlooded();
-            final int newMoves = node.getSolutionSize();
-            final Integer oldMoves = this.map.get(caSet);
-            if ((null == oldMoves) || (oldMoves.intValue() > newMoves)) {
-                this.map.put(new ColorAreaSet(caSet), Integer.valueOf(newMoves));
+        public boolean addIfLess(final AStarNode node) {
+//            final ColorAreaSet caSet = node.getFlooded();
+//            final int newMoves = node.getSolutionSize();
+//            final Integer oldMoves = this.map.get(caSet);
+//            final boolean result;
+//            if ((null == oldMoves) || (oldMoves.intValue() > newMoves)) {
+//                this.map.put(new ColorAreaSet(caSet), Integer.valueOf(newMoves));
 //                ++this.countAdded;
-                return true;
-            } else {
+//                result = true;
+//            } else {
 //                ++this.countNotAdded;
-                return false;
-            }
+//                result = false;
+//            }
+            final boolean resultNew = this.map2.putIfLess(node.getFlooded().getArray(), node.getSolutionSize() + 1);
+            return resultNew;
+//            assert result == resultNew;
+//            return result;
         }
 
 //        private String printStats() {
@@ -377,5 +384,149 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
 //                    + "  countNotAdded=" + countNotAdded + " (" + ((countNotAdded * 100) / countTotal) + "%)"
 //                    ;
 //        }
+    }
+
+    /**
+     * This class is a minimal implementation of a HashMap, taylored to the specific use case in this AStarSolver,
+     * with the aim of being faster and more efficient than the generic Java HashMap.
+     * The data type of its keys is "fixed-size array of long" and its values are of type "byte".
+     * Some simple and well-known methods are used: open addressing with linear probing and tabulation hashing.
+     */
+    private static class HashMapLongArray2Byte {
+        private final double LOAD_FACTOR = 0.5; // CONFIGURE THIS
+        private final int KEY_SIZE; // number of "long" elements in each key
+        private final int[][] hashLookup; // lookup tables for tabulation hashing
+        private long[] tableKeys;   // the table of keys
+        private byte[] tableValues; // the table of values corresponding to the keys
+        private int size;           // current number of data records stored in this map
+        private int maxSize;        // maximum number of data records that can be stored before table size must be increased
+        private int mask;           // bit mask based on current table size
+
+        /**
+         * constructor
+         */
+        public HashMapLongArray2Byte(final Board board) {
+            this.KEY_SIZE = (board.getSizeColorAreas8() + 7) >> 3;
+            final int initialTableSize = 1 << 18; // must be a power of two! CONFIGURE THIS
+            this.tableKeys = new long[initialTableSize * this.KEY_SIZE];
+            this.tableValues = new byte[initialTableSize];
+            this.size = 0;
+            this.maxSize = (int)(this.tableValues.length * this.LOAD_FACTOR);
+            this.mask = this.tableValues.length - 1;
+            this.hashLookup = new int[Long.BYTES * this.KEY_SIZE][1 << Byte.SIZE]; // tabulation hashing - split key into bytes
+            final long seed = Double.doubleToLongBits(Math.PI); // arbitrary, constant seed for random number generator
+            final Random random = new Random(seed); // constant seed = same pseudo-random values in each run
+            for (int y = 0, ym = this.hashLookup[0].length;  y < ym;  ++y) {
+                for (int x = 0, xm = this.hashLookup.length;  x < xm;  ++x) {
+                    this.hashLookup[x][y] = random.nextInt();
+                }
+            }
+        }
+
+        /**
+         * try to put this key-value pair into the map. this will succeed if the key was not present
+         * in the map before or if the new value is less than the previously stored value for the key.
+         * @param key must be the internal array of a ColorAreaSet of the Board that was used as the constructor parameter
+         * @param value must be greater than zero and less than 256
+         * @return true if the key-value pair was stored, false if it was stored before with the same or a lower value.
+         */
+        public boolean putIfLess(final long[] newKey, final int newValue) {
+            assert newKey.length == this.KEY_SIZE;
+            assert newValue > 0;
+            final int hash = this.hash(newKey, 0);
+            int indexValues = hash & this.mask;
+            int oldValue;
+            while ((oldValue = this.tableValues[indexValues]) != 0) {
+                // found an existing entry, now check if it's our key
+                boolean matchesKey = true;
+                int indexKeys = indexValues * this.KEY_SIZE;
+                for (final long newKeyElement : newKey) {
+                    if (newKeyElement != this.tableKeys[indexKeys++]) {
+                        matchesKey = false;
+                        break; // for
+                    }
+                }
+                if (matchesKey) {
+                    break; // while
+                } else {
+                    indexValues = (indexValues + 1) & this.mask;
+                }
+            }
+            if (0 == oldValue) {
+                // key not present yet
+                // -> add new entry
+                int indexKeys = indexValues * this.KEY_SIZE;
+                for (final long newKeyElement : newKey) {
+                    this.tableKeys[indexKeys++] = newKeyElement;
+                }
+                this.tableValues[indexValues] = (byte)newValue;
+                if (++this.size > this.maxSize) {
+                    this.increaseSize();
+                }
+                return true;
+            } else if (newValue < (oldValue & 0xff)) {
+                // entry present and new value is less than old value
+                // -> update entry
+                this.tableValues[indexValues] = (byte)newValue;
+                return true;
+            } else {
+                // entry present and new value is same or greater than old value
+                // -> do nothing
+                return false;
+            }
+        }
+
+        /**
+         * calculate the 32bit hash value of the array of long.
+         */
+        private int hash(final long[] key, final int startIndex) {
+            int result = 0;
+            for (int i = 0, k = startIndex, km = startIndex + this.KEY_SIZE;  k < km;  ++k, i += Long.BYTES) {
+                // manually unrolled loop that processes the 8 bytes of each long.
+                // the compiler might be able to optimize this code for a speedup.
+                final long l = key[k];
+                final int h0 = this.hashLookup[ i     ][ (int)(l                    ) & 0xff ];
+                final int h1 = this.hashLookup[ i + 1 ][ (int)(l >>> (1 * Byte.SIZE)) & 0xff ];
+                final int h2 = this.hashLookup[ i + 2 ][ (int)(l >>> (2 * Byte.SIZE)) & 0xff ];
+                final int h3 = this.hashLookup[ i + 3 ][ (int)(l >>> (3 * Byte.SIZE)) & 0xff ];
+                final int h4 = this.hashLookup[ i + 4 ][ (int)(l >>> (4 * Byte.SIZE)) & 0xff ];
+                final int h5 = this.hashLookup[ i + 5 ][ (int)(l >>> (5 * Byte.SIZE)) & 0xff ];
+                final int h6 = this.hashLookup[ i + 6 ][ (int)(l >>> (6 * Byte.SIZE)) & 0xff ];
+                final int h7 = this.hashLookup[ i + 7 ][ (int)(l >>> (7 * Byte.SIZE))        ];
+                result ^= h0 ^ h1 ^ h2 ^ h3 ^ h4 ^ h5 ^ h6 ^ h7;
+            }
+            return result;
+        }
+
+        /**
+         * double the storage space in the internal tables
+         */
+        private void increaseSize() {
+            // allocate new tables, twice as large as the current ones
+            final long[] oldTableKeys = this.tableKeys;
+            this.tableKeys = new long[oldTableKeys.length << 1];
+            final byte[] oldTableValues = this.tableValues;
+            this.tableValues = new byte[oldTableValues.length << 1];
+            this.maxSize = (int)(this.tableValues.length * this.LOAD_FACTOR);
+            this.mask = this.tableValues.length - 1;
+            // add all entries to the new tables
+            for (int oldIndexValues = 0;  oldIndexValues < oldTableValues.length;  ++oldIndexValues) {
+                final byte value = oldTableValues[oldIndexValues];
+                if (value != 0) {
+                    final int oldIndexKeys = oldIndexValues * this.KEY_SIZE;
+                    final int hash = this.hash(oldTableKeys, oldIndexKeys);
+                    int newIndexValues = hash & this.mask;
+                    while (this.tableValues[newIndexValues] != 0) {
+                        // there can't be any duplicate keys, so just skip all occupied slots
+                        newIndexValues = (newIndexValues + 1) & this.mask;
+                    }
+                    final int newIndexKeys = newIndexValues * this.KEY_SIZE;
+                    for (int i = 0;  i < this.KEY_SIZE;  ++i) {
+                        this.tableKeys[newIndexKeys + i] = oldTableKeys[oldIndexKeys + i];
+                    }
+                    this.tableValues[newIndexValues] = value;
+                }
+            }
+        }
     }
 }
