@@ -393,7 +393,7 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
      * Some simple and well-known methods are used: open addressing with linear probing and tabulation hashing.
      */
     private static class HashMapLongArray2Byte {
-        private final double LOAD_FACTOR = 0.5; // CONFIGURE THIS
+        private final double LOAD_FACTOR = 0.9; // CONFIGURE THIS
         private final int KEY_SIZE; // number of "long" elements in each key
         private final int[][] hashLookup; // lookup tables for tabulation hashing
         private long[] tableKeys;   // the table of keys
@@ -407,7 +407,7 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
          */
         public HashMapLongArray2Byte(final Board board) {
             this.KEY_SIZE = (board.getSizeColorAreas8() + 7) >> 3;
-            final int initialTableSize = 1 << 18; // must be a power of two! CONFIGURE THIS
+            final int initialTableSize = 1 << 16; // must be a power of two! CONFIGURE THIS
             this.tableKeys = new long[initialTableSize * this.KEY_SIZE];
             this.tableValues = new byte[initialTableSize];
             this.size = 0;
