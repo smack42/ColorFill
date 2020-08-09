@@ -24,17 +24,13 @@ import java.util.Arrays;
  */
 public class ColorAreaSet {
 
-    private static final short SIZE_UNKNOWN = -1;
-
     private final long[] array;
-    private short size;
 
     /**
      * the constructor
      */
     public ColorAreaSet(final Board board) {
         this.array = new long[(board.getSizeColorAreas8() + 7) >> 3];
-        this.size = 0;
     }
 
     /**
@@ -43,7 +39,6 @@ public class ColorAreaSet {
      */
     public ColorAreaSet(final ColorAreaSet other) {
         this.array = other.array.clone();
-        this.size = other.size;
     }
 
     /**
@@ -51,7 +46,6 @@ public class ColorAreaSet {
      */
     public void copyFrom(final ColorAreaSet other) {
         System.arraycopy(other.array, 0, this.array, 0, this.array.length);
-        this.size = other.size;
     }
 
     /**
@@ -59,7 +53,6 @@ public class ColorAreaSet {
      */
     public void clear() {
         Arrays.fill(this.array, 0);
-        this.size = 0;
     }
 
     /**
@@ -76,7 +69,6 @@ public class ColorAreaSet {
         final int caId = ca.getId();
         final int i = caId >>> 6;       // index is always >= 0
         this.array[i] |= 1L << caId;    // implicit shift distance (caId & 0x3f)
-        this.size = SIZE_UNKNOWN;
     }
 
     /**
@@ -85,7 +77,6 @@ public class ColorAreaSet {
     public void add(final int caId) {
         final int i = caId >>> 6;       // index is always >= 0
         this.array[i] |= 1L << caId;    // implicit shift distance (caId & 0x3f)
-        this.size = SIZE_UNKNOWN;
     }
 
     /**
@@ -94,7 +85,6 @@ public class ColorAreaSet {
     public void remove(final int caId) {
         final int i = caId >>> 6;       // index is always >= 0
         this.array[i] &= ~(1L << caId); // implicit shift distance (caId & 0x3f)
-        this.size = SIZE_UNKNOWN;
     }
 
     /**
@@ -156,21 +146,23 @@ public class ColorAreaSet {
      * return the number of ColorAreas in this set
      */
     public int size() {
-        if (SIZE_UNKNOWN == this.size) {
-            int sz = 0;
-            for (final long a : this.array) {
-                sz += Long.bitCount(a); // hopefully an intrinsic function using instruction POPCNT
-            }
-            this.size = (short)sz;
+        int size = 0;
+        for (final long a : this.array) {
+            size += Long.bitCount(a); // hopefully an intrinsic function using instruction POPCNT
         }
-        return this.size;
+        return size;
     }
 
     /**
      * return true is this set is empty
      */
     public boolean isEmpty() {
-        return (short)0 == this.size;
+        for (final long a : this.array) {
+            if (0L != a) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -180,20 +172,15 @@ public class ColorAreaSet {
         for (int i = 0;  i < this.array.length;  ++i) {
             this.array[i] |= other.array[i];
         }
-        this.size = SIZE_UNKNOWN;
     }
 
     /**
      * remove all ColorAreas in the other set from this set
      */
-    public int removeAll(final ColorAreaSet other) {
-        int sz = 0;
+    public void removeAll(final ColorAreaSet other) {
         for (int i = 0;  i < this.array.length;  ++i) {
-            final long a = (this.array[i] &= ~(other.array[i]));
-            sz += Long.bitCount(a); // hopefully an intrinsic function using instruction POPCNT
+            this.array[i] &= ~(other.array[i]);
         }
-        this.size = (short)sz;
-        return sz;
     }
 
     @Override
@@ -225,7 +212,7 @@ public class ColorAreaSet {
          */
         public void init(final ColorAreaSet caSet) {
             this.array = caSet.array;
-            this.longIdxLimit = ((short)0 == caSet.size ? 0 : this.array.length - 1);
+            this.longIdxLimit = this.array.length - 1;
             this.longIdx = 0;
             this.buf = this.array[0];
         }

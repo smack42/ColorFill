@@ -96,7 +96,8 @@ public class ColorAreaGroup {
      * @param color the color
      */
     public void removeAllColor(final ColorAreaSet removeColorAreas, final byte color) {
-        final int sz = this.theArray[color].removeAll(removeColorAreas);
+        this.theArray[color].removeAll(removeColorAreas);
+        final int sz = this.theArray[color].size();
         assert sz >= 0;
         // conditionally set/clear a bit without branching
         final int mask = ~(1 << color);
