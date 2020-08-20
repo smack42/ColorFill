@@ -390,12 +390,12 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
      * This class is a minimal implementation of a HashMap, taylored to the specific use case in this AStarSolver,
      * with the aim of being faster and more efficient than the generic Java HashMap.
      * The data type of its keys is "fixed-size array of long" and its values are of type "byte".
-     * Some simple and well-known methods are used: open addressing with linear probing and tabulation hashing.
+     * Some simple and well-known methods are used: open addressing with linear probing and MurmurHash3-derived hashing (or tabulation hashing).
      */
     private static class HashMapLongArray2Byte {
         private final double LOAD_FACTOR = 0.9; // CONFIGURE THIS
         private final int KEY_SIZE; // number of "long" elements in each key
-        private final int[][] hashLookup; // lookup tables for tabulation hashing
+//        private final int[][] hashLookup; // lookup tables for tabulation hashing
         private long[] tableKeys;   // the table of keys
         private byte[] tableValues; // the table of values corresponding to the keys
         private int size;           // current number of data records stored in this map
@@ -413,14 +413,14 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
             this.size = 0;
             this.maxSize = (int)(this.tableValues.length * this.LOAD_FACTOR);
             this.mask = this.tableValues.length - 1;
-            this.hashLookup = new int[Long.BYTES * this.KEY_SIZE][1 << Byte.SIZE]; // tabulation hashing - split key into bytes
-            final long seed = Double.doubleToLongBits(Math.PI); // arbitrary, constant seed for random number generator
-            final Random random = new Random(seed); // constant seed = same pseudo-random values in each run
-            for (int y = 0, ym = this.hashLookup[0].length;  y < ym;  ++y) {
-                for (int x = 0, xm = this.hashLookup.length;  x < xm;  ++x) {
-                    this.hashLookup[x][y] = random.nextInt();
-                }
-            }
+//            this.hashLookup = new int[Long.BYTES * this.KEY_SIZE][1 << Byte.SIZE]; // tabulation hashing - split key into bytes
+//            final long seed = Double.doubleToLongBits(Math.PI); // arbitrary, constant seed for random number generator
+//            final Random random = new Random(seed); // constant seed = same pseudo-random values in each run
+//            for (int y = 0, ym = this.hashLookup[0].length;  y < ym;  ++y) {
+//                for (int x = 0, xm = this.hashLookup.length;  x < xm;  ++x) {
+//                    this.hashLookup[x][y] = random.nextInt();
+//                }
+//            }
         }
 
         /**
@@ -479,23 +479,51 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
         /**
          * calculate the 32bit hash value of the array of long.
          */
+//        private int hash(final long[] key, final int startIndex) {
+//            // tabulation hashing
+//            int result = 0;
+//            for (int i = 0, k = startIndex, km = startIndex + this.KEY_SIZE;  k < km;  ++k, i += Long.BYTES) {
+//                // manually unrolled loop that processes the 8 bytes of each long.
+//                // the compiler might be able to optimize this code for a speedup.
+//                final long l = key[k];
+//                final int h0 = this.hashLookup[ i     ][ (int)(l                    ) & 0xff ];
+//                final int h1 = this.hashLookup[ i + 1 ][ (int)(l >>> (1 * Byte.SIZE)) & 0xff ];
+//                final int h2 = this.hashLookup[ i + 2 ][ (int)(l >>> (2 * Byte.SIZE)) & 0xff ];
+//                final int h3 = this.hashLookup[ i + 3 ][ (int)(l >>> (3 * Byte.SIZE)) & 0xff ];
+//                final int h4 = this.hashLookup[ i + 4 ][ (int)(l >>> (4 * Byte.SIZE)) & 0xff ];
+//                final int h5 = this.hashLookup[ i + 5 ][ (int)(l >>> (5 * Byte.SIZE)) & 0xff ];
+//                final int h6 = this.hashLookup[ i + 6 ][ (int)(l >>> (6 * Byte.SIZE)) & 0xff ];
+//                final int h7 = this.hashLookup[ i + 7 ][ (int)(l >>> (7 * Byte.SIZE))        ];
+//                result ^= h0 ^ h1 ^ h2 ^ h3 ^ h4 ^ h5 ^ h6 ^ h7;
+//            }
+//            return result;
+//        }
         private int hash(final long[] key, final int startIndex) {
-            int result = 0;
-            for (int i = 0, k = startIndex, km = startIndex + this.KEY_SIZE;  k < km;  ++k, i += Long.BYTES) {
-                // manually unrolled loop that processes the 8 bytes of each long.
-                // the compiler might be able to optimize this code for a speedup.
+            // based on MurmurHash3_x86_32
+            int h1 = 12345; // seed
+            for (int k = startIndex, km = startIndex + this.KEY_SIZE;  k < km;  ++k) {
                 final long l = key[k];
-                final int h0 = this.hashLookup[ i     ][ (int)(l                    ) & 0xff ];
-                final int h1 = this.hashLookup[ i + 1 ][ (int)(l >>> (1 * Byte.SIZE)) & 0xff ];
-                final int h2 = this.hashLookup[ i + 2 ][ (int)(l >>> (2 * Byte.SIZE)) & 0xff ];
-                final int h3 = this.hashLookup[ i + 3 ][ (int)(l >>> (3 * Byte.SIZE)) & 0xff ];
-                final int h4 = this.hashLookup[ i + 4 ][ (int)(l >>> (4 * Byte.SIZE)) & 0xff ];
-                final int h5 = this.hashLookup[ i + 5 ][ (int)(l >>> (5 * Byte.SIZE)) & 0xff ];
-                final int h6 = this.hashLookup[ i + 6 ][ (int)(l >>> (6 * Byte.SIZE)) & 0xff ];
-                final int h7 = this.hashLookup[ i + 7 ][ (int)(l >>> (7 * Byte.SIZE))        ];
-                result ^= h0 ^ h1 ^ h2 ^ h3 ^ h4 ^ h5 ^ h6 ^ h7;
+                int k1 = (int)l;
+                k1 *= 0xcc9e2d51;
+                k1 = Integer.rotateLeft(k1, 15);
+                k1 *= 0x1b873593;
+                h1 ^= k1;
+                h1 = Integer.rotateLeft(h1, 13);
+                h1 = h1 * 5 + 0xe6546b64;
+                k1 = (int)(l >>> 32);
+                k1 *= 0xcc9e2d51;
+                k1 = Integer.rotateLeft(k1, 15);
+                k1 *= 0x1b873593;
+                h1 ^= k1;
+                h1 = Integer.rotateLeft(h1, 13);
+                h1 = h1 * 5 + 0xe6546b64;
             }
-            return result;
+            h1 ^= h1 >>> 16;
+            h1 *= 0x85ebca6b;
+            h1 ^= h1 >>> 13;
+            h1 *= 0xc2b2ae35;
+            h1 ^= h1 >>> 16;
+            return h1;
         }
 
         /**
