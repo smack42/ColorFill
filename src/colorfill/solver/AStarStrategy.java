@@ -26,5 +26,5 @@ public interface AStarStrategy extends Strategy {
      * update the given node with its cost, which is estimated by this strategy.
      * @param node
      */
-    public void setEstimatedCost(final AStarNode node);
+    public void setEstimatedCost(final AStarNode node, int nonCompletedColors);
 }

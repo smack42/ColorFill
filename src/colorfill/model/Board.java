@@ -48,7 +48,7 @@ public class Board {
     private byte[] idsColors;
     private ColorAreaSet[] idsNeighborColorAreaSets;
     private int sizeColorAreas8;
-    private final ColorAreaSet[] casByColor;
+    private final ColorAreaSet[] casByColorBits;
 
     /**
      * construct a new Board using the specified parameters.
@@ -80,7 +80,7 @@ public class Board {
             this.char2Color.put(c, b);
             this.color2Char.put(b, c);
         }
-        this.casByColor = new ColorAreaSet[this.colors];
+        this.casByColorBits = new ColorAreaSet[1 << this.colors];
         this.colorAreas = new TreeSet<ColorArea>();
         this.colorAreas.addAll(this.createColorAreas());
     }
@@ -141,7 +141,7 @@ public class Board {
         this.importString(str);
         this.colors = this.char2Color.size();
         this.cellsColorAreas = new ColorArea[len];
-        this.casByColor = new ColorAreaSet[this.colors];
+        this.casByColorBits = new ColorAreaSet[1 << this.colors];
         this.colorAreas = new TreeSet<ColorArea>();
         this.colorAreas.addAll(this.createColorAreas());
         this.startPos = this.depth = -1;
@@ -239,14 +239,25 @@ public class Board {
         this.idsColorAreas = new ColorArea[result.size()];
         this.idsColors = new byte[result.size()];
         this.sizeColorAreas8 = (result.size() + 7) >> 3; // how many bytes are needed to store them as bits?
-        for (int color = 0;  color < this.casByColor.length;  ++color) {
-            this.casByColor[color] = new ColorAreaSet(this);
+        for (int i = 0;  i < this.casByColorBits.length;  ++i) {
+            this.casByColorBits[i] = new ColorAreaSet(this);
         }
         for (final ColorArea ca : result) {
             ca.setId(id++);
             this.idsColorAreas[ca.getId()] = ca;
             this.idsColors[ca.getId()] = ca.getColor();
-            this.casByColor[ca.getColor()].add(ca);
+            this.casByColorBits[1 << ca.getColor()].add(ca);
+        }
+        for (int colorBits = 3;  colorBits < this.casByColorBits.length;  ++colorBits) {
+            if (0 != (colorBits & (colorBits - 1))) { // is not power of two?
+                // several color bits are set
+                final ColorAreaSet caSet = this.casByColorBits[colorBits];
+                for (int bits = colorBits;  0 != bits;  ) {
+                    final int bit = Integer.lowestOneBit(bits);
+                    bits ^= bit;
+                    caSet.addAll(this.casByColorBits[bit]);
+                }
+            }
         }
         for (final ColorArea ca : result) {
             ca.makeNeighborsArray(this);
@@ -468,7 +479,7 @@ public class Board {
         return this.sizeColorAreas8;
     }
 
-    public ColorAreaSet[] getCasByColorArray() {
-        return this.casByColor;
+    public ColorAreaSet[] getCasByColorBitsArray() {
+        return this.casByColorBits;
     }
 }

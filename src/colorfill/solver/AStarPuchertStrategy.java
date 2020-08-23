@@ -34,40 +34,22 @@ public class AStarPuchertStrategy implements AStarStrategy {
     protected final ColorAreaSet[] casByColorBits;
     protected final ColorAreaSet.Iterator iter;
     protected final ColorAreaSet.IteratorAnd iterAnd;
-    protected final int allColors;
 
     public AStarPuchertStrategy(final Board board) {
         this.board = board;
         this.visited = new ColorAreaSet(board);
         this.current = new ColorAreaSet(board);
         this.next = new ColorAreaSet(board);
-        final ColorAreaSet[] casByColor = board.getCasByColorArray();
-        this.casByColorBits = new ColorAreaSet[1 << casByColor.length];
-        for (int colorBits = 1;  colorBits < this.casByColorBits.length;  ++colorBits) {
-            if (0 == (colorBits & (colorBits - 1))) { // is power of two?
-                // power of two = a single color bit is set
-                this.casByColorBits[colorBits] = casByColor[Integer.numberOfTrailingZeros(colorBits)];
-            } else {
-                // several color bits are set
-                ColorAreaSet caSet = new ColorAreaSet(board);
-                this.casByColorBits[colorBits] = caSet;
-                for (int bits = colorBits;  0 != bits;  ) {
-                    final int bit = Integer.lowestOneBit(bits);
-                    bits ^= bit;
-                    caSet.addAll(this.casByColorBits[bit]);
-                }
-            }
-        }
+        this.casByColorBits = board.getCasByColorBitsArray();
         this.iter = new ColorAreaSet.Iterator();
         this.iterAnd = new ColorAreaSet.IteratorAnd();
-        this.allColors = (1 << board.getNumColors()) - 1;
     }
 
     /* (non-Javadoc)
      * @see colorfill.solver.AStarStrategy#setEstimatedCost(colorfill.solver.AStarNode)
      */
     @Override
-    public void setEstimatedCost(final AStarNode node) {
+    public void setEstimatedCost(final AStarNode node, int nonCompletedColors) {
 
         // quote from floodit.cpp: int State::computeValuation()
         // (in branch "performance")
@@ -80,64 +62,57 @@ public class AStarPuchertStrategy implements AStarStrategy {
         // closer to the end.
 
         int distance = 0;
-        if (!node.isSolved()) {
-            node.copyNeighborsTo(this.current);
-            node.copyFloodedTo(this.visited);
-            int nonCompletedColors = this.allColors;
-            for (int colorBit = 1;  colorBit < this.casByColorBits.length;  colorBit <<= 1) {
+        node.copyNeighborsTo(this.current);
+        node.copyFloodedTo(this.visited);
+
+        while (true) {
+            this.visited.addAll(this.current);
+            int completedColors = 0;
+            for (int colors = nonCompletedColors;  0 != colors;  ) {
+                final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
+                colors ^= colorBit;
                 if (this.visited.containsAll(this.casByColorBits[colorBit])) {
+                    completedColors |= colorBit;
                     nonCompletedColors ^= colorBit;
                 }
             }
-
-            while (true) {
-                this.visited.addAll(this.current);
-                int completedColors = 0;
-                for (int colors = nonCompletedColors;  0 != colors;  ) {
-                    final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
-                    colors ^= colorBit;
-                    if (this.visited.containsAll(this.casByColorBits[colorBit])) {
-                        completedColors |= colorBit;
-                        nonCompletedColors ^= colorBit;
-                    }
-                }
-                if (0 != completedColors) {
-                    // We can eliminate colors. Do just that.
-                    // We also combine all these elimination moves.
-                    distance += Integer.bitCount(completedColors);
-                    if (0 == nonCompletedColors) {
-                        break; // done
-                    } else {
-                        this.next.clear();
-                        // completed colors
-                        final ColorAreaSet colorCas = this.casByColorBits[completedColors];
-                        this.iterAnd.init(this.current, colorCas);
-                        for (int caId;  (caId = this.iterAnd.nextOrNegative()) >= 0;  ) {
-                            this.next.addAll(this.board.getNeighborColorAreaSet4Id(caId));
-                        }
-                        this.current.removeAll(colorCas);
-                        this.next.removeAll(this.visited);
-                        // non-completed colors
-                        // move nodes to next layer
-                        this.next.addAll(this.current);
-                    }
+            if (0 != completedColors) {
+                // We can eliminate colors. Do just that.
+                // We also combine all these elimination moves.
+                distance += Integer.bitCount(completedColors);
+                if (0 == (nonCompletedColors & (nonCompletedColors - 1))) { // one or zero colors remaining
+                    distance += (0 == nonCompletedColors ? 0 : 1);
+                    break; // done
                 } else {
                     this.next.clear();
-                    // Nothing found, do the color-blind pseudo-move
-                    // Expand current layer of nodes.
-                    ++distance;
-                    this.iter.init(this.current);
-                    for (int caId;  (caId = this.iter.nextOrNegative()) >= 0;  ) {
+                    // completed colors
+                    final ColorAreaSet colorCas = this.casByColorBits[completedColors];
+                    this.iterAnd.init(this.current, colorCas);
+                    for (int caId;  (caId = this.iterAnd.nextOrNegative()) >= 0;  ) {
                         this.next.addAll(this.board.getNeighborColorAreaSet4Id(caId));
                     }
+                    this.current.removeAll(colorCas);
                     this.next.removeAll(this.visited);
+                    // non-completed colors
+                    // move nodes to next layer
+                    this.next.addAll(this.current);
                 }
-
-                // Move the next layer into the current.
-                final ColorAreaSet t = this.current;
-                this.current = this.next;
-                this.next = t;
+            } else {
+                this.next.clear();
+                // Nothing found, do the color-blind pseudo-move
+                // Expand current layer of nodes.
+                ++distance;
+                this.iter.init(this.current);
+                for (int caId;  (caId = this.iter.nextOrNegative()) >= 0;  ) {
+                    this.next.addAll(this.board.getNeighborColorAreaSet4Id(caId));
+                }
+                this.next.removeAll(this.visited);
             }
+
+            // Move the next layer into the current.
+            final ColorAreaSet t = this.current;
+            this.current = this.next;
+            this.next = t;
         }
         node.setEstimatedCost(node.getSolutionSize() + distance);
     }

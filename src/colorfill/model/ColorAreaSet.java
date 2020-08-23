@@ -119,6 +119,20 @@ public class ColorAreaSet {
     }
 
     /**
+     * return true if this set contains at least one ColorArea in the other set
+     */
+    public boolean intersects(final ColorAreaSet other) {
+        for (int i = 0;  i < this.array.length;  ++i) {
+            final long thisLong = this.array[i];
+            final long otherLong = other.array[i];
+            if ((thisLong & otherLong) != 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * return true if this set contains all ColorAreas in the array
      */
     public boolean containsAll(final ColorArea[] others) {
@@ -183,20 +197,6 @@ public class ColorAreaSet {
         }
     }
 
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode(this.array);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof ColorAreaSet) {
-            return Arrays.equals(this.array, ((ColorAreaSet)obj).array);
-        } else {
-            return false;
-        }
-    }
-
     /**
      * an Iterator over one ColorAreaSet that returns the IDs of the member ColorArea objects
      */
@@ -250,20 +250,22 @@ public class ColorAreaSet {
         /**
          * initialize this Iterator for use with these ColorAreaSets.
          */
-        public void init(final ColorAreaSet caSet1, final ColorAreaSet caSet2) {
+        public IteratorAnd init(final ColorAreaSet caSet1, final ColorAreaSet caSet2) {
             this.array1 = caSet1.array;
             this.array2 = caSet2.array;
             this.longIdxLimit = this.array1.length - 1;
             this.longIdx = 0;
             this.buf = this.array1[0] & this.array2[0];
+            return this;
         }
 
         /**
          * re-initialize this Iterator for use with the ColorAreaSets set by the previous init().
          */
-        public void restart() {
+        public IteratorAnd restart() {
             this.longIdx = 0;
             this.buf = this.array1[0] & this.array2[0];
+            return this;
         }
 
         /**

@@ -52,7 +52,7 @@ public class AStarTigrouStrategy implements AStarStrategy {
      * @see colorfill.solver.AStarStrategy#setEstimatedCost(colorfill.solver.AStarNode)
      */
     @Override
-    public void setEstimatedCost(final AStarNode node) {
+    public void setEstimatedCost(final AStarNode node, int nonCompletedColors) {
         AStarNode currentNode = node;
         //copy current board and play the best color until the end.
         //number of moves required to go the end is the heuristic

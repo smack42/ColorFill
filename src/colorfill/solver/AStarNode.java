@@ -154,7 +154,7 @@ public class AStarNode {
      * @param recycleNode
      * @return
      */
-    public AStarNode copyAndPlay(final byte nextColor, final AStarNode recycleNode, final ColorAreaSet.IteratorAnd nextColorNeighbors, final Board board) {
+    public AStarNode copyAndPlay(final AStarNode recycleNode, final ColorAreaSet.IteratorAnd nextColorNeighbors, final Board board) {
         final AStarNode result;
         if (null == recycleNode) {
             result = new AStarNode(this);
