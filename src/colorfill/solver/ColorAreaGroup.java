@@ -28,7 +28,7 @@ import colorfill.model.ColorAreaSet;
 public class ColorAreaGroup {
 
     private final Board board;
-    private final ColorAreaSet[] theArray;
+    private final long[][] theArray;
     private final ColorAreaSet.Iterator iter;
     
     private int colorsNotEmptyBits;
@@ -38,9 +38,9 @@ public class ColorAreaGroup {
      */
     public ColorAreaGroup(final Board board) {
         this.board = board;
-        this.theArray = new ColorAreaSet[board.getNumColors()];
+        this.theArray = new long[board.getNumColors()][];
         for (int color = 0;  color < this.theArray.length;  ++color) {
-            this.theArray[color] = new ColorAreaSet(board);
+            this.theArray[color] = ColorAreaSet.constructor(board);
         }
         this.iter = new ColorAreaSet.Iterator();
         this.colorsNotEmptyBits = 0;
@@ -53,9 +53,9 @@ public class ColorAreaGroup {
     public void copyFrom(final ColorAreaGroup other, final int exceptColor) {
         for (int color = 0;  color < this.theArray.length;  ++color) {
             if (color != exceptColor) {
-                this.theArray[color].copyFrom(other.theArray[color]);
+                ColorAreaSet.copyFrom(this.theArray[color], other.theArray[color]);
             } else {
-                this.theArray[color].clear();
+                ColorAreaSet.clear(this.theArray[color]);
             }
         }
         final int mask = ~(1 << exceptColor);
@@ -67,11 +67,11 @@ public class ColorAreaGroup {
      * @param addColorAreas the color areas to be added
      * @param excludeColorAreas color areas that are also members of this set will not be added
      */
-    public void addAll(final ColorArea[] addColorAreas, final ColorAreaSet excludeColorAreas) {
+    public void addAll(final ColorArea[] addColorAreas, final long[] excludeColorAreas) {
         for (final ColorArea ca : addColorAreas) {
-            if (false == excludeColorAreas.contains(ca)) {
+            if (false == ColorAreaSet.contains(excludeColorAreas, ca)) {
                 final int color = ca.getColor();
-                this.theArray[color].add(ca);
+                ColorAreaSet.add(this.theArray[color], ca);
                 this.colorsNotEmptyBits |= 1 << color;
             }
         }
@@ -83,9 +83,9 @@ public class ColorAreaGroup {
      * @param addColorAreas the color areas to be added
      * @param color the color
      */
-    public void addAllColor(final ColorAreaSet addColorAreas, final byte color) {
-        assert false == addColorAreas.isEmpty();
-        this.theArray[color].addAll(addColorAreas);
+    public void addAllColor(final long[] addColorAreas, final byte color) {
+        assert false == ColorAreaSet.isEmpty(addColorAreas);
+        ColorAreaSet.addAll(this.theArray[color], addColorAreas);
         this.colorsNotEmptyBits |= 1 << color;
     }
 
@@ -95,9 +95,9 @@ public class ColorAreaGroup {
      * @param removeColorAreas the color areas to be removed
      * @param color the color
      */
-    public void removeAllColor(final ColorAreaSet removeColorAreas, final byte color) {
-        this.theArray[color].removeAll(removeColorAreas);
-        final int sz = this.theArray[color].size();
+    public void removeAllColor(final long[] removeColorAreas, final byte color) {
+        ColorAreaSet.removeAll(this.theArray[color], removeColorAreas);
+        final int sz = ColorAreaSet.size(this.theArray[color]);
         assert sz >= 0;
         // conditionally set/clear a bit without branching
         final int mask = ~(1 << color);
@@ -135,7 +135,7 @@ public class ColorAreaGroup {
      */
     public int getColorsDepth(final int depth) {
         int result = 0;
-        for (final ColorAreaSet caSet : this.theArray) {
+        for (final long[] caSet : this.theArray) {
             this.iter.init(caSet);
             int nextId;
             while ((nextId = this.iter.nextOrNegative()) >= 0) {
@@ -157,7 +157,7 @@ public class ColorAreaGroup {
     public int getColorsDepthOrLower(final int depth) {
         int result = 0;
         int depthMax = -1;
-        for (final ColorAreaSet caSet : this.theArray) {
+        for (final long[] caSet : this.theArray) {
             byte color = Byte.MIN_VALUE;
             int depthColor = -2;
             this.iter.init(caSet);
@@ -195,9 +195,9 @@ public class ColorAreaGroup {
             final int l1b = colors & -colors; // Integer.lowestOneBit()
             final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
             colors ^= l1b; // clear lowest one bit
-            final ColorAreaSet  thisSet =  this.theArray[31 - clz];
-            final ColorAreaSet otherSet = other.theArray[31 - clz];
-            if ((thisSet.size() == otherSet.size()) && thisSet.containsAll(otherSet)) {
+            final long[]  thisSet =  this.theArray[31 - clz];
+            final long[] otherSet = other.theArray[31 - clz];
+            if ((ColorAreaSet.size(thisSet) == ColorAreaSet.size(otherSet)) && ColorAreaSet.containsAll(thisSet, otherSet)) {
                 return l1b;
             }
         }
@@ -210,7 +210,7 @@ public class ColorAreaGroup {
      * @param excludeNeighbors exclude color areas if their neighbors are contained here
      * @return list of colors, not expected to be empty
      */
-    public int getColorsMaxMembers(final ColorAreaSet excludeNeighbors) {
+    public int getColorsMaxMembers(final long[] excludeNeighbors) {
         int result = 0;
         int maxCount = 1; // return empty collection if all colors are empty. not expected!
         for (byte color = 0;  color < this.theArray.length;  ++color) {
@@ -219,7 +219,7 @@ public class ColorAreaGroup {
             int nextId;
             while ((nextId = this.iter.nextOrNegative()) >= 0) {
                 final ColorArea ca = this.board.getColorArea4Id(nextId);
-                if (false == excludeNeighbors.containsAll(ca.getNeighborsArray())) {
+                if (false == ColorAreaSet.containsAll(excludeNeighbors, ca.getNeighborsArray())) {
                     count += ca.getMemberSize();
                 }
             }
@@ -239,7 +239,7 @@ public class ColorAreaGroup {
      * @param excludeNeighbors exclude color areas if their neighbors or their next neighbors are contained here
      * @return list of colors, not expected to be empty
      */
-    public int getColorsMaxNextNeighbors(final ColorAreaSet excludeNeighbors) {
+    public int getColorsMaxNextNeighbors(final long[] excludeNeighbors) {
         int result = 0;
         int maxCount = -1; // include colors that have zero or more next new neighbors
         for (byte color = 0;  color < this.theArray.length;  ++color) {
@@ -249,8 +249,8 @@ public class ColorAreaGroup {
             while ((nextId = this.iter.nextOrNegative()) >= 0) {
                 final ColorArea ca = this.board.getColorArea4Id(nextId);
                 for (final ColorArea caNext : ca.getNeighborsArray()) {
-                    if ((false == excludeNeighbors.contains(caNext))
-                            && excludeNeighbors.containsNone(caNext.getNeighborsArray())) {
+                    if ((false == ColorAreaSet.contains(excludeNeighbors, caNext))
+                            && ColorAreaSet.containsNone(excludeNeighbors, caNext.getNeighborsArray())) {
                         count += caNext.getMemberSize();
                     }
                 }
@@ -270,7 +270,7 @@ public class ColorAreaGroup {
      * @param color
      * @return the areas
      */
-    public ColorAreaSet getColor(final byte color) {
+    public long[] getColor(final byte color) {
         return this.theArray[color];
     }
 
@@ -279,7 +279,7 @@ public class ColorAreaGroup {
      * @param color
      */
     public void clearColor(final byte color) {
-        this.theArray[color].clear();
+        ColorAreaSet.clear(this.theArray[color]);
         final int mask = ~(1 << color);
         this.colorsNotEmptyBits &= mask;
     }

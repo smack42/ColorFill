@@ -32,7 +32,7 @@ public class DfsSolver extends AbstractSolver {
     private DfsStrategy strategy;
 
     private byte[] solution;
-    private ColorAreaSet allFlooded;
+    private long[] allFlooded;
     private ColorAreaGroup notFlooded;
     private ColorAreaGroup[] neighbors;
     private final ColorAreaSet.Iterator iter;
@@ -112,7 +112,7 @@ public class DfsSolver extends AbstractSolver {
         this.strategy.setPreviousNumSteps(this.solutionSize);
 
         final ColorArea startCa = this.board.getColorArea4Cell(startPos);
-        this.allFlooded = new ColorAreaSet(this.board);
+        this.allFlooded = ColorAreaSet.constructor(this.board);
         this.notFlooded = new ColorAreaGroup(this.board);
         notFlooded.addAll(this.board.getColorAreas().toArray(new ColorArea[0]), this.allFlooded);
         this.solution = new byte[MAX_SEARCH_DEPTH];
@@ -135,9 +135,9 @@ public class DfsSolver extends AbstractSolver {
             final byte thisColor
             ) throws InterruptedException {
         final ColorAreaGroup theseNeighbors = this.neighbors[depth];
-        final ColorAreaSet thisFlooded = theseNeighbors.getColor(thisColor);
+        final long[] thisFlooded = theseNeighbors.getColor(thisColor);
         int colorsNotFlooded = this.notFlooded.countColorsNotEmpty();
-        if (thisFlooded.size() == this.notFlooded.getColor(thisColor).size()) {
+        if (ColorAreaSet.size(thisFlooded) == ColorAreaSet.size(this.notFlooded.getColor(thisColor))) {
             --colorsNotFlooded;
         }
 
@@ -155,7 +155,7 @@ public class DfsSolver extends AbstractSolver {
 
             this.solution[depth] = thisColor;
             this.notFlooded.removeAllColor(thisFlooded, thisColor);
-            this.allFlooded.addAll(thisFlooded);
+            ColorAreaSet.addAll(this.allFlooded, thisFlooded);
             final ColorAreaGroup nextNeighbors = this.neighbors[depth + 1];
             nextNeighbors.copyFrom(theseNeighbors, thisColor);
             // add new neighbors
@@ -173,7 +173,7 @@ public class DfsSolver extends AbstractSolver {
                 nextColors ^= l1b; // clear lowest one bit
                 doRecursion(depth + 1, (byte)(31 - clz));
             }
-            this.allFlooded.removeAll(thisFlooded); // restore for backtracking
+            ColorAreaSet.removeAll(this.allFlooded, thisFlooded); // restore for backtracking
             this.notFlooded.addAllColor(thisFlooded, thisColor); // restore for backtracking
         }
     }

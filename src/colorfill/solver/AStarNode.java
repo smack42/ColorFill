@@ -30,8 +30,8 @@ import colorfill.solver.AStarSolver.SolutionTree;
  */
 public class AStarNode {
 
-    private final ColorAreaSet flooded;
-    private final ColorAreaSet neighbors;
+    private final long[] flooded;
+    private final long[] neighbors;
     private int solutionEntry;
     private byte solutionSize;  // unsigned byte: 0...0xff
     private byte estimatedCost; // unsigned byte: 0...0xff
@@ -41,10 +41,10 @@ public class AStarNode {
      * @param startCa
      */
     public AStarNode(final Board board, final ColorArea startCa, final SolutionTree solutionTree) {
-        this.flooded = new ColorAreaSet(board);
-        this.flooded.add(startCa);
-        this.neighbors = new ColorAreaSet(board);
-        this.neighbors.addAll(startCa.getNeighborsColorAreaSet());
+        this.flooded = ColorAreaSet.constructor(board);
+        ColorAreaSet.add(this.flooded, startCa);
+        this.neighbors = ColorAreaSet.constructor(board);
+        ColorAreaSet.addAll(this.neighbors, startCa.getNeighborsColorAreaSet());
         this.solutionEntry = solutionTree.init(startCa.getColor());
         this.solutionSize = 0;
         this.estimatedCost = -1; // 0xff
@@ -55,8 +55,8 @@ public class AStarNode {
      * @param other
      */
     public AStarNode(final AStarNode other) {
-        this.flooded = new ColorAreaSet(other.flooded);
-        this.neighbors = new ColorAreaSet(other.neighbors);
+        this.flooded = ColorAreaSet.constructor(other.flooded);
+        this.neighbors = ColorAreaSet.constructor(other.neighbors);
         this.solutionEntry = other.solutionEntry;
         this.solutionSize = other.solutionSize;
         //this.estimatedCost = other.estimatedCost;  // not necessary to copy
@@ -67,7 +67,7 @@ public class AStarNode {
      * @return
      */
     public boolean isSolved() {
-        return this.neighbors.isEmpty();
+        return ColorAreaSet.isEmpty(this.neighbors);
     }
 
     /**
@@ -98,7 +98,7 @@ public class AStarNode {
      * get the set of neighbors.
      * @return
      */
-    public ColorAreaSet getNeighbors() {
+    public long[] getNeighbors() {
         return this.neighbors;
     }
 
@@ -106,7 +106,7 @@ public class AStarNode {
      * get the set of flooded color areas.
      * @return
      */
-    public ColorAreaSet getFlooded() {
+    public long[] getFlooded() {
         return this.flooded;
     }
 
@@ -114,23 +114,23 @@ public class AStarNode {
      * get the number of flooded color areas.
      */
     public int getFloodedSize() {
-        return this.flooded.size();
+        return ColorAreaSet.size(this.flooded);
     }
 
     /**
      * copy contents of "flooded" set to this one.
      * @param other
      */
-    public void copyFloodedTo(final ColorAreaSet other) {
-        other.copyFrom(this.flooded);
+    public void copyFloodedTo(final long[] other) {
+        ColorAreaSet.copyFrom(other, this.flooded);
     }
 
     /**
      * copy contents of "neighbors" set to this one.
      * @param other
      */
-    public void copyNeighborsTo(final ColorAreaSet other) {
-        other.copyFrom(this.neighbors);
+    public void copyNeighborsTo(final long[] other) {
+        ColorAreaSet.copyFrom(other, this.neighbors);
     }
 
     /**
@@ -139,10 +139,10 @@ public class AStarNode {
      */
     public void play(final byte nextColor, final ColorAreaSet.IteratorAnd nextColorNeighbors, final SolutionTree solutionTree, final Board board) {
         for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
-            this.flooded.add(nextColorNeighbor);
-            this.neighbors.addAll(board.getNeighborColorAreaSet4Id(nextColorNeighbor));
+            ColorAreaSet.add(this.flooded, nextColorNeighbor);
+            ColorAreaSet.addAll(this.neighbors, board.getNeighborColorAreaSet4Id(nextColorNeighbor));
         }
-        this.neighbors.removeAll(this.flooded);
+        ColorAreaSet.removeAll(this.neighbors, this.flooded);
         ++this.solutionSize;
         this.solutionEntry = solutionTree.add(this.solutionEntry, nextColor);
     }
@@ -161,17 +161,17 @@ public class AStarNode {
         } else {
             // copy - compare copy constructor
             result = recycleNode;
-            result.flooded.copyFrom(this.flooded);
-            result.neighbors.copyFrom(this.neighbors);
+            ColorAreaSet.copyFrom(result.flooded, this.flooded);
+            ColorAreaSet.copyFrom(result.neighbors, this.neighbors);
             result.solutionSize = this.solutionSize;
             //result.estimatedCost = this.estimatedCost;  // not necessary to copy
         }
         // play - compare method play()
         for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
-            result.flooded.add(nextColorNeighbor);
-            result.neighbors.addAll(board.getNeighborColorAreaSet4Id(nextColorNeighbor));
+            ColorAreaSet.add(result.flooded, nextColorNeighbor);
+            ColorAreaSet.addAll(result.neighbors, board.getNeighborColorAreaSet4Id(nextColorNeighbor));
         }
-        result.neighbors.removeAll(result.flooded);
+        ColorAreaSet.removeAll(result.neighbors, result.flooded);
         result.solutionEntry = this.solutionEntry;
         return result;
     }
@@ -231,7 +231,7 @@ public class AStarNode {
     public int getSumDistances(final Queue<ColorArea> queue, final Board board) {
         final int NO_DEPTH = -1;
         for (final ColorArea ca : board.getColorAreasArray()) {
-            if (this.flooded.contains(ca)) {
+            if (ColorAreaSet.contains(this.flooded, ca)) {
                 ca.tmpAStarDepth = 0;  // start
                 queue.offer(ca);
             } else {

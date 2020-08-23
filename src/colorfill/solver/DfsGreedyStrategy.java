@@ -17,8 +17,6 @@
 
 package colorfill.solver;
 
-import colorfill.model.ColorAreaSet;
-
 /**
  * this strategy results in an incomplete search.
  * it chooses the colors in two steps:
@@ -43,7 +41,7 @@ public class DfsGreedyStrategy implements DfsStrategy {
 
     @Override
     public int selectColors(final int depth,
-            final ColorAreaSet flooded,
+            final long[] flooded,
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
         int result = neighbors.getColorsCompleted(notFlooded);

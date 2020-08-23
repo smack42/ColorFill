@@ -17,8 +17,6 @@
 
 package colorfill.solver;
 
-import colorfill.model.ColorAreaSet;
-
 /**
  * a strategy for the depth-first search (DFS) solver.
  */
@@ -34,7 +32,7 @@ public interface DfsStrategy extends Strategy {
      * @return the colors to be used for the next step
      */
     public int selectColors(int depth,
-            ColorAreaSet flooded,
+            long[] flooded,
             ColorAreaGroup notFlooded,
             ColorAreaGroup neighbors);
 

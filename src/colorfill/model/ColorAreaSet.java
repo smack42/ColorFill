@@ -20,97 +20,82 @@ package colorfill.model;
 import java.util.Arrays;
 
 /**
- * this class is a bespoke implementation of a Set of ColorArea. 
+ * this class is a bespoke implementation of a Set of ColorArea.
+ * <p>
+ * there are static methods in this class, only.
+ * no objects of this class can be created.
+ * the actual data, an "array of long", is created by the "constructor" methods and is to be passed as a parameter to each method call.
+ * <p>
+ * of course, this is a bit unusual and certainly not the proper OOP-way of doing it.
+ * however, the adavantages of this "static implementation with raw data" are: faster operation and lower memory usage.
  */
-public class ColorAreaSet {
+public final class ColorAreaSet {
 
-    private final long[] array;
+    private ColorAreaSet() {
+        throw new IllegalStateException("can't create any objects of this class!");
+    }
 
     /**
      * the constructor
      */
-    public ColorAreaSet(final Board board) {
-        this.array = new long[(board.getSizeColorAreas8() + 7) >> 3];
+    public static long[] constructor(final Board board) {
+        return new long[(board.getSizeColorAreas8() + 7) >> 3];
     }
 
     /**
      * copy constructor
-     * @param other
      */
-    public ColorAreaSet(final ColorAreaSet other) {
-        this.array = other.array.clone();
+    public static long[] constructor(final long[] casOther) {
+        return casOther.clone();
     }
 
     /**
      * copy the contents of the other set into this set
      */
-    public void copyFrom(final ColorAreaSet other) {
-        System.arraycopy(other.array, 0, this.array, 0, this.array.length);
+    public static void copyFrom(final long[] casThis, final long[] casOther) {
+        System.arraycopy(casOther, 0, casThis, 0, casThis.length);
     }
 
     /**
      * remove all ColorAreas from this set
      */
-    public void clear() {
-        Arrays.fill(this.array, 0);
-    }
-
-    /**
-     * get the reference of the internal array
-     */
-    public long[] getArray() {
-        return this.array;
+    public static void clear(final long[] casThis) {
+        Arrays.fill(casThis, 0);
     }
 
     /**
      * add the ColorArea to this set
      */
-    public void add(final ColorArea ca) {
+    public static void add(final long[] casThis, final ColorArea ca) {
         final int caId = ca.getId();
         final int i = caId >>> 6;       // index is always >= 0
-        this.array[i] |= 1L << caId;    // implicit shift distance (caId & 0x3f)
+        casThis[i] |= 1L << caId;       // implicit shift distance (caId & 0x3f)
     }
 
     /**
      * add the ColorArea to this set
      */
-    public void add(final int caId) {
+    public static void add(final long[] casThis, final int caId) {
         final int i = caId >>> 6;       // index is always >= 0
-        this.array[i] |= 1L << caId;    // implicit shift distance (caId & 0x3f)
-    }
-
-    /**
-     * remove the ColorArea from this set
-     */
-    public void remove(final int caId) {
-        final int i = caId >>> 6;       // index is always >= 0
-        this.array[i] &= ~(1L << caId); // implicit shift distance (caId & 0x3f)
+        casThis[i] |= 1L << caId;       // implicit shift distance (caId & 0x3f)
     }
 
     /**
      * return true if the ColorArea is in this set
      */
-    public boolean contains(final ColorArea ca) {
+    public static boolean contains(final long[] casThis, final ColorArea ca) {
         final int caId = ca.getId();
-        final long bit = this.array[caId >>> 6] & (1L << caId); // index is always >= 0; implicit shift distance (caId & 0x3f)
-        return 0 != bit;
-    }
-
-    /**
-     * return true if the ColorArea is in this set
-     */
-    public boolean contains(final int caId) {
-        final long bit = this.array[caId >>> 6] & (1L << caId); // index is always >= 0; implicit shift distance (caId & 0x3f)
+        final long bit = casThis[caId >>> 6] & (1L << caId); // index is always >= 0; implicit shift distance (caId & 0x3f)
         return 0 != bit;
     }
 
     /**
      * return true if this set contains all ColorAreas in the other set
      */
-    public boolean containsAll(final ColorAreaSet other) {
-        for (int i = 0;  i < this.array.length;  ++i) {
-            final long thisLong = this.array[i];
-            final long otherLong = other.array[i];
+    public static boolean containsAll(final long[] casThis, final long[] casOther) {
+        for (int i = 0;  i < casThis.length;  ++i) {
+            final long thisLong = casThis[i];
+            final long otherLong = casOther[i];
             if ((thisLong & otherLong) != otherLong) {
                 return false;
             }
@@ -121,10 +106,10 @@ public class ColorAreaSet {
     /**
      * return true if this set contains at least one ColorArea in the other set
      */
-    public boolean intersects(final ColorAreaSet other) {
-        for (int i = 0;  i < this.array.length;  ++i) {
-            final long thisLong = this.array[i];
-            final long otherLong = other.array[i];
+    public static boolean intersects(final long[] casThis, final long[] casOther) {
+        for (int i = 0;  i < casThis.length;  ++i) {
+            final long thisLong = casThis[i];
+            final long otherLong = casOther[i];
             if ((thisLong & otherLong) != 0) {
                 return true;
             }
@@ -135,9 +120,9 @@ public class ColorAreaSet {
     /**
      * return true if this set contains all ColorAreas in the array
      */
-    public boolean containsAll(final ColorArea[] others) {
+    public static boolean containsAll(final long[] casThis, final ColorArea[] others) {
         for (final ColorArea other : others) {
-            if (false == this.contains(other)) {
+            if (false == contains(casThis, other)) {
                 return false;
             }
         }
@@ -147,9 +132,9 @@ public class ColorAreaSet {
     /**
      * return true if this set contains none of the ColorAreas in the array
      */
-    public boolean containsNone(final ColorArea[] others) {
+    public static boolean containsNone(final long[] casThis, final ColorArea[] others) {
         for (final ColorArea other : others) {
-            if (true == this.contains(other)) {
+            if (true == contains(casThis, other)) {
                 return false;
             }
         }
@@ -159,9 +144,9 @@ public class ColorAreaSet {
     /**
      * return the number of ColorAreas in this set
      */
-    public int size() {
+    public static int size(final long[] casThis) {
         int size = 0;
-        for (final long a : this.array) {
+        for (final long a : casThis) {
             size += Long.bitCount(a); // hopefully an intrinsic function using instruction POPCNT
         }
         return size;
@@ -170,8 +155,8 @@ public class ColorAreaSet {
     /**
      * return true is this set is empty
      */
-    public boolean isEmpty() {
-        for (final long a : this.array) {
+    public static boolean isEmpty(final long[] casThis) {
+        for (final long a : casThis) {
             if (0L != a) {
                 return false;
             }
@@ -182,18 +167,18 @@ public class ColorAreaSet {
     /**
      * add all ColorAreas in the other set to this set
      */
-    public void addAll(final ColorAreaSet other) {
-        for (int i = 0;  i < this.array.length;  ++i) {
-            this.array[i] |= other.array[i];
+    public static void addAll(final long[] casThis, final long[] casOther) {
+        for (int i = 0;  i < casThis.length;  ++i) {
+            casThis[i] |= casOther[i];
         }
     }
 
     /**
      * remove all ColorAreas in the other set from this set
      */
-    public void removeAll(final ColorAreaSet other) {
-        for (int i = 0;  i < this.array.length;  ++i) {
-            this.array[i] &= ~(other.array[i]);
+    public static void removeAll(final long[] casThis, final long[] casOther) {
+        for (int i = 0;  i < casThis.length;  ++i) {
+            casThis[i] &= ~(casOther[i]);
         }
     }
 
@@ -210,9 +195,9 @@ public class ColorAreaSet {
          * initialize this Iterator for use with this ColorAreaSet.
          * @param caSet
          */
-        public void init(final ColorAreaSet caSet) {
-            this.array = caSet.array;
-            this.longIdxLimit = this.array.length - 1;
+        public void init(final long[] caSet) {
+            this.array = caSet;
+            this.longIdxLimit = caSet.length - 1;
             this.longIdx = 0;
             this.buf = this.array[0];
         }
@@ -250,10 +235,10 @@ public class ColorAreaSet {
         /**
          * initialize this Iterator for use with these ColorAreaSets.
          */
-        public IteratorAnd init(final ColorAreaSet caSet1, final ColorAreaSet caSet2) {
-            this.array1 = caSet1.array;
-            this.array2 = caSet2.array;
-            this.longIdxLimit = this.array1.length - 1;
+        public IteratorAnd init(final long[] caSet1, final long[] caSet2) {
+            this.array1 = caSet1;
+            this.array2 = caSet2;
+            this.longIdxLimit = caSet1.length - 1;
             this.longIdx = 0;
             this.buf = this.array1[0] & this.array2[0];
             return this;

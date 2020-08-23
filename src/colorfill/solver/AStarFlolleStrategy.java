@@ -28,14 +28,14 @@ import colorfill.model.ColorAreaSet;
  */
 public class AStarFlolleStrategy extends AStarPuchertStrategy {
 
-    protected ColorAreaSet nextOne, nextTwo;
+    protected long[] nextOne, nextTwo;
     private final int caLimit;
 
     public AStarFlolleStrategy(final Board board) {
         super(board);
         this.caLimit = board.getColorAreasArray().length / 3; // TODO: find a good value for caLimit
-        this.nextOne = new ColorAreaSet(board);
-        this.nextTwo = new ColorAreaSet(board);
+        this.nextOne = ColorAreaSet.constructor(board);
+        this.nextTwo = ColorAreaSet.constructor(board);
     }
 
     /* (non-Javadoc)
@@ -63,12 +63,12 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
         node.copyFloodedTo(this.visited);
 
         while (true) {
-            this.visited.addAll(this.current);
+            ColorAreaSet.addAll(this.visited, this.current);
             int completedColors = 0;
             for (int colors = nonCompletedColors;  0 != colors;  ) {
                 final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
                 colors ^= colorBit;
-                if (this.visited.containsAll(this.casByColorBits[colorBit])) {
+                if (ColorAreaSet.containsAll(this.visited, this.casByColorBits[colorBit])) {
                     completedColors |= colorBit;
                     nonCompletedColors ^= colorBit;
                 }
@@ -81,18 +81,18 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
                     distance += (0 == nonCompletedColors ? 0 : 1);
                     break; // done
                 } else {
-                    this.next.clear();
+                    ColorAreaSet.clear(this.next);
                     // completed colors
-                    final ColorAreaSet colorCas = this.casByColorBits[completedColors];
+                    final long[] colorCas = this.casByColorBits[completedColors];
                     this.iterAnd.init(this.current, colorCas);
                     for (int caId;  (caId = this.iterAnd.nextOrNegative()) >= 0;  ) {
-                        this.next.addAll(this.board.getNeighborColorAreaSet4Id(caId));
+                        ColorAreaSet.addAll(this.next, this.board.getNeighborColorAreaSet4Id(caId));
                     }
-                    this.current.removeAll(colorCas);
-                    this.next.removeAll(this.visited);
+                    ColorAreaSet.removeAll(this.current, colorCas);
+                    ColorAreaSet.removeAll(this.next, this.visited);
                     // non-completed colors
                     // move nodes to next layer
-                    this.next.addAll(this.current);
+                    ColorAreaSet.addAll(this.next, this.current);
                 }
             } else {
                 // Nothing found, do the color-blind pseudo-move
@@ -103,12 +103,12 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
                 for (int colors = nonCompletedColors;  0 != colors;  ) {
                     final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
                     colors ^= colorBit;
-                    this.next.clear();
+                    ColorAreaSet.clear(this.next);
                     this.iterAnd.init(this.current, this.casByColorBits[colorBit]);
                     for (int caId;  (caId = this.iterAnd.nextOrNegative()) >= 0;  ) {
-                        this.next.addAll(this.board.getNeighborColorAreaSet4Id(caId));
+                        ColorAreaSet.addAll(this.next, this.board.getNeighborColorAreaSet4Id(caId));
                     }
-                    this.next.removeAll(this.visited);
+                    ColorAreaSet.removeAll(this.next, this.visited);
                     int size = 0;
                     this.iter.init(this.next);
                     for (int caId;  (caId = this.iter.nextOrNegative()) >= 0;  ) {
@@ -117,7 +117,7 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
                     if (size > sizeOne) { // new best color -> move previous best color to second best
                         sizeTwo = sizeOne;
                         colorBitTwo = colorBitOne;
-                        final ColorAreaSet t = this.nextTwo;
+                        final long[] t = this.nextTwo;
                         this.nextTwo = this.nextOne;
                         sizeOne = size;
                         colorBitOne = colorBit;
@@ -126,24 +126,24 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
                     } else if (size > sizeTwo) { // new second best color
                         sizeTwo = size;
                         colorBitTwo = colorBit;
-                        final ColorAreaSet t = this.nextTwo;
+                        final long[] t = this.nextTwo;
                         this.nextTwo = this.next;
                         this.next = t;
                     }
                 }
-                final ColorAreaSet t = this.next;
+                final long[] t = this.next;
                 this.next = this.nextOne; // always take the best color
                 this.nextOne = t;
-                this.current.removeAll(this.casByColorBits[colorBitOne]);
+                ColorAreaSet.removeAll(this.current, this.casByColorBits[colorBitOne]);
                 if (sizeTwo > 0) { // if available, take the second best color as well 
-                    this.next.addAll(this.nextTwo);
-                    this.current.removeAll(this.casByColorBits[colorBitTwo]);
+                    ColorAreaSet.addAll(this.next, this.nextTwo);
+                    ColorAreaSet.removeAll(this.current, this.casByColorBits[colorBitTwo]);
                 }
-                this.next.addAll(this.current); // move other colors to next
+                ColorAreaSet.addAll(this.next, this.current); // move other colors to next
             }
 
             // Move the next layer into the current.
-            final ColorAreaSet t = this.current;
+            final long[] t = this.current;
             this.current = this.next;
             this.next = t;
         }

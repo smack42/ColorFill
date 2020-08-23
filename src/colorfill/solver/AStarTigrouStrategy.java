@@ -22,7 +22,6 @@ import java.util.Queue;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
-import colorfill.model.ColorAreaSet;
 import colorfill.solver.AStarSolver.SolutionTree;
 
 /**
@@ -61,7 +60,7 @@ public class AStarTigrouStrategy implements AStarStrategy {
             int minDistance = Integer.MAX_VALUE;
             AStarNode minNode = null;
             //find color which give the minimum sum of distance from root to each other node
-            final ColorAreaSet neighbors = currentNode.getNeighbors();
+            final long[] neighbors = currentNode.getNeighbors();
             int nextColors = this.solver.getColors(neighbors);
             while (0 != nextColors) {
                 final int l1b = nextColors & -nextColors; // Integer.lowestOneBit()

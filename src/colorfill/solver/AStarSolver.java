@@ -35,7 +35,7 @@ public class AStarSolver extends AbstractSolver {
     private final SolutionTree solutionTree = new SolutionTree();
     private final ColorAreaSet.Iterator iter;
     private final ColorAreaSet.IteratorAnd iterAnd;
-    private final ColorAreaSet[] casByColorBits;
+    private final long[][] casByColorBits;
 
     /**
      * construct a new solver for this Board.
@@ -120,23 +120,23 @@ public class AStarSolver extends AbstractSolver {
         while (open.size() > 0) {
             if (Thread.interrupted()) { throw new InterruptedException(); }
             final AStarNode currentNode = open.poll();
-            final ColorAreaSet flooded = currentNode.getFlooded();
+            final long[] flooded = currentNode.getFlooded();
             int nonCompletedColors = colorBitLimit - 1;
             for (int colorBit = 1;  colorBit < colorBitLimit;  colorBit <<= 1) {
-                if (flooded.containsAll(this.casByColorBits[colorBit])) {
+                if (ColorAreaSet.containsAll(flooded, this.casByColorBits[colorBit])) {
                     nonCompletedColors ^= colorBit;
                 }
             }
             // play all possible colors
-            final ColorAreaSet neighbors = currentNode.getNeighbors();
+            final long[] neighbors = currentNode.getNeighbors();
             for (int colors = nonCompletedColors, colorBit;  (colorBit = (colors & -colors)) != 0;  colors ^= colorBit) {
-                final ColorAreaSet casColorBit = this.casByColorBits[colorBit];
-                if (neighbors.intersects(casColorBit)
+                final long[] casColorBit = this.casByColorBits[colorBit];
+                if (ColorAreaSet.intersects(neighbors, casColorBit)
                         && this.canPlay(colorBit, this.iterAnd.init(neighbors, casColorBit), currentNode)) {
                     final AStarNode nextNode = currentNode.copyAndPlay(recycleNode, this.iterAnd.restart(), this.board);
                     if (knownStates.addIfLess(nextNode)) {
                         nextNode.addSolutionEntry((byte)(31 - Integer.numberOfLeadingZeros(colorBit)), this.solutionTree);
-                        if (nextNode.getFlooded().containsAll(casColorBit) // color completed
+                        if (ColorAreaSet.containsAll(nextNode.getFlooded(), casColorBit) // color completed
                                 && (0 == ((nonCompletedColors ^= colorBit) & (nonCompletedColors - 1)))) { // one or zero colors remaining
                             if (0 != nonCompletedColors) {
                                 nextNode.addSolutionEntry((byte)(31 - Integer.numberOfLeadingZeros(nonCompletedColors)), this.solutionTree);
@@ -172,7 +172,7 @@ public class AStarSolver extends AbstractSolver {
                     return;  // finished!
                 } else {
                     // play all possible colors
-                    final ColorAreaSet neighbors = currentNode.getNeighbors();
+                    final long[] neighbors = currentNode.getNeighbors();
                     int nextColors = this.getColors(neighbors);
                     while (0 != nextColors) {
                         final int l1b = nextColors & -nextColors; // Integer.lowestOneBit()
@@ -196,7 +196,7 @@ public class AStarSolver extends AbstractSolver {
      * NOTE: uses this.iter
      * @return
      */
-    protected int getColors(final ColorAreaSet caSet) {
+    protected int getColors(final long[] caSet) {
         int result = 0;
         this.iter.init(caSet);
         for (int nextId;  (nextId = this.iter.nextOrNegative()) >= 0;  ) {
@@ -211,7 +211,7 @@ public class AStarSolver extends AbstractSolver {
      * NOTE: uses this.iterAnd
      * @return ColorAreaSet.IteratorAnd
      */
-    protected ColorAreaSet.IteratorAnd getColorAreas(final ColorAreaSet caSet, final byte color) {
+    protected ColorAreaSet.IteratorAnd getColorAreas(final long[] caSet, final byte color) {
         this.iterAnd.init(caSet, this.casByColorBits[1 << color]);
         return this.iterAnd;
     }
@@ -225,12 +225,12 @@ public class AStarSolver extends AbstractSolver {
      */
     private boolean canPlay(final int nextColorBit, final ColorAreaSet.IteratorAnd nextColorNeighbors, final AStarNode currentNode) {
         final byte currColor = this.solutionTree.getColor(currentNode.getSolutionEntry());
-        final ColorAreaSet flooded = currentNode.getFlooded();
+        final long[] flooded = currentNode.getFlooded();
         // did the previous move add any new "nextColor" neighbors?
         boolean newNext = false;
 next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
             for (final ColorArea prevNeighbor : this.board.getColorArea4Id(nextColorNeighbor).getNeighborsArray()) {
-                if ((prevNeighbor.getColor() != currColor) && flooded.contains(prevNeighbor)) {
+                if ((prevNeighbor.getColor() != currColor) && ColorAreaSet.contains(flooded, prevNeighbor)) {
                     continue next;
                 }
             }
@@ -245,7 +245,7 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
                 // should nextColor have been played before currColor?
                 for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
                     for (final ColorArea prevNeighbor : this.board.getColorArea4Id(nextColorNeighbor).getNeighborsArray()) {
-                        if ((prevNeighbor.getColor() == currColor) && !flooded.contains(prevNeighbor)) {
+                        if ((prevNeighbor.getColor() == currColor) && !ColorAreaSet.contains(flooded, prevNeighbor)) {
                             return false;
                         }
                     }
@@ -360,7 +360,7 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
          * @return true if the board state was stored, false if it was already stored with the same or lower number of moves.
          */
         public boolean addIfLess(final AStarNode node) {
-            return this.map2.putIfLess(node.getFlooded().getArray(), node.getSolutionSize() + 1);
+            return this.map2.putIfLess(node.getFlooded(), node.getSolutionSize() + 1);
         }
     }
 

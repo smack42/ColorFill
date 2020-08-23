@@ -29,17 +29,17 @@ import colorfill.model.ColorAreaSet;
 public class AStarPuchertStrategy implements AStarStrategy {
 
     protected final Board board;
-    protected final ColorAreaSet visited;
-    protected ColorAreaSet current, next;
-    protected final ColorAreaSet[] casByColorBits;
+    protected final long[] visited;
+    protected long[] current, next;
+    protected final long[][] casByColorBits;
     protected final ColorAreaSet.Iterator iter;
     protected final ColorAreaSet.IteratorAnd iterAnd;
 
     public AStarPuchertStrategy(final Board board) {
         this.board = board;
-        this.visited = new ColorAreaSet(board);
-        this.current = new ColorAreaSet(board);
-        this.next = new ColorAreaSet(board);
+        this.visited = ColorAreaSet.constructor(board);
+        this.current = ColorAreaSet.constructor(board);
+        this.next = ColorAreaSet.constructor(board);
         this.casByColorBits = board.getCasByColorBitsArray();
         this.iter = new ColorAreaSet.Iterator();
         this.iterAnd = new ColorAreaSet.IteratorAnd();
@@ -66,12 +66,12 @@ public class AStarPuchertStrategy implements AStarStrategy {
         node.copyFloodedTo(this.visited);
 
         while (true) {
-            this.visited.addAll(this.current);
+            ColorAreaSet.addAll(this.visited, this.current);
             int completedColors = 0;
             for (int colors = nonCompletedColors;  0 != colors;  ) {
                 final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
                 colors ^= colorBit;
-                if (this.visited.containsAll(this.casByColorBits[colorBit])) {
+                if (ColorAreaSet.containsAll(this.visited, this.casByColorBits[colorBit])) {
                     completedColors |= colorBit;
                     nonCompletedColors ^= colorBit;
                 }
@@ -84,33 +84,33 @@ public class AStarPuchertStrategy implements AStarStrategy {
                     distance += (0 == nonCompletedColors ? 0 : 1);
                     break; // done
                 } else {
-                    this.next.clear();
+                    ColorAreaSet.clear(this.next);
                     // completed colors
-                    final ColorAreaSet colorCas = this.casByColorBits[completedColors];
+                    final long[] colorCas = this.casByColorBits[completedColors];
                     this.iterAnd.init(this.current, colorCas);
                     for (int caId;  (caId = this.iterAnd.nextOrNegative()) >= 0;  ) {
-                        this.next.addAll(this.board.getNeighborColorAreaSet4Id(caId));
+                        ColorAreaSet.addAll(this.next, this.board.getNeighborColorAreaSet4Id(caId));
                     }
-                    this.current.removeAll(colorCas);
-                    this.next.removeAll(this.visited);
+                    ColorAreaSet.removeAll(this.current, colorCas);
+                    ColorAreaSet.removeAll(this.next, this.visited);
                     // non-completed colors
                     // move nodes to next layer
-                    this.next.addAll(this.current);
+                    ColorAreaSet.addAll(this.next, this.current);
                 }
             } else {
-                this.next.clear();
+                ColorAreaSet.clear(this.next);
                 // Nothing found, do the color-blind pseudo-move
                 // Expand current layer of nodes.
                 ++distance;
                 this.iter.init(this.current);
                 for (int caId;  (caId = this.iter.nextOrNegative()) >= 0;  ) {
-                    this.next.addAll(this.board.getNeighborColorAreaSet4Id(caId));
+                    ColorAreaSet.addAll(this.next, this.board.getNeighborColorAreaSet4Id(caId));
                 }
-                this.next.removeAll(this.visited);
+                ColorAreaSet.removeAll(this.next, this.visited);
             }
 
             // Move the next layer into the current.
-            final ColorAreaSet t = this.current;
+            final long[] t = this.current;
             this.current = this.next;
             this.next = t;
         }

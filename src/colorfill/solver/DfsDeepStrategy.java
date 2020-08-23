@@ -18,7 +18,6 @@
 package colorfill.solver;
 
 import colorfill.model.Board;
-import colorfill.model.ColorAreaSet;
 
 /**
  * this strategy results in an incomplete search.
@@ -55,7 +54,7 @@ public class DfsDeepStrategy implements DfsStrategy {
 
     @Override
     public int selectColors(final int depth,
-            final ColorAreaSet flooded,
+            final long[] flooded,
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
         int result = neighbors.getColorsCompleted(notFlooded);

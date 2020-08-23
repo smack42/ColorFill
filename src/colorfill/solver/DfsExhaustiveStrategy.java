@@ -20,7 +20,6 @@ package colorfill.solver;
 import java.util.Arrays;
 
 import colorfill.model.Board;
-import colorfill.model.ColorAreaSet;
 
 /**
  * this strategy results in a complete search.
@@ -90,7 +89,7 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
 
     @Override
     public int selectColors(final int depth,
-            final ColorAreaSet flooded,
+            final long[] flooded,
             final ColorAreaGroup notFlooded,
             final ColorAreaGroup neighbors) {
         int result;
@@ -136,10 +135,10 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
          * @param depth to be assigned (as value) to "state"
          * @return true if the state/depth pair was added.
          */
-        private boolean put(final ColorAreaSet set1, final ColorAreaSet set2, final int depth) {
+        private boolean put(final long[] set1, final long[] set2, final int depth) {
             // copy state into memory at nextState
-            final long[] arr1 = set1.getArray();
-            final long[] arr2 = set2.getArray();
+            final long[] arr1 = set1;
+            final long[] arr2 = set2;
             // performance: inline hashcode computation; copy&paste from hashStrategyHashCode()
             int h32 = SEED + PRIME5;
             for (int b = this.nextStateOffset, i = 0, len = arr1.length;  i < len;  ++i, ++b) {
