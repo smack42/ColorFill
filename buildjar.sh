@@ -3,7 +3,7 @@ TMPDIR=_tmp_
 
 rm -f $OUTPUT _$OUTPUT
 
-java -jar $HOME/Programme/proguard6.0/lib/proguard.jar @proguard_config -outjars _$OUTPUT
+java -jar $HOME/Programme/proguard6.2/lib/proguard.jar @proguard_config -outjars _$OUTPUT
 
 rm -rf $TMPDIR
 mkdir $TMPDIR

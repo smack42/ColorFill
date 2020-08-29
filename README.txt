@@ -1,6 +1,6 @@
 ColorFill - yet another Flood-It clone (game and solver algorithm)
 
-Version   1.2.2 (2020-01-27)
+Version   1.3.0 (2020-08-29)
 Homepage  https://github.com/smack42/ColorFill/wiki
 
 
@@ -28,9 +28,10 @@ solve two competition tasks that I've found on the internet:
 
 usage
 
-Java SE Runtime Environment (JRE version 6 or newer) is required to run
+Java SE Runtime Environment (JRE version 8 or newer) is required to run
 this program. You can download Java here:
-http://www.oracle.com/technetwork/java/javase/downloads/index.html
+https://www.oracle.com/java/technologies/javase-downloads.html
+https://adoptopenjdk.net/
 
 To run the program just doubleclick "colorfill.jar".
 
@@ -77,3 +78,4 @@ Programming
     http://kunigami.wordpress.com/2012/09/16/flood-it-an-exact-approach/
     https://codegolf.stackexchange.com/questions/26232/create-a-flood-paint-ai
     https://github.com/aaronpuchert/floodit
+    https://github.com/Flolle/terminal-flood

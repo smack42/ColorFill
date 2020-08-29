@@ -2,6 +2,28 @@ ColorFill  CHANGES
 
 
 
+1.3.0 (2020-08-29)
+- Java 8 or higher is required
+- added checkboxes to switch on/off each solver strategy (persistent setting)
+  * DfsExhaustiveStrategy is disabled by default (it's so slow)
+- optimized AStarPuchertStrategy (about twice as fast as version 1.2.2)
+  * optimal solutions are found in less time and using less memory
+- added AStarFlolleStrategy
+  * idea is taken from the program "terminal-flood" by Flolle (Florian Fischer)
+  * https://github.com/Flolle/terminal-flood
+  * based on terminal-flood InadmissibleSlowStrategy, with minor modifications
+  * doesn't always find optimal solutions, but usually finds very good solutions
+  * runs faster and uses less memory than AStarPuchertStrategy
+- added "-benchmark" feature
+  * command line parameters: -benchmark <input file> [solver strategy]
+  * in folder "benchmark" there are a shell script, some test data and results
+  * several of the test datasets have been copied from Flolle's terminal-flood
+- improved import/export of Board data from/to text data
+  * supports arbitrary characters for colors (not limited to numbers anymore)
+  * maximum number of distinct characters (colors) per board is 16
+
+
+
 1.2.2 (2020-01-27)
 - optimized AStarPuchertStrategy (more than twice as fast as version 1.1.1)
 
