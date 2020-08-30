@@ -26,7 +26,10 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.font.TextAttribute;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 import javax.swing.AbstractAction;
@@ -57,6 +60,10 @@ public class ControlPanel extends JPanel {
     private static final ResourceBundle L10N = ResourceBundle.getBundle("colorfill-ui");  //L10N = Localization
 
     private final ControlController controller;
+
+    private final Map<TextAttribute, Integer> mapTextAttributeUnderlineOn;
+    private final Map<TextAttribute, Integer> mapTextAttributeUnderlineOff;
+    private final MouseAdapter mouseAdapterUnderline;
 
     private final JButton buttonNew = new JButton();
     private final JButton buttonPrefs = new JButton();
@@ -127,6 +134,20 @@ public class ControlPanel extends JPanel {
     protected ControlPanel(final ControlController controller, final Color[] colors, final int numColors, final String[] solverNames,
             final boolean isSelectedSolverResults, final List<String> dontRunSolverStrategies) {
         super();
+        this.mapTextAttributeUnderlineOn = new HashMap<>();
+        this.mapTextAttributeUnderlineOn.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
+        this.mapTextAttributeUnderlineOff = new HashMap<>();
+        this.mapTextAttributeUnderlineOff.put(TextAttribute.UNDERLINE, Integer.valueOf(-1));
+        this.mouseAdapterUnderline = new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                e.getComponent().setFont(e.getComponent().getFont().deriveFont(ControlPanel.this.mapTextAttributeUnderlineOn));
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                e.getComponent().setFont(e.getComponent().getFont().deriveFont(ControlPanel.this.mapTextAttributeUnderlineOff));
+            }
+        };
         this.controller = controller;
         this.numColors = numColors;
 
@@ -225,6 +246,7 @@ public class ControlPanel extends JPanel {
                 ControlPanel.this.controller.userButtonSolution(0);
             }
         });
+        this.userRButton.addMouseListener(this.mouseAdapterUnderline);
         return this.userRButton;
     }
 
@@ -333,12 +355,14 @@ public class ControlPanel extends JPanel {
                 ControlPanel.this.controller.userChangedRunSolverAll(isSelected);
             }
         });
+        this.checkBoxSolverResults.addMouseListener(this.mouseAdapterUnderline);
         return this.checkBoxSolverResults;
     }
 
     private void makeSolverRows(final ButtonGroup bgroup, final DesignGridLayout layout, final List<String> dontRunSolverStrategies) {
         for (int i = 0;  i < this.solverNames.length;  ++i) {
-            this.solverRButtons[i] = new JRadioButton("?? " + this.solverNames[i]);
+            final JRadioButton solverRButton = new JRadioButton("?? " + this.solverNames[i]);
+            this.solverRButtons[i] = solverRButton;
             this.solverRButtons[i].setEnabled(false);
             bgroup.add(this.solverRButtons[i]);
             final int numProgress = i + 1;
@@ -349,6 +373,17 @@ public class ControlPanel extends JPanel {
                     ControlPanel.this.controller.userButtonSolution(numProgress);
                 }
             });
+            final MouseAdapter mouseAdapterUnderline = new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    solverRButton.setFont(solverRButton.getFont().deriveFont(ControlPanel.this.mapTextAttributeUnderlineOn));
+                }
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    solverRButton.setFont(solverRButton.getFont().deriveFont(ControlPanel.this.mapTextAttributeUnderlineOff));
+                }
+            };
+            solverRButton.addMouseListener(mouseAdapterUnderline);
             this.solverCheckBoxes[i] = new JCheckBox();
             this.solverCheckBoxes[i].setVisible(false);
             this.solverCheckBoxes[i].setSelected(!dontRunSolverStrategies.contains(this.solverNames[i]));
@@ -359,6 +394,7 @@ public class ControlPanel extends JPanel {
                     ControlPanel.this.controller.userChangedRunSolver(numProgress, isSelected);
                 }
             });
+            this.solverCheckBoxes[i].addMouseListener(mouseAdapterUnderline);
             this.solverMoves[i] = new JLabel();
             this.solverMoves[i].setVisible(false);
             this.solverMoves[i].setHorizontalAlignment(SwingConstants.CENTER);
