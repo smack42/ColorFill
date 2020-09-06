@@ -33,8 +33,25 @@ public class AStarNode {
     private final long[] flooded;
     private final long[] neighbors;
     private int solutionEntry;
-    private byte solutionSize;  // unsigned byte: 0...0xff
-    private byte estimatedCost; // unsigned byte: 0...0xff
+
+    /**
+     * one 32bit-int data field that stores the values of two separate fields:
+     * <p>
+     * byte estimatedCost = estimated total number of steps to end of search = solutionSize + estimation by the heuristic algorithm<br>
+     * byte solutionSize  = number of steps done, from start of search to the current (intermediate) state
+     * <p>
+     * the fields estimatedCost and solutionSize are stored in a particular way,
+     * to facilitate the operation of "strongerComparator" in a single step, for increased performance.
+     * field solutionSize is therefore located in the lower byte of the packed field
+     * and its value is stored in ones' complement format (0=0xff, 1=0xfe, 2=0xfd, ...)
+     * <p>
+     * TODO find something useful to store in the upper 16 bits, which are currently not used
+     */
+    private int packedData;
+    private static final int DATA_MASK_ESTIMATED_COST   = 0x0000ff00;
+    private static final int DATA_SHIFT_ESTIMATED_COST  = 8;
+    private static final int DATA_MASK_SOLUTION_SIZE    = 0x000000ff;
+    private static final int DATA_MASK_ESTIMATED_COST_SOLUTION_SIZE = DATA_MASK_ESTIMATED_COST | DATA_MASK_SOLUTION_SIZE;
 
     /**
      * initial constructor.
@@ -46,8 +63,7 @@ public class AStarNode {
         this.neighbors = ColorAreaSet.constructor(board);
         ColorAreaSet.addAll(this.neighbors, startCa.getNeighborsColorAreaSet());
         this.solutionEntry = solutionTree.init(startCa.getColor());
-        this.solutionSize = 0;
-        this.estimatedCost = -1; // 0xff
+        this.packedData = DATA_MASK_SOLUTION_SIZE; // estimatedCost=0, solutionSize=0xff=~zero
     }
 
     /**
@@ -58,8 +74,7 @@ public class AStarNode {
         this.flooded = ColorAreaSet.constructor(other.flooded);
         this.neighbors = ColorAreaSet.constructor(other.neighbors);
         this.solutionEntry = other.solutionEntry;
-        this.solutionSize = other.solutionSize;
-        //this.estimatedCost = other.estimatedCost;  // not necessary to copy
+        this.packedData = other.packedData;
     }
 
     /**
@@ -75,7 +90,7 @@ public class AStarNode {
      * @return
      */
     public byte[] getSolution(final SolutionTree solutionTree) {
-        return solutionTree.materialize(this.solutionEntry, 0xff & this.solutionSize);
+        return solutionTree.materialize(this.solutionEntry, this.getSolutionSize());
     }
 
     /**
@@ -83,7 +98,7 @@ public class AStarNode {
      * @return
      */
     public int getSolutionSize() {
-        return 0xff & this.solutionSize;
+        return (DATA_MASK_SOLUTION_SIZE & ~this.packedData); // ~ NOT operator is NEGATE in ones' complement
     }
 
     /**
@@ -143,7 +158,7 @@ public class AStarNode {
             ColorAreaSet.addAll(this.neighbors, board.getNeighborColorAreaSet4Id(nextColorNeighbor));
         }
         ColorAreaSet.removeAll(this.neighbors, this.flooded);
-        ++this.solutionSize;
+        --this.packedData; // increment solutionSize  TODO check overflow
         this.solutionEntry = solutionTree.add(this.solutionEntry, nextColor);
     }
 
@@ -163,8 +178,8 @@ public class AStarNode {
             result = recycleNode;
             ColorAreaSet.copyFrom(result.flooded, this.flooded);
             ColorAreaSet.copyFrom(result.neighbors, this.neighbors);
-            result.solutionSize = this.solutionSize;
-            //result.estimatedCost = this.estimatedCost;  // not necessary to copy
+            result.solutionEntry = this.solutionEntry;
+            result.packedData = this.packedData;
         }
         // play - compare method play()
         for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
@@ -172,12 +187,11 @@ public class AStarNode {
             ColorAreaSet.addAll(result.neighbors, board.getNeighborColorAreaSet4Id(nextColorNeighbor));
         }
         ColorAreaSet.removeAll(result.neighbors, result.flooded);
-        result.solutionEntry = this.solutionEntry;
         return result;
     }
 
     public void addSolutionEntry(final byte nextColor, final SolutionTree solutionTree) {
-        ++this.solutionSize;
+        --this.packedData; // increment solutionSize  TODO check overflow
         this.solutionEntry = solutionTree.add(this.solutionEntry, nextColor);
     }
 
@@ -189,7 +203,9 @@ public class AStarNode {
         return new Comparator<AStarNode>() {
             @Override
             public int compare(AStarNode o1, AStarNode o2) {
-                return o1.estimatedCost - o2.estimatedCost;
+                final int diff = (o1.packedData & DATA_MASK_ESTIMATED_COST)
+                               - (o2.packedData & DATA_MASK_ESTIMATED_COST);
+                return diff;
             }
         };
     }
@@ -202,11 +218,9 @@ public class AStarNode {
         return new Comparator<AStarNode>() {
             @Override
             public int compare(AStarNode o1, AStarNode o2) {
-                if (o1.estimatedCost != o2.estimatedCost) {
-                    return o1.estimatedCost - o2.estimatedCost;
-                } else {
-                    return o2.solutionSize - o1.solutionSize;
-                }
+                final int diff = (o1.packedData & DATA_MASK_ESTIMATED_COST_SOLUTION_SIZE)
+                               - (o2.packedData & DATA_MASK_ESTIMATED_COST_SOLUTION_SIZE);
+                return diff;
             }
         };
     }
@@ -216,10 +230,10 @@ public class AStarNode {
      * @param estimatedCost
      */
     public void setEstimatedCost(final int estimatedCost) {
-        this.estimatedCost = (byte)estimatedCost;
+        this.packedData = (this.packedData & ~DATA_MASK_ESTIMATED_COST) | (estimatedCost << DATA_SHIFT_ESTIMATED_COST); // TODO check overflow
     }
     public int getEstimatedCost() {
-        return this.estimatedCost;
+        return ((this.packedData & DATA_MASK_ESTIMATED_COST) >>> DATA_SHIFT_ESTIMATED_COST);
     }
 
     /**
