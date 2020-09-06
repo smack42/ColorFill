@@ -29,18 +29,19 @@ import colorfill.model.ColorAreaSet;
 public class AStarPuchertStrategy implements AStarStrategy {
 
     protected final Board board;
-    protected final long[] visited;
-    protected long[] current, next;
+    protected final long[] casVisited, casCurrent, casNext;
     protected final long[][] casByColorBits;
+    protected final long[][] idsNeighborColorAreaSets;
     protected final ColorAreaSet.Iterator iter;
     protected final ColorAreaSet.IteratorAnd iterAnd;
 
     public AStarPuchertStrategy(final Board board) {
         this.board = board;
-        this.visited = ColorAreaSet.constructor(board);
-        this.current = ColorAreaSet.constructor(board);
-        this.next = ColorAreaSet.constructor(board);
+        this.casVisited = ColorAreaSet.constructor(board);
+        this.casCurrent = ColorAreaSet.constructor(board);
+        this.casNext = ColorAreaSet.constructor(board);
         this.casByColorBits = board.getCasByColorBitsArray();
+        this.idsNeighborColorAreaSets = board.getNeighborColorAreaSet4IdArray();
         this.iter = new ColorAreaSet.Iterator();
         this.iterAnd = new ColorAreaSet.IteratorAnd();
     }
@@ -62,16 +63,19 @@ public class AStarPuchertStrategy implements AStarStrategy {
         // closer to the end.
 
         int distance = 0;
-        node.copyNeighborsTo(this.current);
-        node.copyFloodedTo(this.visited);
+        long[] next = this.casNext;
+        long[] current = this.casCurrent;
+        node.copyNeighborsTo(current);
+        long[] visited = this.casVisited;
+        node.copyFloodedTo(visited);
 
         while (true) {
-            ColorAreaSet.addAll(this.visited, this.current);
+            ColorAreaSet.addAll(visited, current);
             int completedColors = 0;
             for (int colors = nonCompletedColors;  0 != colors;  ) {
                 final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
                 colors ^= colorBit;
-                if (ColorAreaSet.containsAll(this.visited, this.casByColorBits[colorBit])) {
+                if (ColorAreaSet.containsAll(visited, this.casByColorBits[colorBit])) {
                     completedColors |= colorBit;
                     nonCompletedColors ^= colorBit;
                 }
@@ -84,35 +88,35 @@ public class AStarPuchertStrategy implements AStarStrategy {
                     distance += (0 == nonCompletedColors ? 0 : 1);
                     break; // done
                 } else {
-                    ColorAreaSet.clear(this.next);
+                    ColorAreaSet.clear(next);
                     // completed colors
                     final long[] colorCas = this.casByColorBits[completedColors];
-                    this.iterAnd.init(this.current, colorCas);
+                    this.iterAnd.init(current, colorCas);
                     for (int caId;  (caId = this.iterAnd.nextOrNegative()) >= 0;  ) {
-                        ColorAreaSet.addAll(this.next, this.board.getNeighborColorAreaSet4Id(caId));
+                        ColorAreaSet.addAll(next, this.idsNeighborColorAreaSets[caId]);
                     }
-                    ColorAreaSet.removeAll(this.current, colorCas);
-                    ColorAreaSet.removeAll(this.next, this.visited);
+                    ColorAreaSet.removeAll(current, colorCas);
+                    ColorAreaSet.removeAll(next, visited);
                     // non-completed colors
                     // move nodes to next layer
-                    ColorAreaSet.addAll(this.next, this.current);
+                    ColorAreaSet.addAll(next, current);
                 }
             } else {
-                ColorAreaSet.clear(this.next);
+                ColorAreaSet.clear(next);
                 // Nothing found, do the color-blind pseudo-move
                 // Expand current layer of nodes.
                 ++distance;
-                this.iter.init(this.current);
+                this.iter.init(current);
                 for (int caId;  (caId = this.iter.nextOrNegative()) >= 0;  ) {
-                    ColorAreaSet.addAll(this.next, this.board.getNeighborColorAreaSet4Id(caId));
+                    ColorAreaSet.addAll(next, this.idsNeighborColorAreaSets[caId]);
                 }
-                ColorAreaSet.removeAll(this.next, this.visited);
+                ColorAreaSet.removeAll(next, visited);
             }
 
             // Move the next layer into the current.
-            final long[] t = this.current;
-            this.current = this.next;
-            this.next = t;
+            final long[] t = current;
+            current = next;
+            next = t;
         }
         node.setEstimatedCost(node.getSolutionSize() + distance);
     }

@@ -117,6 +117,7 @@ public class AStarSolver extends AbstractSolver {
         open.offer(new AStarNode(this.board, startCa, this.solutionTree));
         AStarNode recycleNode = null;
         final int colorBitLimit = this.casByColorBits.length;
+        final long[][] idsNeighborColorAreaSets = this.board.getNeighborColorAreaSet4IdArray();
         while (open.size() > 0) {
             if (Thread.interrupted()) { throw new InterruptedException(); }
             final AStarNode currentNode = open.poll();
@@ -127,13 +128,14 @@ public class AStarSolver extends AbstractSolver {
                     nonCompletedColors ^= colorBit;
                 }
             }
+            final int prevColorBit = 1 << (currentNode.getSolutionEntry() & SolutionTree.COLOR_BIT_MASK);
             // play all possible colors
             final long[] neighbors = currentNode.getNeighbors();
-            for (int colors = nonCompletedColors, colorBit;  (colorBit = (colors & -colors)) != 0;  colors ^= colorBit) {
+            for (int colors = (nonCompletedColors & ~prevColorBit), colorBit;  (colorBit = (colors & -colors)) != 0;  colors ^= colorBit) {
                 final long[] casColorBit = this.casByColorBits[colorBit];
                 if (ColorAreaSet.intersects(neighbors, casColorBit)
                         && this.canPlay(colorBit, this.iterAnd.init(neighbors, casColorBit), currentNode)) {
-                    final AStarNode nextNode = currentNode.copyAndPlay(recycleNode, this.iterAnd.restart(), this.board);
+                    final AStarNode nextNode = currentNode.copyAndPlay(recycleNode, this.iterAnd.restart(), idsNeighborColorAreaSets);
                     if (knownStates.addIfLess(nextNode)) {
                         nextNode.addSolutionEntry((byte)(31 - Integer.numberOfLeadingZeros(colorBit)), this.solutionTree);
                         if (ColorAreaSet.containsAll(nextNode.getFlooded(), casColorBit) // color completed
@@ -224,7 +226,7 @@ public class AStarSolver extends AbstractSolver {
      * NOTE: uses this.iter
      */
     private boolean canPlay(final int nextColorBit, final ColorAreaSet.IteratorAnd nextColorNeighbors, final AStarNode currentNode) {
-        final byte currColor = this.solutionTree.getColor(currentNode.getSolutionEntry());
+        final byte currColor = (byte)(currentNode.getSolutionEntry() & SolutionTree.COLOR_BIT_MASK);
         final long[] flooded = currentNode.getFlooded();
         // did the previous move add any new "nextColor" neighbors?
         boolean newNext = false;
@@ -331,15 +333,6 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
                 result[i] = (byte)(entry & COLOR_BIT_MASK);
             }
             return result;
-        }
-
-        /**
-         * Extract the color of this move.
-         * @param entry
-         * @return color of entry
-         */
-        protected byte getColor(final int entry) {
-            return (byte)(entry & COLOR_BIT_MASK);
         }
     }
 

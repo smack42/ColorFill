@@ -28,14 +28,16 @@ import colorfill.model.ColorAreaSet;
  */
 public class AStarFlolleStrategy extends AStarPuchertStrategy {
 
-    protected long[] nextOne, nextTwo;
+    protected final long[] casNextOne, casNextTwo;
     private final int caLimit;
+    private final int[] idsMemberSize;
 
     public AStarFlolleStrategy(final Board board) {
         super(board);
         this.caLimit = board.getColorAreasArray().length / 3; // TODO: find a good value for caLimit
-        this.nextOne = ColorAreaSet.constructor(board);
-        this.nextTwo = ColorAreaSet.constructor(board);
+        this.casNextOne = ColorAreaSet.constructor(board);
+        this.casNextTwo = ColorAreaSet.constructor(board);
+        this.idsMemberSize = board.getMemberSize4IdArray();
     }
 
     /* (non-Javadoc)
@@ -59,16 +61,21 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
             return;
         }
 
-        node.copyNeighborsTo(this.current);
-        node.copyFloodedTo(this.visited);
+        long[] next = this.casNext;
+        long[] current = this.casCurrent;
+        node.copyNeighborsTo(current);
+        long[] visited = this.casVisited;
+        node.copyFloodedTo(visited);
+        long[] nextOne = this.casNextOne;
+        long[] nextTwo = this.casNextTwo;
 
         while (true) {
-            ColorAreaSet.addAll(this.visited, this.current);
+            ColorAreaSet.addAll(visited, current);
             int completedColors = 0;
             for (int colors = nonCompletedColors;  0 != colors;  ) {
                 final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
                 colors ^= colorBit;
-                if (ColorAreaSet.containsAll(this.visited, this.casByColorBits[colorBit])) {
+                if (ColorAreaSet.containsAll(visited, this.casByColorBits[colorBit])) {
                     completedColors |= colorBit;
                     nonCompletedColors ^= colorBit;
                 }
@@ -81,18 +88,18 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
                     distance += (0 == nonCompletedColors ? 0 : 1);
                     break; // done
                 } else {
-                    ColorAreaSet.clear(this.next);
+                    ColorAreaSet.clear(next);
                     // completed colors
                     final long[] colorCas = this.casByColorBits[completedColors];
-                    this.iterAnd.init(this.current, colorCas);
+                    this.iterAnd.init(current, colorCas);
                     for (int caId;  (caId = this.iterAnd.nextOrNegative()) >= 0;  ) {
-                        ColorAreaSet.addAll(this.next, this.board.getNeighborColorAreaSet4Id(caId));
+                        ColorAreaSet.addAll(next, this.idsNeighborColorAreaSets[caId]);
                     }
-                    ColorAreaSet.removeAll(this.current, colorCas);
-                    ColorAreaSet.removeAll(this.next, this.visited);
+                    ColorAreaSet.removeAll(current, colorCas);
+                    ColorAreaSet.removeAll(next, visited);
                     // non-completed colors
                     // move nodes to next layer
-                    ColorAreaSet.addAll(this.next, this.current);
+                    ColorAreaSet.addAll(next, current);
                 }
             } else {
                 // Nothing found, do the color-blind pseudo-move
@@ -103,49 +110,49 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
                 for (int colors = nonCompletedColors;  0 != colors;  ) {
                     final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
                     colors ^= colorBit;
-                    ColorAreaSet.clear(this.next);
-                    this.iterAnd.init(this.current, this.casByColorBits[colorBit]);
+                    ColorAreaSet.clear(next);
+                    this.iterAnd.init(current, this.casByColorBits[colorBit]);
                     for (int caId;  (caId = this.iterAnd.nextOrNegative()) >= 0;  ) {
-                        ColorAreaSet.addAll(this.next, this.board.getNeighborColorAreaSet4Id(caId));
+                        ColorAreaSet.addAll(next, this.idsNeighborColorAreaSets[caId]);
                     }
-                    ColorAreaSet.removeAll(this.next, this.visited);
+                    ColorAreaSet.removeAll(next, visited);
                     int size = 0;
-                    this.iter.init(this.next);
+                    this.iter.init(next);
                     for (int caId;  (caId = this.iter.nextOrNegative()) >= 0;  ) {
-                        size += this.board.getColorArea4Id(caId).getMemberSize();
+                        size += this.idsMemberSize[caId];
                     }
                     if (size > sizeOne) { // new best color -> move previous best color to second best
                         sizeTwo = sizeOne;
                         colorBitTwo = colorBitOne;
-                        final long[] t = this.nextTwo;
-                        this.nextTwo = this.nextOne;
+                        final long[] t = nextTwo;
+                        nextTwo = nextOne;
                         sizeOne = size;
                         colorBitOne = colorBit;
-                        this.nextOne = this.next;
-                        this.next = t;
+                        nextOne = next;
+                        next = t;
                     } else if (size > sizeTwo) { // new second best color
                         sizeTwo = size;
                         colorBitTwo = colorBit;
-                        final long[] t = this.nextTwo;
-                        this.nextTwo = this.next;
-                        this.next = t;
+                        final long[] t = nextTwo;
+                        nextTwo = next;
+                        next = t;
                     }
                 }
-                final long[] t = this.next;
-                this.next = this.nextOne; // always take the best color
-                this.nextOne = t;
-                ColorAreaSet.removeAll(this.current, this.casByColorBits[colorBitOne]);
+                final long[] t = next;
+                next = nextOne; // always take the best color
+                nextOne = t;
+                ColorAreaSet.removeAll(current, this.casByColorBits[colorBitOne]);
                 if (sizeTwo > 0) { // if available, take the second best color as well 
-                    ColorAreaSet.addAll(this.next, this.nextTwo);
-                    ColorAreaSet.removeAll(this.current, this.casByColorBits[colorBitTwo]);
+                    ColorAreaSet.addAll(next, nextTwo);
+                    ColorAreaSet.removeAll(current, this.casByColorBits[colorBitTwo]);
                 }
-                ColorAreaSet.addAll(this.next, this.current); // move other colors to next
+                ColorAreaSet.addAll(next, current); // move other colors to next
             }
 
             // Move the next layer into the current.
-            final long[] t = this.current;
-            this.current = this.next;
-            this.next = t;
+            final long[] t = current;
+            current = next;
+            next = t;
         }
         node.setEstimatedCost(node.getSolutionSize() + distance);
     }

@@ -47,6 +47,7 @@ public class Board {
     private ColorArea[] idsColorAreas;
     private byte[] idsColors;
     private long[][] idsNeighborColorAreaSets;
+    private int[] idsMemberSize;
     private int sizeColorAreas8;
     private final long[][] casByColorBits;
 
@@ -238,6 +239,7 @@ public class Board {
         int id = 0;
         this.idsColorAreas = new ColorArea[result.size()];
         this.idsColors = new byte[result.size()];
+        this.idsMemberSize = new int[result.size()];
         this.sizeColorAreas8 = (result.size() + 7) >> 3; // how many bytes are needed to store them as bits?
         for (int i = 0;  i < this.casByColorBits.length;  ++i) {
             this.casByColorBits[i] = ColorAreaSet.constructor(this);
@@ -246,6 +248,7 @@ public class Board {
             ca.setId(id++);
             this.idsColorAreas[ca.getId()] = ca;
             this.idsColors[ca.getId()] = ca.getColor();
+            this.idsMemberSize[ca.getId()] = ca.getMemberSize();
             ColorAreaSet.add(this.casByColorBits[1 << ca.getColor()], ca);
         }
         for (int colorBits = 3;  colorBits < this.casByColorBits.length;  ++colorBits) {
@@ -441,6 +444,14 @@ public class Board {
 
     public long[] getNeighborColorAreaSet4Id(int id) {
         return this.idsNeighborColorAreaSets[id];
+    }
+
+    public long[][] getNeighborColorAreaSet4IdArray() {
+        return this.idsNeighborColorAreaSets;
+    }
+
+    public int[] getMemberSize4IdArray() {
+        return this.idsMemberSize;
     }
 
     public ColorArea[] getColorAreasArray() {
