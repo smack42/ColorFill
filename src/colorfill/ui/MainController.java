@@ -75,10 +75,30 @@ public class MainController {
         this.controlController = new ControlController(this, this.gameState);
         this.controlController.actionUpdateBoardColors();
         this.mainView = new MainWindow(progname, this.boardController.getPanel(), this.controlController.getPanel());
-        this.mainView.update();
         this.gameState.setAutoRunSolver(this.gameState.getPreferences().isRunSolver());
         this.preferencesController = new PreferencesController(this, this.gameState, this.mainView, progname, version, author);
         this.gameidController = new GameIdController(this, this.gameState, this.mainView);
+        this.setNewLookAndFeel();
+    }
+
+    private void setNewLookAndFeel() {
+        try {
+            final String lafName = this.gameState.getPreferences().getLafName();
+            if (lafName != null) {
+                for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                    if (lafName.contentEquals(info.getName())) {
+                        UIManager.setLookAndFeel(info.getClassName());
+                        SwingUtilities.updateComponentTreeUI(this.mainView);
+                        this.mainView.update();
+                        this.preferencesController.updateComponentTreeUI();
+                        this.gameidController.updateComponentTreeUI();
+                        break;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void internalUpdateBoardColors() {
@@ -156,13 +176,15 @@ public class MainController {
     /**
      * apply updated preferences.
      */
-    protected void actionUpdatedPrefs(final boolean isNewBoard, final boolean isNewSize) {
+    protected void actionUpdatedPrefs(final boolean isNewBoard, final boolean isNewSize, final boolean isNewLaf) {
         if (isNewBoard) {
             this.gameState.setNewRandomBoard();
             this.hideHint();
         }
         this.boardController.initBoardPanel();
-        if (isNewSize) {
+        if (isNewLaf) {
+            this.setNewLookAndFeel();
+        } else if (isNewSize) {
             this.mainView.update();
         }
         this.internalUpdateBoardColors();

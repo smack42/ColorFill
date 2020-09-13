@@ -19,6 +19,8 @@ package colorfill.ui;
 
 import java.awt.Color;
 
+import javax.swing.SwingUtilities;
+
 import colorfill.model.BoardColorNumbersEnum;
 import colorfill.model.GamePreferences;
 import colorfill.model.GameState;
@@ -43,6 +45,10 @@ public class PreferencesController {
         this.prefDialog.showDialog();
     }
 
+    protected void updateComponentTreeUI() {
+        SwingUtilities.updateComponentTreeUI(this.prefDialog);
+    }
+
     /**
      * called by PreferencesDialog when user pressed the "OK" button.
      */
@@ -55,7 +61,8 @@ public class PreferencesController {
             final BoardColorNumbersEnum bcne,
             final int uiColorsNumber,
             final int cellSize,
-            final HighlightColorEnum hce) {
+            final HighlightColorEnum hce,
+            final String lafName ) {
         boolean isNewBoard = this.gameState.getPreferences().setWidth(width);
         isNewBoard |= this.gameState.getPreferences().setHeight(height);
         boolean isNewSize = isNewBoard;
@@ -66,8 +73,9 @@ public class PreferencesController {
         this.gameState.getPreferences().setBoardColorNumbers(bcne);
         this.gameState.getPreferences().setUiColorsNumber(uiColorsNumber);
         this.gameState.getPreferences().setHighlightColor(hce);
+        boolean isNewLaf = this.gameState.getPreferences().setLafName(lafName);
         this.gameState.getPreferences().savePrefs();
-        this.mainController.actionUpdatedPrefs(isNewBoard, isNewSize);
+        this.mainController.actionUpdatedPrefs(isNewBoard, isNewSize, isNewLaf);
     }
 
     /**
@@ -83,7 +91,8 @@ public class PreferencesController {
                 GamePreferences.DEFAULT_UI_BOARD_COLOR_NUMBERS,
                 GamePreferences.DEFAULT_UI_HIGHLIGHT_COLOR,
                 GamePreferences.DEFAULT_UI_COLSCHEME,
-                GamePreferences.DEFAULT_UI_CELLSIZE);
+                GamePreferences.DEFAULT_UI_CELLSIZE,
+                GamePreferences.DEFAULT_UI_LAFNAME );
     }
 
     /**
@@ -122,5 +131,8 @@ public class PreferencesController {
     }
     protected int getCellSize() {
         return this.gameState.getPreferences().getCellSize();
+    }
+    protected String getLafName() {
+        return this.gameState.getPreferences().getLafName();
     }
 }

@@ -19,6 +19,8 @@ package colorfill.ui;
 
 import java.util.ResourceBundle;
 
+import javax.swing.SwingUtilities;
+
 import colorfill.model.GameState;
 import colorfill.model.StartPositionEnum;
 
@@ -38,6 +40,10 @@ public class GameIdController {
 
     protected void showDialog() {
         this.dialog.showDialog();
+    }
+
+    protected void updateComponentTreeUI() {
+        SwingUtilities.updateComponentTreeUI(this.dialog);
     }
 
     protected String getCurrentGameId() {
@@ -79,7 +85,7 @@ public class GameIdController {
         if ((null != result) && (result.length() != 0)) {
             return result;  // error message
         } else {
-            this.mainController.actionUpdatedPrefs(false, true);
+            this.mainController.actionUpdatedPrefs(false, true, false);
             return null;
         }
     }

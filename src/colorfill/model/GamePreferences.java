@@ -33,6 +33,7 @@ public class GamePreferences {
     private static final String PREFS_NUMCOLORS = "numColors";
     private static final String PREFS_STARTPOS  = "startPos";
     private static final String PREFS_GRIDLINES = "gridLines";
+    private static final String PREFS_LAFNAME   = "lafName";
     private static final String PREFS_BOARD_COLOR_NUMBERS = "boardColorNumbers";
     private static final String PREFS_HIGHLIGHT_COLOR = "highlightColor";
     private static final String PREFS_CELLSIZE  = "cellSize";
@@ -51,6 +52,7 @@ public class GamePreferences {
     public static final int DEFAULT_BOARD_NUM_COLORS = 6;
     public static final StartPositionEnum DEFAULT_BOARD_STARTPOS = StartPositionEnum.TOP_LEFT;
     public static final GridLinesEnum DEFAULT_UI_GRIDLINES = GridLinesEnum.NONE;
+    public static final String DEFAULT_UI_LAFNAME = "Nimbus";
     public static final BoardColorNumbersEnum DEFAULT_UI_BOARD_COLOR_NUMBERS = BoardColorNumbersEnum.NONE;
     public static final HighlightColorEnum DEFAULT_UI_HIGHLIGHT_COLOR = HighlightColorEnum.WHITE;
     public static final int DEFAULT_UI_CELLSIZE = 36;
@@ -127,6 +129,7 @@ public class GamePreferences {
     private int cellSize;
     private int runSolver;
     private final List<String> dontRunSolverStrategies;
+    private String lafName;
 
     public GamePreferences() {
         this.width = DEFAULT_BOARD_WIDTH;
@@ -138,6 +141,7 @@ public class GamePreferences {
         this.cellSize = DEFAULT_UI_CELLSIZE;
         this.uiBoardColorNumbers = DEFAULT_UI_BOARD_COLOR_NUMBERS.intValue;
         this.highlightColor = DEFAULT_UI_HIGHLIGHT_COLOR.intValue;
+        this.lafName = DEFAULT_UI_LAFNAME;
         this.runSolver = DEFAULT_UI_RUNSOLVER;
         this.dontRunSolverStrategies = new ArrayList<String>();
         this.dontRunSolverStrategies.add(DEFAULT_UI_DONT_RUN_STRATEGIES);
@@ -291,6 +295,17 @@ public class GamePreferences {
         return Collections.unmodifiableList(this.dontRunSolverStrategies);
     }
 
+    public boolean setLafName(final String lafName) {
+        if ((lafName != null) && ((this.lafName == null) || !this.lafName.contentEquals(lafName))) {
+            this.lafName = lafName;
+            return true;
+        }
+        return false;
+    }
+    public String getLafName() {
+        return this.lafName;
+    }
+
     private void loadPrefs() {
         this.setWidth            (PREFS.getInt(PREFS_WIDTH,              DEFAULT_BOARD_WIDTH));
         this.setHeight           (PREFS.getInt(PREFS_HEIGHT,             DEFAULT_BOARD_HEIGHT));
@@ -307,6 +322,7 @@ public class GamePreferences {
         while (tokDontRun.hasMoreTokens()) {
             this.dontRunSolverStrategies.add(tokDontRun.nextToken());
         }
+        this.lafName            = PREFS.get(PREFS_LAFNAME, DEFAULT_UI_LAFNAME);
     }
 
     public void savePrefs() {
@@ -325,6 +341,7 @@ public class GamePreferences {
             sbDontRun.append(',').append(dontRun);
         }
         PREFS.put(PREFS_DONT_RUN_STRATEGIES, sbDontRun.substring(Math.min(sbDontRun.length(), 1)));
+        PREFS.put(PREFS_LAFNAME, this.lafName);
     }
 
     public static void saveBoard(final Board board) {

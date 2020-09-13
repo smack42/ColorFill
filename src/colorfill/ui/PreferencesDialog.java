@@ -42,6 +42,8 @@ import javax.swing.KeyStroke;
 import javax.swing.ListCellRenderer;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
 
 import colorfill.model.BoardColorNumbersEnum;
 import colorfill.model.GridLinesEnum;
@@ -73,6 +75,7 @@ public class PreferencesDialog extends JDialog {
     private final JComboBox<GridLinesItem> jcomboGridLines = new JComboBox<>();
     private final JComboBox<BoardColorNumbersItem> jcomboBoardColorNumbers = new JComboBox<>();
     private final JComboBox<HighlightColorItem> jcomboHighlightColor = new JComboBox<>();
+    private final JComboBox<String> jcomboLookAndFeel = new JComboBox<>();
 
     private boolean closedByOkButton = false;
 
@@ -102,6 +105,7 @@ public class PreferencesDialog extends JDialog {
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.NumColors.txt"))).addMulti(this.makeJspinNumColors());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.StartPos.txt"))).addMulti(this.makeJcomboStartPos());
         layout.row().left().fill().add(new JSeparator());
+        layout.row().grid(new JLabel(L10N.getString("pref.lbl.LookAndFeel.txt"))).addMulti(this.makeJcomboLookAndFeel());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.GridLines.txt"))).addMulti(this.makeJcomboGridLines());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.BoardColorNumbers.txt"))).addMulti(this.makeJcomboBoardColorNumbers());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.HighlightColor.txt"))).addMulti(this.makeJcomboHighlightColor());
@@ -154,6 +158,13 @@ public class PreferencesDialog extends JDialog {
             this.jcomboStartPos.addItem(new StartPosItem(spe));
         }
         return this.jcomboStartPos;
+    }
+
+    private JComboBox<String> makeJcomboLookAndFeel() {
+        for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+            this.jcomboLookAndFeel.addItem(info.getName());
+        }
+        return this.jcomboLookAndFeel;
     }
 
     private JComboBox<GridLinesItem> makeJcomboGridLines() {
@@ -284,7 +295,8 @@ public class PreferencesDialog extends JDialog {
                         PreferencesDialog.this.getSelectedBoardColorNumbersEnum(),
                         PreferencesDialog.this.getSelectedColorSchemeNumber(),
                         ((Number)PreferencesDialog.this.jspinCellSize.getValue()).intValue(),
-                        PreferencesDialog.this.getHighlightColorEnum());
+                        PreferencesDialog.this.getHighlightColorEnum(),
+                        PreferencesDialog.this.jcomboLookAndFeel.getItemAt(PreferencesDialog.this.jcomboLookAndFeel.getSelectedIndex()) );
                 PreferencesDialog.this.closedByOkButton = true;
                 PreferencesDialog.this.dispose();
             }
@@ -355,6 +367,7 @@ public class PreferencesDialog extends JDialog {
         this.jcomboBoardColorNumbers.setSelectedIndex(this.controller.getBoardColorNumbers().ordinal());
         this.jcomboHighlightColor.setSelectedIndex(this.controller.getHighlightColor().ordinal());
         this.jcomboColorSchemes.setSelectedIndex(this.controller.getUiColorsNumber());
+        this.jcomboLookAndFeel.setSelectedItem(this.controller.getLafName());
         this.getRootPane().setDefaultButton(this.buttonOk);
         this.pack();
         this.setLocationRelativeTo(this.mainWindow);
@@ -370,7 +383,8 @@ public class PreferencesDialog extends JDialog {
             final BoardColorNumbersEnum bcne,
             final HighlightColorEnum hce,
             final int uiColorsNumber,
-            final int cellSize) {
+            final int cellSize,
+            final String lafName ) {
         this.jspinWidth.setValue(Integer.valueOf(width));
         this.jspinHeight.setValue(Integer.valueOf(height));
         this.jspinNumColors.setValue(Integer.valueOf(numColors));
@@ -380,6 +394,7 @@ public class PreferencesDialog extends JDialog {
         this.jcomboColorSchemes.setSelectedIndex(uiColorsNumber);
         this.jcomboBoardColorNumbers.setSelectedIndex(bcne.ordinal());
         this.jcomboHighlightColor.setSelectedIndex(hce.ordinal());
+        this.jcomboLookAndFeel.setSelectedItem(lafName);
     }
 
     private static abstract class EnumItem {
