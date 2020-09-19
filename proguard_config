@@ -1,6 +1,6 @@
 -injars bin
 -injars lib/designgridlayout-1.11.jar(**.class)
--injars lib/flatlaf-0.41.jar(com/formdev/flatlaf/**)
+-injars lib/flatlaf-0.42.jar(com/formdev/flatlaf/**)
 # specify this on the command line: -outjars colorfill.jar
 
 -libraryjars <java.home>/lib/rt.jar
