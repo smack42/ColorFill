@@ -18,8 +18,11 @@
 package colorfill.solver;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
@@ -144,6 +147,7 @@ public class AStarSolver extends AbstractSolver {
                                 nextNode.addSolutionEntry((byte)(31 - Integer.numberOfLeadingZeros(nonCompletedColors)), this.solutionTree);
                             }
                             this.addSolution(nextNode.getSolution(this.solutionTree));
+                            assert printQueueStatistics(open);
                             return;
                         } else {
                             this.strategy.setEstimatedCost(nextNode, nonCompletedColors);
@@ -190,6 +194,25 @@ public class AStarSolver extends AbstractSolver {
             }
         }
         // if we get here then we have not found any solution
+    }
+
+
+    private boolean printQueueStatistics(final Queue<AStarNode> queue) {
+        final SortedMap<Integer, Integer> histogram = new TreeMap<>();
+        for (final AStarNode node : queue) {
+            final Integer key = Integer.valueOf(node.getEstimatedCostSolutionSize());
+            final Integer value = histogram.get(key);
+            histogram.put(key, Integer.valueOf((value != null ? value.intValue() : 0) + 1));
+        }
+        final StringBuilder sb = new StringBuilder();
+        sb.append(this.getSolverName()).append("_estimation,solutionsteps,count\n");
+        for (final Map.Entry<Integer, Integer> entry : histogram.entrySet()) {
+            sb.append(AStarNode.getEstimatedCost(entry.getKey().intValue())).append(',');
+            sb.append(AStarNode.getSolutionSize (entry.getKey().intValue())).append(',');
+            sb.append(entry.getValue()).append('\n');
+        }
+        System.out.print(sb.toString());
+        return true;
     }
 
 

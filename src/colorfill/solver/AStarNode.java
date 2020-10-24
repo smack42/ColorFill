@@ -100,6 +100,9 @@ public class AStarNode {
     public int getSolutionSize() {
         return (DATA_MASK_SOLUTION_SIZE & ~this.packedData); // ~ NOT operator is NEGATE in ones' complement
     }
+    public static int getSolutionSize(final int data) {
+        return (DATA_MASK_SOLUTION_SIZE & ~data); // ~ NOT operator is NEGATE in ones' complement
+    }
 
     /**
      * get the current solutionEntry stored in this node. (pointer in SolutionTree)
@@ -234,6 +237,12 @@ public class AStarNode {
     }
     public int getEstimatedCost() {
         return ((this.packedData & DATA_MASK_ESTIMATED_COST) >>> DATA_SHIFT_ESTIMATED_COST);
+    }
+    public static int getEstimatedCost(final int data) {
+        return ((data & DATA_MASK_ESTIMATED_COST) >>> DATA_SHIFT_ESTIMATED_COST);
+    }
+    public int getEstimatedCostSolutionSize() {
+        return (this.packedData & DATA_MASK_ESTIMATED_COST_SOLUTION_SIZE);
     }
 
     /**
