@@ -116,7 +116,7 @@ public class AStarSolver extends AbstractSolver {
 
     private void executeInternalPuchert(final ColorArea startCa) throws InterruptedException {
         final Queue<AStarNode> open = new PriorityQueue<AStarNode>(AStarNode.strongerComparator());
-        final KnownStates knownStates = new KnownStates(this.board);
+        final HashMapLongArray2Byte map = new HashMapLongArray2Byte(this.board);
         open.offer(new AStarNode(this.board, startCa, this.solutionTree));
         AStarNode recycleNode = null;
         final int colorBitLimit = this.casByColorBits.length;
@@ -134,12 +134,15 @@ public class AStarSolver extends AbstractSolver {
             final int prevColorBit = 1 << (currentNode.getSolutionEntry() & SolutionTree.COLOR_BIT_MASK);
             // play all possible colors
             final long[] neighbors = currentNode.getNeighbors();
-            for (int colors = (nonCompletedColors & ~prevColorBit), colorBit;  (colorBit = (colors & -colors)) != 0;  colors ^= colorBit) {
+            final int nextSolutionSize = currentNode.getSolutionSize() + 1;
+            for (int colors = (nonCompletedColors & ~prevColorBit);  0 != colors;  ) {
+                final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
+                colors ^= colorBit;
                 final long[] casColorBit = this.casByColorBits[colorBit];
                 if (ColorAreaSet.intersects(neighbors, casColorBit)
                         && this.canPlay(colorBit, this.iterAnd.init(neighbors, casColorBit), currentNode)) {
                     final AStarNode nextNode = currentNode.copyAndPlay(recycleNode, this.iterAnd.restart(), idsNeighborColorAreaSets);
-                    if (knownStates.addIfLess(nextNode)) {
+                    if (map.putIfLess(nextNode.getFlooded(), nextSolutionSize)) {
                         nextNode.addSolutionEntry((byte)(31 - Integer.numberOfLeadingZeros(colorBit)), this.solutionTree);
                         if (ColorAreaSet.containsAll(nextNode.getFlooded(), casColorBit) // color completed
                                 && (0 == ((nonCompletedColors ^= colorBit) & (nonCompletedColors - 1)))) { // one or zero colors remaining
@@ -359,26 +362,6 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
         }
     }
 
-
-    /**
-     * This class stores all partially flooded board states and the minimum number of moves that were required to reach each of them.
-     */
-    private static class KnownStates {
-        private final HashMapLongArray2Byte map2;
-
-        public KnownStates(final Board board) {
-            this.map2 = new HashMapLongArray2Byte(board);
-        }
-
-        /**
-         * try to add the board state in this AStarNode to the map.
-         * @param node
-         * @return true if the board state was stored, false if it was already stored with the same or lower number of moves.
-         */
-        public boolean addIfLess(final AStarNode node) {
-            return this.map2.putIfLess(node.getFlooded(), node.getSolutionSize() + 1);
-        }
-    }
 
     /**
      * This class is a minimal implementation of a HashMap, taylored to the specific use case in this AStarSolver,

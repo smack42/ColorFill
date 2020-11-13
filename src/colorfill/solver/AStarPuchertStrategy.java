@@ -85,7 +85,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 // We also combine all these elimination moves.
                 distance += Integer.bitCount(completedColors);
                 if (0 == (nonCompletedColors & (nonCompletedColors - 1))) { // one or zero colors remaining
-                    distance += (0 == nonCompletedColors ? 0 : 1);
+                    distance += (-nonCompletedColors >>> 31); // nonCompletedColors is never negative // (0 == nonCompletedColors ? 0 : 1)
                     break; // done
                 } else {
                     ColorAreaSet.clear(next);
