@@ -183,6 +183,46 @@ public final class ColorAreaSet {
     }
 
     /**
+     * add all ColorAreaSets indexed by the other set in the lookup-array, to this set.
+     * (this combines an iteration over casOther, with a lookup and an addAll-call inside the loop)
+     */
+    public static void addAllLookup(final long[] casThis, final long[] casOther, final long[][] casLookup) {
+        for (int o = 0;  o < casOther.length;  ++o) {
+            long buf = casOther[o];
+            final int offset = (o << 6) + 63;
+            while (buf != 0) {
+                final long l1b = buf & -buf; // Long.lowestOneBit
+                final int caId = offset - Long.numberOfLeadingZeros(l1b);
+                buf ^= l1b;
+                final long[] casAdd = casLookup[caId];
+                for (int i = 0;  i < casThis.length;  ++i) {
+                    casThis[i] |= casAdd[i];
+                }
+            }
+        }
+    }
+
+    /**
+     * add all ColorAreaSets indexed by the AND-combined other two sets in the lookup-array, to this set.
+     * (this combines an iteration over casOtherOne and casOtherTwo, with a lookup and an addAll-call inside the loop)
+     */
+    public static void addAllAndLookup(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo, final long[][] casLookup) {
+        for (int o = 0;  o < casOtherOne.length;  ++o) {
+            long buf = (casOtherOne[o] & casOtherTwo[o]);
+            final int offset = (o << 6) + 63;
+            while (buf != 0) {
+                final long l1b = buf & -buf; // Long.lowestOneBit
+                final int caId = offset - Long.numberOfLeadingZeros(l1b);
+                buf ^= l1b;
+                final long[] casAdd = casLookup[caId];
+                for (int i = 0;  i < casThis.length;  ++i) {
+                    casThis[i] |= casAdd[i];
+                }
+            }
+        }
+    }
+
+    /**
      * an Iterator over one ColorAreaSet that returns the IDs of the member ColorArea objects
      */
     public static class Iterator {

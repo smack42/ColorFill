@@ -33,7 +33,6 @@ public class AStarPuchertStrategy implements AStarStrategy {
     protected final long[][] casByColorBits;
     protected final long[][] idsNeighborColorAreaSets;
     protected final ColorAreaSet.Iterator iter;
-    protected final ColorAreaSet.IteratorAnd iterAnd;
 
     public AStarPuchertStrategy(final Board board) {
         this.board = board;
@@ -43,7 +42,6 @@ public class AStarPuchertStrategy implements AStarStrategy {
         this.casByColorBits = board.getCasByColorBitsArray();
         this.idsNeighborColorAreaSets = board.getNeighborColorAreaSet4IdArray();
         this.iter = new ColorAreaSet.Iterator();
-        this.iterAnd = new ColorAreaSet.IteratorAnd();
     }
 
     /* (non-Javadoc)
@@ -91,10 +89,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                     ColorAreaSet.clear(next);
                     // completed colors
                     final long[] colorCas = this.casByColorBits[completedColors];
-                    this.iterAnd.init(current, colorCas);
-                    for (int caId;  (caId = this.iterAnd.nextOrNegative()) >= 0;  ) {
-                        ColorAreaSet.addAll(next, this.idsNeighborColorAreaSets[caId]);
-                    }
+                    ColorAreaSet.addAllAndLookup(next, current, colorCas, this.idsNeighborColorAreaSets);
                     ColorAreaSet.removeAll(current, colorCas);
                     ColorAreaSet.removeAll(next, visited);
                     // non-completed colors
@@ -106,10 +101,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 // Nothing found, do the color-blind pseudo-move
                 // Expand current layer of nodes.
                 ++distance;
-                this.iter.init(current);
-                for (int caId;  (caId = this.iter.nextOrNegative()) >= 0;  ) {
-                    ColorAreaSet.addAll(next, this.idsNeighborColorAreaSets[caId]);
-                }
+                ColorAreaSet.addAllLookup(next, current, this.idsNeighborColorAreaSets);
                 ColorAreaSet.removeAll(next, visited);
             }
 
