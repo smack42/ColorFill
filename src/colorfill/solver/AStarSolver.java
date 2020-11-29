@@ -33,7 +33,7 @@ import colorfill.model.ColorAreaSet;
  */
 public class AStarSolver extends AbstractSolver {
 
-    private Class<? extends AStarStrategy> strategyClass = AStarTigrouStrategy.class; // default
+    private Class<? extends AStarStrategy> strategyClass = AStarPuchertStrategy.class; // default
     private AStarStrategy strategy;
     private final SolutionTree solutionTree = new SolutionTree();
     private final ColorAreaSet.Iterator iter;
@@ -82,9 +82,7 @@ public class AStarSolver extends AbstractSolver {
 
     private AStarStrategy makeStrategy() {
         final AStarStrategy result;
-        if (AStarTigrouStrategy.class.equals(this.strategyClass)) {
-            result = new AStarTigrouStrategy(this.board, this.solutionTree, this);
-        } else if (AStarPuchertStrategy.class.equals(this.strategyClass)) {
+        if (AStarPuchertStrategy.class.equals(this.strategyClass)) {
             result = new AStarPuchertStrategy(this.board);
         } else if (AStarFlolleStrategy.class.equals(this.strategyClass)) {
             result = new AStarFlolleStrategy(this.board);
@@ -104,9 +102,7 @@ public class AStarSolver extends AbstractSolver {
 
         final ColorArea startCa = this.board.getColorArea4Cell(startPos);
 
-        if (this.strategy instanceof AStarTigrouStrategy) {
-            this.executeInternalTigrou(startCa);
-        } else if (this.strategy instanceof AStarPuchertStrategy) {
+        if (this.strategy instanceof AStarPuchertStrategy) {
             this.executeInternalPuchert(startCa);
         } else if (this.strategy instanceof AStarFlolleStrategy) {
             this.executeInternalPuchert(startCa);
@@ -163,40 +159,6 @@ public class AStarSolver extends AbstractSolver {
             }
             recycleNode = currentNode;
         }
-    }
-
-
-    private void executeInternalTigrou(final ColorArea startCa) throws InterruptedException {
-        // use a PriorityQueue (faster!)
-        final Queue<AStarNode> open = new PriorityQueue<AStarNode>(AStarNode.simpleComparator());
-        open.offer(new AStarNode(this.board, startCa, this.solutionTree));
-        while (open.size() > 0) {
-            if (Thread.interrupted()) { throw new InterruptedException(); }
-            final AStarNode currentNode = open.poll();
-            if (currentNode.isSolved()) {
-                this.addSolution(currentNode.getSolution(this.solutionTree));
-//                return;
-            } else {
-                if (currentNode.getEstimatedCost() > this.solutionSize) {
-                    return;  // finished!
-                } else {
-                    // play all possible colors
-                    final long[] neighbors = currentNode.getNeighbors();
-                    int nextColors = this.getColors(neighbors);
-                    while (0 != nextColors) {
-                        final int l1b = nextColors & -nextColors; // Integer.lowestOneBit()
-                        final int clz = Integer.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
-                        nextColors ^= l1b; // clear lowest one bit
-                        final AStarNode nextNode = new AStarNode(currentNode);
-                        final byte color = (byte)(31 - clz);
-                        nextNode.play(color, this.getColorAreas(neighbors, color), this.solutionTree, this.board);
-                        this.strategy.setEstimatedCost(nextNode, 0); // nonCompletedColors is not used
-                        open.offer(nextNode);
-                    }
-                }
-            }
-        }
-        // if we get here then we have not found any solution
     }
 
 

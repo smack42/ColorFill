@@ -18,7 +18,6 @@
 package colorfill.solver;
 
 import java.util.Comparator;
-import java.util.Queue;
 
 import colorfill.model.Board;
 import colorfill.model.ColorArea;
@@ -152,20 +151,6 @@ public class AStarNode {
     }
 
     /**
-     * play the given color.
-     * @param nextColor
-     */
-    public void play(final byte nextColor, final ColorAreaSet.IteratorAnd nextColorNeighbors, final SolutionTree solutionTree, final Board board) {
-        for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
-            ColorAreaSet.add(this.flooded, nextColorNeighbor);
-            ColorAreaSet.addAll(this.neighbors, board.getNeighborColorAreaSet4Id(nextColorNeighbor));
-        }
-        ColorAreaSet.removeAll(this.neighbors, this.flooded);
-        --this.packedData; // increment solutionSize  TODO check overflow
-        this.solutionEntry = solutionTree.add(this.solutionEntry, nextColor);
-    }
-
-    /**
      * try to re-use the given node or create a new one
      * and then play the given color in the result node.
      * @param nextColor
@@ -243,37 +228,5 @@ public class AStarNode {
     }
     public int getEstimatedCostSolutionSize() {
         return (this.packedData & DATA_MASK_ESTIMATED_COST_SOLUTION_SIZE);
-    }
-
-    /**
-     * calculate the sum of distances from current flooded area to all remaining areas.
-     * @param queue an empty Queue; used inside this function; will be empty on return.
-     * @param depths an array of int; must be large enough to store a value for each ColorArea on the Board.
-     * @return
-     */
-    public int getSumDistances(final Queue<ColorArea> queue, final Board board) {
-        final int NO_DEPTH = -1;
-        for (final ColorArea ca : board.getColorAreasArray()) {
-            if (ColorAreaSet.contains(this.flooded, ca)) {
-                ca.tmpAStarDepth = 0;  // start
-                queue.offer(ca);
-            } else {
-                ca.tmpAStarDepth = NO_DEPTH;  // reset
-            }
-        }
-        int sumDistances = 0;
-        ColorArea currentCa;
-        while (null != (currentCa = queue.poll())) { // while queue is not empty
-            final int nextDepth = currentCa.tmpAStarDepth + 1;
-            for (final ColorArea nextCa : currentCa.getNeighborsArray()) {
-                if (nextCa.tmpAStarDepth == NO_DEPTH) {
-                    nextCa.tmpAStarDepth = nextDepth;
-                    sumDistances += nextDepth;
-                    queue.offer(nextCa);
-                }
-            }
-        }
-        // queue is empty now
-        return sumDistances;
     }
 }

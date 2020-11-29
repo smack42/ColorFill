@@ -28,7 +28,6 @@ import java.util.List;
 import colorfill.model.Board;
 import colorfill.solver.AStarFlolleStrategy;
 import colorfill.solver.AStarPuchertStrategy;
-import colorfill.solver.AStarTigrouStrategy;
 import colorfill.solver.AbstractSolver;
 import colorfill.solver.DfsDeepStrategy;
 import colorfill.solver.DfsDeeperStrategy;
@@ -43,7 +42,7 @@ public class Starter {
     
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill";
-        final String version  = "1.3.0 (2020-08-29)";
+        final String version  = "1.4.0 __DEV__ (2020-11-29)";
         final String author   = "Copyright (C) 2020 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
@@ -182,7 +181,6 @@ public class Starter {
             DfsGreedyNextStrategy.class,
             DfsDeepStrategy.class,
             DfsDeeperStrategy.class,
-            AStarTigrouStrategy.class,
             AStarFlolleStrategy.class,
             AStarPuchertStrategy.class,
             //DfsExhaustiveStrategy.class,
@@ -294,7 +292,6 @@ public class Starter {
         final Class<?>[] STRATEGIES = {
             DfsGreedyStrategy.class,
             DfsGreedyNextStrategy.class,
-            AStarTigrouStrategy.class,
             DfsExhaustiveStrategy.class  // DfsExhaustiveStrategy must be last one!
         };
         DfsExhaustiveStrategy.setCodeGolf26232();

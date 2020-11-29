@@ -36,7 +36,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import colorfill.solver.AStarFlolleStrategy;
 import colorfill.solver.AStarPuchertStrategy;
-import colorfill.solver.AStarTigrouStrategy;
 import colorfill.solver.AbstractSolver;
 import colorfill.solver.DfsDeepStrategy;
 import colorfill.solver.DfsDeeperStrategy;
@@ -57,7 +56,6 @@ public class GameState {
         DfsGreedyNextStrategy.class
         ,DfsGreedyStrategy.class
         ,AStarFlolleStrategy.class
-        ,AStarTigrouStrategy.class
         ,DfsDeepStrategy.class
         ,DfsDeeperStrategy.class
         ,AStarPuchertStrategy.class
