@@ -115,6 +115,14 @@ public class GamePreferences {
             new Color(0x1BC4C1),
             new Color(0xFCF8C9),
             new Color(0xD19C2D)
+        },
+        { // Grayscale
+            new Color(0x181818),
+            new Color(0xF0F0F0),
+            new Color(0x909090),
+            new Color(0x585858),
+            new Color(0xC8C8C8),
+            new Color(0x383838)
         }
     };
 

@@ -147,19 +147,13 @@ public class BoardPanel extends JPanel {
         final int ch4 = cellHeight / 4;
         final int cwHighlight = cellWidth - cw4 - cw4;
         final int chHighlight = cellHeight - ch4 - ch4;
-        final Color highlight;
-        if (HighlightColorEnum.BLACK == this.highlightColor) {
-            highlight = Color.BLACK;
-        } else {  // if (HighlightColorEnum.WHITE == this.highlightColor)
-            highlight = Color.WHITE;
-        }
         if (g instanceof Graphics2D) ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
         for (int index = 0, y = 0, row = 0;  row < this.rows;  y += cellHeight, ++row) {
             for (int x = 0, column = 0;  column < this.columns;  x += cellWidth, ++column, ++index) {
                 final int color = this.cellColors[index];
                 g.setColor(this.uiColors[color]);
                 g.fillRect(x, y, cellWidth, cellHeight);
-                g.setColor(highlight);
+                g.setColor(this.highlightColor.color);
                 if (index == this.startPos) {
                     g.fillRect(x + cellWidth * 3/8, y + cellHeight * 3/8, cw4, ch4);
                 }

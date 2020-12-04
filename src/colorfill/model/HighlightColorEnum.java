@@ -17,17 +17,22 @@
 
 package colorfill.model;
 
+import java.awt.Color;
+
 public enum HighlightColorEnum {
 
-    WHITE (0, "pref.highlightColor.white.txt"),
-    BLACK (1, "pref.highlightColor.black.txt");
+    WHITE (0, "pref.highlightColor.white.txt", Color.WHITE),
+    BLACK (1, "pref.highlightColor.black.txt", Color.BLACK),
+    BLUE  (2, "pref.highlightColor.blue.txt",  new Color(0x4B6EAF));
 
     public final int intValue;
     public final String l10nKey;
+    public final Color color;
 
-    private HighlightColorEnum(final int intValue, final String l10nKey) {
+    private HighlightColorEnum(final int intValue, final String l10nKey, final Color color) {
         this.intValue = intValue;
         this.l10nKey = l10nKey; //L10N = Localization
+        this.color = color;
     }
 
     /**
