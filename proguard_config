@@ -1,14 +1,14 @@
 -injars bin
--injars lib/designgridlayout-1.11.jar(**.class)
--injars lib/flatlaf-0.42.jar(com/formdev/flatlaf/**)
 # specify this on the command line: -outjars colorfill.jar
 
 -libraryjars <java.home>/lib/rt.jar
+-libraryjars ./lib/designgridlayout-1.11.jar
+-libraryjars ./lib/flatlaf-0.42.jar
 
 -target 1.8
 
--dontoptimize
-#-optimizationpasses 9
+#-dontoptimize
+-optimizationpasses 9
 
 -allowaccessmodification
 
@@ -25,12 +25,6 @@
 # methods.
 -keepclasseswithmembers public class colorfill.ui.Starter {
     public static void main(java.lang.String[]);
-}
-
-# Keep - Libraries. Keep all public and protected classes, fields, and methods.
--keep public class com.formdev.flatlaf.** {
-    public protected <fields>;
-    public protected <methods>;
 }
 
 # Also keep - Enumerations. Keep the special static methods that are required in
