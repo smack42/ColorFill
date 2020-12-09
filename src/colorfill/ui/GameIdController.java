@@ -42,10 +42,6 @@ public class GameIdController {
         this.dialog.showDialog();
     }
 
-    protected void updateComponentTreeUI() {
-        SwingUtilities.updateComponentTreeUI(this.dialog);
-    }
-
     protected String getCurrentGameId() {
         return this.gameState.getGameId();
     }

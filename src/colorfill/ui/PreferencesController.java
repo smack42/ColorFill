@@ -45,10 +45,6 @@ public class PreferencesController {
         this.prefDialog.showDialog();
     }
 
-    protected void updateComponentTreeUI() {
-        SwingUtilities.updateComponentTreeUI(this.prefDialog);
-    }
-
     /**
      * called by PreferencesDialog when user pressed the "OK" button.
      */

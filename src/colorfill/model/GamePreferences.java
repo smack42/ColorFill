@@ -52,7 +52,7 @@ public class GamePreferences {
     public static final int DEFAULT_BOARD_NUM_COLORS = 6;
     public static final StartPositionEnum DEFAULT_BOARD_STARTPOS = StartPositionEnum.TOP_LEFT;
     public static final GridLinesEnum DEFAULT_UI_GRIDLINES = GridLinesEnum.NONE;
-    public static final String DEFAULT_UI_LAFNAME = "Nimbus";
+    public static final String DEFAULT_UI_LAFNAME = "FlatLaf Light";
     public static final BoardColorNumbersEnum DEFAULT_UI_BOARD_COLOR_NUMBERS = BoardColorNumbersEnum.NONE;
     public static final HighlightColorEnum DEFAULT_UI_HIGHLIGHT_COLOR = HighlightColorEnum.WHITE;
     public static final int DEFAULT_UI_CELLSIZE = 36;

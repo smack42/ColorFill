@@ -28,6 +28,7 @@ import javax.swing.UIManager.LookAndFeelInfo;
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 
 import colorfill.model.BoardColorNumbersEnum;
@@ -64,14 +65,10 @@ public class MainController {
 
     private void createAndShowGUI(final String progname, final String version, final String author) {
         // FlatLaf - Flat Look and Feel https://www.formdev.com/flatlaf/
-        FlatLightLaf.install();
-        UIManager.installLookAndFeel(new FlatLightLaf().getName(),    FlatLightLaf.class.getCanonicalName());
-        FlatDarkLaf.install();
-        UIManager.installLookAndFeel(new FlatDarkLaf().getName(),     FlatDarkLaf.class.getCanonicalName());
-        FlatIntelliJLaf.install();
-        UIManager.installLookAndFeel(new FlatIntelliJLaf().getName(), FlatIntelliJLaf.class.getCanonicalName());
-        FlatDarculaLaf.install();
-        UIManager.installLookAndFeel(new FlatDarculaLaf().getName(),  FlatDarculaLaf.class.getCanonicalName());
+        FlatLightLaf.installLafInfo();
+        FlatDarkLaf.installLafInfo();
+        FlatIntelliJLaf.installLafInfo();
+        FlatDarculaLaf.installLafInfo();
 
         this.gameState = new GameState();
         this.gameState.addPropertyChangeListener(new GameStatePropertyChangeListener());
@@ -92,10 +89,8 @@ public class MainController {
                 for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                     if (lafName.contentEquals(info.getName())) {
                         UIManager.setLookAndFeel(info.getClassName());
-                        SwingUtilities.updateComponentTreeUI(this.mainView);
+                        FlatLaf.updateUI();
                         this.mainView.update();
-                        this.preferencesController.updateComponentTreeUI();
-                        this.gameidController.updateComponentTreeUI();
                         break;
                     }
                 }
