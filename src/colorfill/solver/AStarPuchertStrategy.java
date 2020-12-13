@@ -28,14 +28,12 @@ import colorfill.model.ColorAreaSet;
  */
 public class AStarPuchertStrategy implements AStarStrategy {
 
-    protected final Board board;
     protected final long[] casVisited, casCurrent, casNext;
     protected final long[][] casByColorBits;
     protected final long[][] idsNeighborColorAreaSets;
     protected final ColorAreaSet.Iterator iter;
 
     public AStarPuchertStrategy(final Board board) {
-        this.board = board;
         this.casVisited = ColorAreaSet.constructor(board);
         this.casCurrent = ColorAreaSet.constructor(board);
         this.casNext = ColorAreaSet.constructor(board);

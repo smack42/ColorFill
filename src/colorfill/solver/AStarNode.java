@@ -77,14 +77,6 @@ public class AStarNode {
     }
 
     /**
-     * is this a final node?
-     * @return
-     */
-    public boolean isSolved() {
-        return ColorAreaSet.isEmpty(this.neighbors);
-    }
-
-    /**
      * get the solution stored in this node.
      * @return
      */
@@ -181,21 +173,6 @@ public class AStarNode {
     public void addSolutionEntry(final byte nextColor, final SolutionTree solutionTree) {
         --this.packedData; // increment solutionSize  TODO check overflow
         this.solutionEntry = solutionTree.add(this.solutionEntry, nextColor);
-    }
-
-    /**
-     * create a "simple" comparator for use in PriorityQueue
-     * @return
-     */
-    public static Comparator<AStarNode> simpleComparator() {
-        return new Comparator<AStarNode>() {
-            @Override
-            public int compare(AStarNode o1, AStarNode o2) {
-                final int diff = (o1.packedData & DATA_MASK_ESTIMATED_COST)
-                               - (o2.packedData & DATA_MASK_ESTIMATED_COST);
-                return diff;
-            }
-        };
     }
 
     /**

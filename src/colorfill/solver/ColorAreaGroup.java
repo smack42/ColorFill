@@ -273,14 +273,4 @@ public class ColorAreaGroup {
     public long[] getColor(final byte color) {
         return this.theArray[color];
     }
-
-    /**
-     * remove the areas of this color.
-     * @param color
-     */
-    public void clearColor(final byte color) {
-        ColorAreaSet.clear(this.theArray[color]);
-        final int mask = ~(1 << color);
-        this.colorsNotEmptyBits &= mask;
-    }
 }

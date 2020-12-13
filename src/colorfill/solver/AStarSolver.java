@@ -36,7 +36,6 @@ public class AStarSolver extends AbstractSolver {
     private Class<? extends AStarStrategy> strategyClass = AStarPuchertStrategy.class; // default
     private AStarStrategy strategy;
     private final SolutionTree solutionTree = new SolutionTree();
-    private final ColorAreaSet.Iterator iter;
     private final ColorAreaSet.IteratorAnd iterAnd;
     private final long[][] casByColorBits;
 
@@ -46,7 +45,6 @@ public class AStarSolver extends AbstractSolver {
      */
     protected AStarSolver(Board board) {
         super(board);
-        this.iter = new ColorAreaSet.Iterator();
         this.iterAnd = new ColorAreaSet.IteratorAnd();
         this.casByColorBits = board.getCasByColorBitsArray();
     }
@@ -182,67 +180,34 @@ public class AStarSolver extends AbstractSolver {
 
 
     /**
-     * get the list of neighbor colors.
-     * NOTE: uses this.iter
-     * @return
-     */
-    protected int getColors(final long[] caSet) {
-        int result = 0;
-        this.iter.init(caSet);
-        for (int nextId;  (nextId = this.iter.nextOrNegative()) >= 0;  ) {
-            result |= 1 << this.board.getColor4Id(nextId);
-        }
-        return result;
-    }
-
-
-    /**
-     * extract the ColorAreas of the specified color.
-     * NOTE: uses this.iterAnd
-     * @return ColorAreaSet.IteratorAnd
-     */
-    protected ColorAreaSet.IteratorAnd getColorAreas(final long[] caSet, final byte color) {
-        this.iterAnd.init(caSet, this.casByColorBits[1 << color]);
-        return this.iterAnd;
-    }
-
-
-    /**
      * check if this color can be played. (avoid duplicate moves)
      * the idea is taken from the program "floodit" by Aaron and Simon Puchert,
      * which can be found at <a>https://github.com/aaronpuchert/floodit</a>
-     * NOTE: uses this.iter
      */
     private boolean canPlay(final int nextColorBit, final ColorAreaSet.IteratorAnd nextColorNeighbors, final AStarNode currentNode) {
         final byte currColor = (byte)(currentNode.getSolutionEntry() & SolutionTree.COLOR_BIT_MASK);
         final long[] flooded = currentNode.getFlooded();
         // did the previous move add any new "nextColor" neighbors?
-        boolean newNext = false;
 next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
             for (final ColorArea prevNeighbor : this.board.getColorArea4Id(nextColorNeighbor).getNeighborsArray()) {
                 if ((prevNeighbor.getColor() != currColor) && ColorAreaSet.contains(flooded, prevNeighbor)) {
                     continue next;
                 }
             }
-            newNext = true;
-            break next;
+            return true;
         }
-        if (!newNext) {
-            if (nextColorBit < (1 << currColor)) {
-                return false;
-            } else {
-                nextColorNeighbors.restart();
-                // should nextColor have been played before currColor?
-                for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
-                    for (final ColorArea prevNeighbor : this.board.getColorArea4Id(nextColorNeighbor).getNeighborsArray()) {
-                        if ((prevNeighbor.getColor() == currColor) && !ColorAreaSet.contains(flooded, prevNeighbor)) {
-                            return false;
-                        }
+        if (nextColorBit < (1 << currColor)) {
+            return false;
+        } else {
+            nextColorNeighbors.restart();
+            // should nextColor have been played before currColor?
+            for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
+                for (final ColorArea prevNeighbor : this.board.getColorArea4Id(nextColorNeighbor).getNeighborsArray()) {
+                    if ((prevNeighbor.getColor() == currColor) && !ColorAreaSet.contains(flooded, prevNeighbor)) {
+                        return false;
                     }
                 }
-                return true;
             }
-        } else {
             return true;
         }
     }

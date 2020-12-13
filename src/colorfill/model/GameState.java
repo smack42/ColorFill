@@ -343,9 +343,6 @@ public class GameState {
     public void addPropertyChangeListener(final PropertyChangeListener listener) {
         this.propertyChangeSupport.addPropertyChangeListener(listener);
     }
-    public void removePropertyChangeListener(final PropertyChangeListener listener) {
-        this.propertyChangeSupport.removePropertyChangeListener(listener);
-    }
     private void firePropertyChange(final String propertyName, final Object oldValue, final Object newValue) {
         this.propertyChangeSupport.firePropertyChange(propertyName, oldValue, newValue);
     }

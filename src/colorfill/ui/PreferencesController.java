@@ -19,8 +19,6 @@ package colorfill.ui;
 
 import java.awt.Color;
 
-import javax.swing.SwingUtilities;
-
 import colorfill.model.BoardColorNumbersEnum;
 import colorfill.model.GamePreferences;
 import colorfill.model.GameState;

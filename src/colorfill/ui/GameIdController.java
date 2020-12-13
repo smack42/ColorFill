@@ -19,8 +19,6 @@ package colorfill.ui;
 
 import java.util.ResourceBundle;
 
-import javax.swing.SwingUtilities;
-
 import colorfill.model.GameState;
 import colorfill.model.StartPositionEnum;
 
