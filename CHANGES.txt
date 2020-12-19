@@ -2,6 +2,19 @@ ColorFill  CHANGES
 
 
 
+1.3.1 (2020-12-19)
+- added GUI Look&Feel configuration to settings dialog
+- added FlatLaf - Flat Look and Feel (with 2 light and 2 dark themes)
+  * https://www.formdev.com/flatlaf
+  * https://github.com/JFormDesigner/FlatLaf
+  * Copyright 2019 FormDev Software GmbH
+  * FlatLaf is open source licensed under the Apache License 2.0
+- added color scheme: Grayscale
+- added highlight color: Blue
+- small speedup of AStarPuchertStrategy and AStarFlolleStrategy
+
+
+
 1.3.0 (2020-08-29)
 - Java 8 or higher is required
 - added checkboxes to switch on/off each solver strategy (persistent setting)

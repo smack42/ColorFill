@@ -1,6 +1,6 @@
 ColorFill - yet another Flood-It clone (game and solver algorithm)
 
-Version   1.3.0 (2020-08-29)
+Version   1.3.1 (2020-12-19)
 Homepage  https://github.com/smack42/ColorFill/wiki
 
 
@@ -57,6 +57,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 
 
 This program uses:
