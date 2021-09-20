@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2020 Michael Henke
+    Copyright (C) 2014, 2020, 2021 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -100,15 +100,6 @@ public class AStarSolver extends AbstractSolver {
 
         final ColorArea startCa = this.board.getColorArea4Cell(startPos);
 
-        if (this.strategy instanceof AStarPuchertStrategy) {
-            this.executeInternalPuchert(startCa);
-        } else if (this.strategy instanceof AStarFlolleStrategy) {
-            this.executeInternalPuchert(startCa);
-        }
-    }
-
-
-    private void executeInternalPuchert(final ColorArea startCa) throws InterruptedException {
         final Queue<AStarNode> open = new PriorityQueue<AStarNode>(AStarNode.strongerComparator());
         final HashMapLongArray2Byte map = new HashMapLongArray2Byte(this.board);
         open.offer(new AStarNode(this.board, startCa, this.solutionTree));
@@ -147,7 +138,7 @@ public class AStarSolver extends AbstractSolver {
                             assert printQueueStatistics(open);
                             return;
                         } else {
-                            this.strategy.setEstimatedCost(nextNode, nonCompletedColors);
+                            nextNode.setEstimatedCost(nextSolutionSize + this.strategy.estimateCost(nextNode, nonCompletedColors));
                             open.offer(nextNode);
                             nonCompletedColors |= colorBit;
                             recycleNode = null;
@@ -310,7 +301,7 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
          * constructor
          */
         public HashMapLongArray2Byte(final Board board) {
-            this.KEY_SIZE = (board.getSizeColorAreas8() + 7) >> 3;
+            this.KEY_SIZE = board.getSizeColorAreas64();
             final int initialTableSize = 1 << 16; // must be a power of two! CONFIGURE THIS
             this.tableKeys = new long[initialTableSize * this.KEY_SIZE];
             this.tableValues = new byte[initialTableSize];

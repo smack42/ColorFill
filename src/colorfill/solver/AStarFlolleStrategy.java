@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2020 Michael Henke
+    Copyright (C) 2020, 2021 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,11 +40,8 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
         this.idsMemberSize = board.getMemberSize4IdArray();
     }
 
-    /* (non-Javadoc)
-     * @see colorfill.solver.AStarStrategy#setEstimatedCost(colorfill.solver.AStarNode)
-     */
     @Override
-    public void setEstimatedCost(final AStarNode node, int nonCompletedColors) {
+    public int estimateCost(final AStarNode node, int nonCompletedColors) {
         // this method is basically copy&paste of method AStarPuchertStrategy.setEstimatedCost(AStarNode)
         // with important changes in the code block following the comment "Nothing found, do the color-blind pseudo-move"
 
@@ -57,8 +54,7 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
         // already more than <caLimit> of the color areas are flooded, so call the admissible strategy.
         // note: we're counting color areas here, unlike Flolle's "terminal-flood" which counted the individual fields (slower)
         if (node.getFloodedSize() > this.caLimit) {
-            super.setEstimatedCost(node, nonCompletedColors); // AStarPuchertStrategy
-            return;
+            return super.estimateCost(node, nonCompletedColors); // AStarPuchertStrategy
         }
 
         long[] next = this.casNext;
@@ -77,16 +73,16 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
                 colors ^= colorBit;
                 if (ColorAreaSet.containsAll(visited, this.casByColorBits[colorBit])) {
                     completedColors |= colorBit;
-                    nonCompletedColors ^= colorBit;
                 }
             }
             if (0 != completedColors) {
+                nonCompletedColors ^= completedColors;
                 // We can eliminate colors. Do just that.
                 // We also combine all these elimination moves.
                 distance += Integer.bitCount(completedColors);
                 if (0 == (nonCompletedColors & (nonCompletedColors - 1))) { // one or zero colors remaining
                     distance += (-nonCompletedColors >>> 31); // nonCompletedColors is never negative // (0 == nonCompletedColors ? 0 : 1)
-                    break; // done
+                    return distance; // done
                 } else {
                     ColorAreaSet.clear(next);
                     // completed colors
@@ -148,6 +144,5 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
             current = next;
             next = t;
         }
-        node.setEstimatedCost(node.getSolutionSize() + distance);
     }
 }

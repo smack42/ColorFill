@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2015 Michael Henke
+    Copyright (C) 2015, 2021 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -59,8 +59,7 @@ public class DfsExhaustiveStrategy implements DfsStrategy {
     private int previousNumSteps = Integer.MAX_VALUE;
 
     public DfsExhaustiveStrategy(final Board board) {
-        final int stateSizeBytes = board.getSizeColorAreas8();
-        this.stateSize = ((stateSizeBytes + 7) >> 3) << 1;
+        this.stateSize = board.getSizeColorAreas64() << 1;
         this.f = HASH_LOAD_FACTOR;
         this.constructorInt2ByteOpenCustomHashMapPutIfLess(HASH_EXPECTED);
     }

@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015 Michael Henke
+    Copyright (C) 2014, 2015, 2021 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ public final class ColorAreaSet {
      * the constructor
      */
     public static long[] constructor(final Board board) {
-        return new long[(board.getSizeColorAreas8() + 7) >> 3];
+        return new long[board.getSizeColorAreas64()];
     }
 
     /**

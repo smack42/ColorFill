@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015 Michael Henke
+    Copyright (C) 2014, 2015, 2021 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -23,8 +23,7 @@ package colorfill.solver;
 public interface AStarStrategy extends Strategy {
 
     /**
-     * update the given node with its cost, which is estimated by this strategy.
-     * @param node
+     * compute the cost estimation using a heuristic
      */
-    public void setEstimatedCost(final AStarNode node, int nonCompletedColors);
+    public int estimateCost(final AStarNode node, int nonCompletedColors);
 }

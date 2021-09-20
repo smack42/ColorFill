@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2017, 2020 Michael Henke
+    Copyright (C) 2017, 2020, 2021 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -42,11 +42,8 @@ public class AStarPuchertStrategy implements AStarStrategy {
         this.iter = new ColorAreaSet.Iterator();
     }
 
-    /* (non-Javadoc)
-     * @see colorfill.solver.AStarStrategy#setEstimatedCost(colorfill.solver.AStarNode)
-     */
     @Override
-    public void setEstimatedCost(final AStarNode node, int nonCompletedColors) {
+    public int estimateCost(final AStarNode node, int nonCompletedColors) {
 
         // quote from floodit.cpp: int State::computeValuation()
         // (in branch "performance")
@@ -62,7 +59,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
         long[] next = this.casNext;
         long[] current = this.casCurrent;
         node.copyNeighborsTo(current);
-        long[] visited = this.casVisited;
+        final long[] visited = this.casVisited;
         node.copyFloodedTo(visited);
 
         while (true) {
@@ -73,16 +70,16 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 colors ^= colorBit;
                 if (ColorAreaSet.containsAll(visited, this.casByColorBits[colorBit])) {
                     completedColors |= colorBit;
-                    nonCompletedColors ^= colorBit;
                 }
             }
             if (0 != completedColors) {
+                nonCompletedColors ^= completedColors;
                 // We can eliminate colors. Do just that.
                 // We also combine all these elimination moves.
                 distance += Integer.bitCount(completedColors);
                 if (0 == (nonCompletedColors & (nonCompletedColors - 1))) { // one or zero colors remaining
                     distance += (-nonCompletedColors >>> 31); // nonCompletedColors is never negative // (0 == nonCompletedColors ? 0 : 1)
-                    break; // done
+                    return distance; // done
                 } else {
                     ColorAreaSet.clear(next);
                     // completed colors
@@ -108,6 +105,5 @@ public class AStarPuchertStrategy implements AStarStrategy {
             current = next;
             next = t;
         }
-        node.setEstimatedCost(node.getSolutionSize() + distance);
     }
 }

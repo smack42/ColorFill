@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2020 Michael Henke
+    Copyright (C) 2014, 2020, 2021 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,21 +36,18 @@ public class AStarNode {
     /**
      * one 32bit-int data field that stores the values of two separate fields:
      * <p>
-     * byte estimatedCost = estimated total number of steps to end of search = solutionSize + estimation by the heuristic algorithm<br>
-     * byte solutionSize  = number of steps done, from start of search to the current (intermediate) state
+     * short estimatedCost = estimated total number of steps to end of search = solutionSize + estimation by the heuristic algorithm<br>
+     * short solutionSize  = number of steps done, from start of search to the current (intermediate) state
      * <p>
      * the fields estimatedCost and solutionSize are stored in a particular way,
      * to facilitate the operation of "strongerComparator" in a single step, for increased performance.
-     * field solutionSize is therefore located in the lower byte of the packed field
-     * and its value is stored in ones' complement format (0=0xff, 1=0xfe, 2=0xfd, ...)
-     * <p>
-     * TODO find something useful to store in the upper 16 bits, which are currently not used
+     * field solutionSize is therefore located in the lower half of the packed field
+     * and its value is stored in ones' complement format (0=0xffff, 1=0xfffe, 2=0xfffd, ...)
      */
     private int packedData;
-    private static final int DATA_MASK_ESTIMATED_COST   = 0x0000ff00;
-    private static final int DATA_SHIFT_ESTIMATED_COST  = 8;
-    private static final int DATA_MASK_SOLUTION_SIZE    = 0x000000ff;
-    private static final int DATA_MASK_ESTIMATED_COST_SOLUTION_SIZE = DATA_MASK_ESTIMATED_COST | DATA_MASK_SOLUTION_SIZE;
+    private static final int DATA_MASK_ESTIMATED_COST   = 0xffff0000;
+    private static final int DATA_SHIFT_ESTIMATED_COST  = 16;
+    private static final int DATA_MASK_SOLUTION_SIZE    = 0x0000ffff;
 
     /**
      * initial constructor.
@@ -62,7 +59,7 @@ public class AStarNode {
         this.neighbors = ColorAreaSet.constructor(board);
         ColorAreaSet.addAll(this.neighbors, startCa.getNeighborsColorAreaSet());
         this.solutionEntry = solutionTree.init(startCa.getColor());
-        this.packedData = DATA_MASK_SOLUTION_SIZE; // estimatedCost=0, solutionSize=0xff=~zero
+        this.packedData = DATA_MASK_SOLUTION_SIZE; // estimatedCost=0, solutionSize=0xffff=~zero
     }
 
     /**
@@ -161,7 +158,7 @@ public class AStarNode {
             result.solutionEntry = this.solutionEntry;
             result.packedData = this.packedData;
         }
-        // play - compare method play()
+        // play
         for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
             ColorAreaSet.add(result.flooded, nextColorNeighbor);
             ColorAreaSet.addAll(result.neighbors, idsNeighborColorAreaSets[nextColorNeighbor]);
@@ -183,8 +180,7 @@ public class AStarNode {
         return new Comparator<AStarNode>() {
             @Override
             public int compare(AStarNode o1, AStarNode o2) {
-                final int diff = (o1.packedData & DATA_MASK_ESTIMATED_COST_SOLUTION_SIZE)
-                               - (o2.packedData & DATA_MASK_ESTIMATED_COST_SOLUTION_SIZE);
+                final int diff = o1.packedData - o2.packedData;
                 return diff;
             }
         };
@@ -204,6 +200,6 @@ public class AStarNode {
         return ((data & DATA_MASK_ESTIMATED_COST) >>> DATA_SHIFT_ESTIMATED_COST);
     }
     public int getEstimatedCostSolutionSize() {
-        return (this.packedData & DATA_MASK_ESTIMATED_COST_SOLUTION_SIZE);
+        return this.packedData;
     }
 }

@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015 Michael Henke
+    Copyright (C) 2014, 2015, 2021 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ public class Board {
     private ColorArea[] idsColorAreas;
     private long[][] idsNeighborColorAreaSets;
     private int[] idsMemberSize;
-    private int sizeColorAreas8;
+    private int sizeColorAreas64;
     private final long[][] casByColorBits;
 
     /**
@@ -238,7 +238,7 @@ public class Board {
         int id = 0;
         this.idsColorAreas = new ColorArea[result.size()];
         this.idsMemberSize = new int[result.size()];
-        this.sizeColorAreas8 = (result.size() + 7) >> 3; // how many bytes are needed to store them as bits?
+        this.sizeColorAreas64 = (result.size() + 63) / 64; // how many longs are needed to store them as bits?
         for (int i = 0;  i < this.casByColorBits.length;  ++i) {
             this.casByColorBits[i] = ColorAreaSet.constructor(this);
         }
@@ -475,8 +475,8 @@ public class Board {
         return this.cells.length;
     }
 
-    public int getSizeColorAreas8() {
-        return this.sizeColorAreas8;
+    public int getSizeColorAreas64() {
+        return this.sizeColorAreas64;
     }
 
     public long[][] getCasByColorBitsArray() {
