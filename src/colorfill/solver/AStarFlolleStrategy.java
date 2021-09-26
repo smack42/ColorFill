@@ -60,18 +60,17 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
         long[] next = this.casNext;
         long[] current = this.casCurrent;
         node.copyNeighborsTo(current);
-        long[] visited = this.casVisited;
-        node.copyFloodedTo(visited);
+        node.copyFloodedTo(this.casVisited);
         long[] nextOne = this.casNextOne;
         long[] nextTwo = this.casNextTwo;
 
         while (true) {
-            ColorAreaSet.addAll(visited, current);
+            ColorAreaSet.addAll(this.casVisited, current);
             int completedColors = 0;
             for (int colors = nonCompletedColors;  0 != colors;  ) {
                 final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
                 colors ^= colorBit;
-                if (ColorAreaSet.containsAll(visited, this.casByColorBits[colorBit])) {
+                if (ColorAreaSet.containsAll(this.casVisited, this.casByColorBits[colorBit])) {
                     completedColors |= colorBit;
                 }
             }
@@ -89,7 +88,7 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
                     final long[] colorCas = this.casByColorBits[completedColors];
                     ColorAreaSet.addAllAndLookup(next, current, colorCas, this.idsNeighborColorAreaSets);
                     ColorAreaSet.removeAll(current, colorCas);
-                    ColorAreaSet.removeAll(next, visited);
+                    ColorAreaSet.removeAll(next, this.casVisited);
                     // non-completed colors
                     // move nodes to next layer
                     ColorAreaSet.addAll(next, current);
@@ -105,7 +104,7 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
                     colors ^= colorBit;
                     ColorAreaSet.clear(next);
                     ColorAreaSet.addAllAndLookup(next, current, this.casByColorBits[colorBit], this.idsNeighborColorAreaSets);
-                    ColorAreaSet.removeAll(next, visited);
+                    ColorAreaSet.removeAll(next, this.casVisited);
                     int size = 0;
                     this.iter.init(next);
                     for (int caId;  (caId = this.iter.nextOrNegative()) >= 0;  ) {
@@ -131,11 +130,10 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
                 final long[] t = next;
                 next = nextOne; // always take the best color
                 nextOne = t;
-                ColorAreaSet.removeAll(current, this.casByColorBits[colorBitOne]);
                 if (sizeTwo > 0) { // if available, take the second best color as well 
                     ColorAreaSet.addAll(next, nextTwo);
-                    ColorAreaSet.removeAll(current, this.casByColorBits[colorBitTwo]);
                 }
+                ColorAreaSet.removeAll(current, this.casByColorBits[colorBitOne | colorBitTwo]);
                 ColorAreaSet.addAll(next, current); // move other colors to next
             }
 

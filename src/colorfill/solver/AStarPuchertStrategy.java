@@ -59,16 +59,15 @@ public class AStarPuchertStrategy implements AStarStrategy {
         long[] next = this.casNext;
         long[] current = this.casCurrent;
         node.copyNeighborsTo(current);
-        final long[] visited = this.casVisited;
-        node.copyFloodedTo(visited);
+        node.copyFloodedTo(this.casVisited);
 
         while (true) {
-            ColorAreaSet.addAll(visited, current);
+            ColorAreaSet.addAll(this.casVisited, current);
             int completedColors = 0;
             for (int colors = nonCompletedColors;  0 != colors;  ) {
                 final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
                 colors ^= colorBit;
-                if (ColorAreaSet.containsAll(visited, this.casByColorBits[colorBit])) {
+                if (ColorAreaSet.containsAll(this.casVisited, this.casByColorBits[colorBit])) {
                     completedColors |= colorBit;
                 }
             }
@@ -86,7 +85,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                     final long[] colorCas = this.casByColorBits[completedColors];
                     ColorAreaSet.addAllAndLookup(next, current, colorCas, this.idsNeighborColorAreaSets);
                     ColorAreaSet.removeAll(current, colorCas);
-                    ColorAreaSet.removeAll(next, visited);
+                    ColorAreaSet.removeAll(next, this.casVisited);
                     // non-completed colors
                     // move nodes to next layer
                     ColorAreaSet.addAll(next, current);
@@ -97,7 +96,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 // Expand current layer of nodes.
                 ++distance;
                 ColorAreaSet.addAllLookup(next, current, this.idsNeighborColorAreaSets);
-                ColorAreaSet.removeAll(next, visited);
+                ColorAreaSet.removeAll(next, this.casVisited);
             }
 
             // Move the next layer into the current.
