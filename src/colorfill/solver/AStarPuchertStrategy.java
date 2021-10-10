@@ -19,6 +19,7 @@ package colorfill.solver;
 
 import colorfill.model.Board;
 import colorfill.model.ColorAreaSet;
+import colorfill.solver.AStarSolver.StateStorage;
 
 /**
  * a specific strategy for the AStar (A*) solver.
@@ -31,15 +32,15 @@ public class AStarPuchertStrategy implements AStarStrategy {
     protected final long[] casVisited, casCurrent, casNext;
     protected final long[][] casByColorBits;
     protected final long[][] idsNeighborColorAreaSets;
-    protected final ColorAreaSet.Iterator iter;
+    protected final StateStorage storage;
 
-    public AStarPuchertStrategy(final Board board) {
+    public AStarPuchertStrategy(final Board board, final StateStorage storage) {
         this.casVisited = ColorAreaSet.constructor(board);
         this.casCurrent = ColorAreaSet.constructor(board);
         this.casNext = ColorAreaSet.constructor(board);
         this.casByColorBits = board.getCasByColorBitsArray();
         this.idsNeighborColorAreaSets = board.getNeighborColorAreaSet4IdArray();
-        this.iter = new ColorAreaSet.Iterator();
+        this.storage = storage;
     }
 
     @Override
@@ -58,8 +59,8 @@ public class AStarPuchertStrategy implements AStarStrategy {
         int distance = 0;
         long[] next = this.casNext;
         long[] current = this.casCurrent;
-        node.copyNeighborsTo(current);
-        node.copyFloodedTo(this.casVisited);
+        this.storage.get(node.getNeighbors(), current);
+        this.storage.get(node.getFlooded(), this.casVisited);
 
         while (true) {
             ColorAreaSet.addAll(this.casVisited, current);

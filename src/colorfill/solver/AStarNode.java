@@ -23,15 +23,16 @@ import colorfill.model.Board;
 import colorfill.model.ColorArea;
 import colorfill.model.ColorAreaSet;
 import colorfill.solver.AStarSolver.SolutionTree;
+import colorfill.solver.AStarSolver.StateStorage;
 
 /**
  * the node used by the AStar (A*) solver.
  */
 public class AStarNode {
 
-    private final long[] flooded;
-    private final long[] neighbors;
-    private int solutionEntry;
+    private int flooded;        // entry in StateStorage
+    private int neighbors;      // entry in StateStorage
+    private int solutionEntry;  // entry in SolutionTree
 
     /**
      * one 32bit-int data field that stores the values of two separate fields:
@@ -51,26 +52,34 @@ public class AStarNode {
 
     /**
      * initial constructor.
-     * @param startCa
      */
-    public AStarNode(final Board board, final ColorArea startCa, final SolutionTree solutionTree) {
-        this.flooded = ColorAreaSet.constructor(board);
-        ColorAreaSet.add(this.flooded, startCa);
-        this.neighbors = ColorAreaSet.constructor(board);
-        ColorAreaSet.addAll(this.neighbors, startCa.getNeighborsColorAreaSet());
+    public AStarNode(final Board board, final ColorArea startCa, final StateStorage storage, final SolutionTree solutionTree) {
+        final long[] casFlooded = ColorAreaSet.constructor(board);
+        ColorAreaSet.add(casFlooded, startCa);
+        this.flooded = storage.put(casFlooded);
+        final long[] casNeighbors = ColorAreaSet.constructor(board);
+        ColorAreaSet.addAll(casNeighbors, startCa.getNeighborsColorAreaSet());
+        this.neighbors = storage.put(casNeighbors);
         this.solutionEntry = solutionTree.init(startCa.getColor());
         this.packedData = DATA_MASK_SOLUTION_SIZE; // estimatedCost=0, solutionSize=0xffff=~zero
     }
 
     /**
-     * copy constructor.
-     * @param other
+     * empty constructor.
      */
-    public AStarNode(final AStarNode other) {
-        this.flooded = ColorAreaSet.constructor(other.flooded);
-        this.neighbors = ColorAreaSet.constructor(other.neighbors);
-        this.solutionEntry = other.solutionEntry;
-        this.packedData = other.packedData;
+    private AStarNode() {
+        // nothing
+    }
+
+    /**
+     * recycle the specified AStarNode object or create a new one if it's null.
+     */
+    public AStarNode recycleOrNew(final AStarNode recycle) {
+        final AStarNode result = (recycle != null ? recycle : new AStarNode());
+        // flooded and neighbors are not copied here
+        result.solutionEntry = this.solutionEntry;
+        result.packedData = this.packedData;
+        return result;
     }
 
     /**
@@ -82,89 +91,11 @@ public class AStarNode {
     }
 
     /**
-     * get the number of steps in the solution of this node.
-     * @return
-     */
-    public int getSolutionSize() {
-        return (DATA_MASK_SOLUTION_SIZE & ~this.packedData); // ~ NOT operator is NEGATE in ones' complement
-    }
-    public static int getSolutionSize(final int data) {
-        return (DATA_MASK_SOLUTION_SIZE & ~data); // ~ NOT operator is NEGATE in ones' complement
-    }
-
-    /**
      * get the current solutionEntry stored in this node. (pointer in SolutionTree)
      * @return
      */
     public int getSolutionEntry() {
         return this.solutionEntry;
-    }
-
-    /**
-     * get the set of neighbors.
-     * @return
-     */
-    public long[] getNeighbors() {
-        return this.neighbors;
-    }
-
-    /**
-     * get the set of flooded color areas.
-     * @return
-     */
-    public long[] getFlooded() {
-        return this.flooded;
-    }
-
-    /**
-     * get the number of flooded color areas.
-     */
-    public int getFloodedSize() {
-        return ColorAreaSet.size(this.flooded);
-    }
-
-    /**
-     * copy contents of "flooded" set to this one.
-     * @param other
-     */
-    public void copyFloodedTo(final long[] other) {
-        ColorAreaSet.copyFrom(other, this.flooded);
-    }
-
-    /**
-     * copy contents of "neighbors" set to this one.
-     * @param other
-     */
-    public void copyNeighborsTo(final long[] other) {
-        ColorAreaSet.copyFrom(other, this.neighbors);
-    }
-
-    /**
-     * try to re-use the given node or create a new one
-     * and then play the given color in the result node.
-     * @param nextColor
-     * @param recycleNode
-     * @return
-     */
-    public AStarNode copyAndPlay(final AStarNode recycleNode, final ColorAreaSet.IteratorAnd nextColorNeighbors, final long[][] idsNeighborColorAreaSets) {
-        final AStarNode result;
-        if (null == recycleNode) {
-            result = new AStarNode(this);
-        } else {
-            // copy - compare copy constructor
-            result = recycleNode;
-            ColorAreaSet.copyFrom(result.flooded, this.flooded);
-            ColorAreaSet.copyFrom(result.neighbors, this.neighbors);
-            result.solutionEntry = this.solutionEntry;
-            result.packedData = this.packedData;
-        }
-        // play
-        for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
-            ColorAreaSet.add(result.flooded, nextColorNeighbor);
-            ColorAreaSet.addAll(result.neighbors, idsNeighborColorAreaSets[nextColorNeighbor]);
-        }
-        ColorAreaSet.removeAll(result.neighbors, result.flooded);
-        return result;
     }
 
     public void addSolutionEntry(final byte nextColor, final SolutionTree solutionTree) {
@@ -187,6 +118,17 @@ public class AStarNode {
     }
 
     /**
+     * get the number of steps in the solution of this node.
+     * @return
+     */
+    public int getSolutionSize() {
+        return (DATA_MASK_SOLUTION_SIZE & ~this.packedData); // ~ NOT operator is NEGATE in ones' complement
+    }
+    public static int getSolutionSize(final int data) {
+        return (DATA_MASK_SOLUTION_SIZE & ~data); // ~ NOT operator is NEGATE in ones' complement
+    }
+
+    /**
      * set estimated cost, which is used for natural ordering (in function compareTo)
      * @param estimatedCost
      */
@@ -201,5 +143,19 @@ public class AStarNode {
     }
     public int getEstimatedCostSolutionSize() {
         return this.packedData;
+    }
+
+    public int getFlooded() {
+        return this.flooded;
+    }
+    public void setFlooded(int flooded) {
+        this.flooded = flooded;
+    }
+
+    public int getNeighbors() {
+        return this.neighbors;
+    }
+    public void setNeighbors(int neighbors) {
+        this.neighbors = neighbors;
     }
 }

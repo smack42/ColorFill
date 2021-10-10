@@ -38,6 +38,10 @@ public class AStarSolver extends AbstractSolver {
     private final SolutionTree solutionTree = new SolutionTree();
     private final ColorAreaSet.IteratorAnd iterAnd;
     private final long[][] casByColorBits;
+    private Queue<AStarNode> open;
+    private HashMapLongArray2Byte map;
+    private StateStorage storage;
+    private final long[] casFlooded, casNeighbors, casNextFlooded, casNextNeighbors;
 
     /**
      * construct a new solver for this Board.
@@ -47,6 +51,10 @@ public class AStarSolver extends AbstractSolver {
         super(board);
         this.iterAnd = new ColorAreaSet.IteratorAnd();
         this.casByColorBits = board.getCasByColorBitsArray();
+        this.casFlooded = ColorAreaSet.constructor(board);
+        this.casNeighbors = ColorAreaSet.constructor(board);
+        this.casNextFlooded = ColorAreaSet.constructor(board);
+        this.casNextNeighbors = ColorAreaSet.constructor(board);
     }
 
     /* (non-Javadoc)
@@ -78,12 +86,12 @@ public class AStarSolver extends AbstractSolver {
         return null; // no info available
     }
 
-    private AStarStrategy makeStrategy() {
+    private AStarStrategy makeStrategy(final StateStorage storage) {
         final AStarStrategy result;
         if (AStarPuchertStrategy.class.equals(this.strategyClass)) {
-            result = new AStarPuchertStrategy(this.board);
+            result = new AStarPuchertStrategy(this.board, storage);
         } else if (AStarFlolleStrategy.class.equals(this.strategyClass)) {
-            result = new AStarFlolleStrategy(this.board);
+            result = new AStarFlolleStrategy(this.board, storage);
         } else {
             throw new IllegalArgumentException(
                     "unsupported strategy class " + this.strategyClass.getName());
@@ -95,51 +103,59 @@ public class AStarSolver extends AbstractSolver {
      * @see colorfill.solver.AbstractSolver#executeInternal(int)
      */
     @Override
-    protected void executeInternal(int startPos) throws InterruptedException {
-        this.strategy = this.makeStrategy();
-
-        final ColorArea startCa = this.board.getColorArea4Cell(startPos);
-
-        final Queue<AStarNode> open = new PriorityQueue<AStarNode>(AStarNode.strongerComparator());
-        final HashMapLongArray2Byte map = new HashMapLongArray2Byte(this.board);
-        open.offer(new AStarNode(this.board, startCa, this.solutionTree));
+    protected void executeInternal(final int startPos) throws InterruptedException {
+        this.storage = new StateStorage(this.board);
+        this.strategy = this.makeStrategy(this.storage);
+        this.open = new PriorityQueue<AStarNode>(AStarNode.strongerComparator());
+        this.open.offer(new AStarNode(this.board, this.board.getColorArea4Cell(startPos), this.storage, this.solutionTree));
+        this.map = new HashMapLongArray2Byte(this.board, this.storage);
         AStarNode recycleNode = null;
         final int colorBitLimit = this.casByColorBits.length;
-        final long[][] idsNeighborColorAreaSets = this.board.getNeighborColorAreaSet4IdArray();
-        while (open.size() > 0) {
+        while (this.open.size() > 0) {
             if (Thread.interrupted()) { throw new InterruptedException(); }
-            final AStarNode currentNode = open.poll();
-            final long[] flooded = currentNode.getFlooded();
+            final AStarNode currentNode = this.open.poll();
+            this.storage.get(currentNode.getFlooded(), this.casFlooded);
             int nonCompletedColors = colorBitLimit - 1;
             for (int colorBit = 1;  colorBit < colorBitLimit;  colorBit <<= 1) {
-                if (ColorAreaSet.containsAll(flooded, this.casByColorBits[colorBit])) {
+                if (ColorAreaSet.containsAll(this.casFlooded, this.casByColorBits[colorBit])) {
                     nonCompletedColors ^= colorBit;
                 }
             }
             final int prevColorBit = 1 << (currentNode.getSolutionEntry() & SolutionTree.COLOR_BIT_MASK);
             // play all possible colors
-            final long[] neighbors = currentNode.getNeighbors();
+            this.storage.get(currentNode.getNeighbors(), this.casNeighbors);
             final int nextSolutionSize = currentNode.getSolutionSize() + 1;
             for (int colors = (nonCompletedColors & ~prevColorBit);  0 != colors;  ) {
                 final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
                 colors ^= colorBit;
                 final long[] casColorBit = this.casByColorBits[colorBit];
-                if (ColorAreaSet.intersects(neighbors, casColorBit)
-                        && this.canPlay(colorBit, this.iterAnd.init(neighbors, casColorBit), currentNode)) {
-                    final AStarNode nextNode = currentNode.copyAndPlay(recycleNode, this.iterAnd.restart(), idsNeighborColorAreaSets);
-                    if (map.putIfLess(nextNode.getFlooded(), nextSolutionSize)) {
+                if (ColorAreaSet.intersects(this.casNeighbors, casColorBit)
+                        && this.canPlay(colorBit, this.iterAnd.init(this.casNeighbors, casColorBit), currentNode)) {
+                    // play, part 1
+                    ColorAreaSet.copyFrom(this.casNextFlooded, this.casFlooded);
+                    ColorAreaSet.addAllAnd(this.casNextFlooded, this.casNeighbors, casColorBit);
+                    final int nextFloodedEntry = this.map.putIfLess(this.casNextFlooded, nextSolutionSize);
+                    if (nextFloodedEntry != 0) {
+                        // play, part 2
+                        ColorAreaSet.copyFrom(this.casNextNeighbors, this.casNeighbors);
+                        ColorAreaSet.addAllAndLookup(this.casNextNeighbors, this.casNeighbors, casColorBit, this.board.getNeighborColorAreaSet4IdArray());
+                        ColorAreaSet.removeAll(this.casNextNeighbors, this.casNextFlooded);
+                        final AStarNode nextNode = currentNode.recycleOrNew(recycleNode);
+                        nextNode.setFlooded(nextFloodedEntry);
+                        nextNode.setNeighbors(this.storage.put(this.casNextNeighbors));
                         nextNode.addSolutionEntry((byte)(31 - Integer.numberOfLeadingZeros(colorBit)), this.solutionTree);
-                        if (ColorAreaSet.containsAll(nextNode.getFlooded(), casColorBit) // color completed
+                        // finished?
+                        if (ColorAreaSet.containsAll(this.casNextFlooded, casColorBit) // color completed
                                 && (0 == ((nonCompletedColors ^= colorBit) & (nonCompletedColors - 1)))) { // one or zero colors remaining
                             if (0 != nonCompletedColors) {
                                 nextNode.addSolutionEntry((byte)(31 - Integer.numberOfLeadingZeros(nonCompletedColors)), this.solutionTree);
                             }
                             this.addSolution(nextNode.getSolution(this.solutionTree));
-                            assert printQueueStatistics(open);
+                            assert printQueueStatistics(this.open);
                             return;
                         } else {
                             nextNode.setEstimatedCost(nextSolutionSize + this.strategy.estimateCost(nextNode, nonCompletedColors));
-                            open.offer(nextNode);
+                            this.open.offer(nextNode);
                             nonCompletedColors |= colorBit;
                             recycleNode = null;
                         }
@@ -177,11 +193,10 @@ public class AStarSolver extends AbstractSolver {
      */
     private boolean canPlay(final int nextColorBit, final ColorAreaSet.IteratorAnd nextColorNeighbors, final AStarNode currentNode) {
         final byte currColor = (byte)(currentNode.getSolutionEntry() & SolutionTree.COLOR_BIT_MASK);
-        final long[] flooded = currentNode.getFlooded();
         // did the previous move add any new "nextColor" neighbors?
 next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
             for (final ColorArea prevNeighbor : this.board.getColorArea4Id(nextColorNeighbor).getNeighborsArray()) {
-                if ((prevNeighbor.getColor() != currColor) && ColorAreaSet.contains(flooded, prevNeighbor)) {
+                if ((prevNeighbor.getColor() != currColor) && ColorAreaSet.contains(this.casFlooded, prevNeighbor)) {
                     continue next;
                 }
             }
@@ -194,7 +209,7 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
             // should nextColor have been played before currColor?
             for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
                 for (final ColorArea prevNeighbor : this.board.getColorArea4Id(nextColorNeighbor).getNeighborsArray()) {
-                    if ((prevNeighbor.getColor() == currColor) && !ColorAreaSet.contains(flooded, prevNeighbor)) {
+                    if ((prevNeighbor.getColor() == currColor) && !ColorAreaSet.contains(this.casFlooded, prevNeighbor)) {
                         return false;
                     }
                 }
@@ -296,18 +311,22 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
         private int size;           // current number of data records stored in this map
         private int maxSize;        // maximum number of data records that can be stored before table size must be increased
         private int mask;           // bit mask based on current table size
+        private final StateStorage storage;
+        private final long[][] storageMemoryBlocks;
 
         /**
          * constructor
          */
-        public HashMapLongArray2Byte(final Board board) {
+        public HashMapLongArray2Byte(final Board board, final StateStorage storage) {
             this.KEY_SIZE = board.getSizeColorAreas64();
             final int initialTableSize = 1 << 16; // must be a power of two! CONFIGURE THIS
-            this.tableKeys = new long[initialTableSize * this.KEY_SIZE];
+            this.tableKeys = new long[initialTableSize];
             this.tableValues = new byte[initialTableSize];
             this.size = 0;
             this.maxSize = (int)(this.tableValues.length * this.LOAD_FACTOR);
             this.mask = this.tableValues.length - 1;
+            this.storage = storage;
+            this.storageMemoryBlocks = storage.memoryBlocks;
 //            this.hashLookup = new int[Long.BYTES * this.KEY_SIZE][1 << Byte.SIZE]; // tabulation hashing - split key into bytes
 //            final long seed = Double.doubleToLongBits(Math.PI); // arbitrary, constant seed for random number generator
 //            final java.util.Random random = new java.util.Random(seed); // constant seed = same pseudo-random values in each run
@@ -321,53 +340,51 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
         /**
          * try to put this key-value pair into the map. this will succeed if the key was not present
          * in the map before or if the new value is less than the previously stored value for the key.
-         * @param key must be the internal array of a ColorAreaSet of the Board that was used as the constructor parameter
-         * @param value must be greater than zero and less than 256
-         * @return true if the key-value pair was stored, false if it was stored before with the same or a lower value.
+         * @param newKey must be a ColorAreaSet
+         * @param newValue must be greater than zero and less than 256
+         * @return non-zero if the key-value pair was stored, zero if it was stored before with the same or a lower value.
          */
-        public boolean putIfLess(final long[] newKey, final int newValue) {
-            assert newKey.length == this.KEY_SIZE;
-            assert newValue > 0;
-            final int hash = this.hash(newKey, 0);
-            int indexValues = hash & this.mask;
-            int oldValue;
-            while ((oldValue = this.tableValues[indexValues]) != 0) {
+        public int putIfLess(final long[] newKey, final int newValue) {
+            final int newHash = this.hash(newKey, 0);
+            int index = newHash & this.mask;
+            int oldValue, oldKey = 0;
+            while ((oldValue = this.tableValues[index]) != 0) {
                 // found an existing entry, now check if it's our key
-                boolean matchesKey = true;
-                int indexKeys = indexValues * this.KEY_SIZE;
-                for (final long newKeyElement : newKey) {
-                    if (newKeyElement != this.tableKeys[indexKeys++]) {
-                        matchesKey = false;
-                        break; // for
+                final long kh = this.tableKeys[index];
+                final int oldHash = (int)kh;
+                if (newHash == oldHash) {
+                    oldKey = (int)(kh >>> Integer.SIZE);
+                    final long[] oldKeyArray = this.storageMemoryBlocks[oldKey >>> StateStorage.MEMORY_BLOCK_SHIFT];
+                    final int oldKeyIndex = oldKey & StateStorage.MEMORY_BLOCK_MASK;
+                    boolean matchesKey = true;
+                    for (int i = 0;  (i < this.KEY_SIZE) && matchesKey;  ++i) {
+                        matchesKey = (newKey[i] == oldKeyArray[oldKeyIndex + i]);
+                    }
+                    if (matchesKey) {
+                        break; // while
                     }
                 }
-                if (matchesKey) {
-                    break; // while
-                } else {
-                    indexValues = (indexValues + 1) & this.mask;
-                }
+                index = ++index & this.mask;
             }
             if (0 == oldValue) {
                 // key not present yet
                 // -> add new entry
-                int indexKeys = indexValues * this.KEY_SIZE;
-                for (final long newKeyElement : newKey) {
-                    this.tableKeys[indexKeys++] = newKeyElement;
-                }
-                this.tableValues[indexValues] = (byte)newValue;
+                final int newKeyEntry = this.storage.put(newKey);
+                this.tableKeys[index] = ((long)newKeyEntry << Integer.SIZE) | (0x00000000ffffffffL & newHash);
+                this.tableValues[index] = (byte)newValue;
                 if (++this.size > this.maxSize) {
                     this.increaseSize();
                 }
-                return true;
+                return newKeyEntry;
             } else if (newValue < (oldValue & 0xff)) {
                 // entry present and new value is less than old value
                 // -> update entry
-                this.tableValues[indexValues] = (byte)newValue;
-                return true;
+                this.tableValues[index] = (byte)newValue;
+                return oldKey;
             } else {
                 // entry present and new value is same or greater than old value
                 // -> do nothing
-                return false;
+                return 0;
             }
         }
 
@@ -485,23 +502,74 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
             this.maxSize = (int)(this.tableValues.length * this.LOAD_FACTOR);
             this.mask = this.tableValues.length - 1;
             // add all entries to the new tables
-            int oldIndexKeys = 0;
+            int oldIndex = 0;
             for (final byte value : oldTableValues) {
                 if (value != 0) {
-                    final int hash = this.hash(oldTableKeys, oldIndexKeys);
-                    int newIndexValues = hash & this.mask;
-                    while (this.tableValues[newIndexValues] != 0) {
+                    final long kh = oldTableKeys[oldIndex];
+                    final int hash = (int)kh;
+                    int newIndex = hash & this.mask;
+                    while (this.tableValues[newIndex] != 0) {
                         // there can't be any duplicate keys, so just skip all occupied slots
-                        newIndexValues = (newIndexValues + 1) & this.mask;
+                        newIndex = ++newIndex & this.mask;
                     }
-                    final int newIndexKeys = newIndexValues * this.KEY_SIZE;
-                    for (int i = 0;  i < this.KEY_SIZE;  ++i) {
-                        this.tableKeys[newIndexKeys + i] = oldTableKeys[oldIndexKeys + i];
-                    }
-                    this.tableValues[newIndexValues] = value;
+                    this.tableKeys[newIndex] = kh;
+                    this.tableValues[newIndex] = value;
                 }
-                oldIndexKeys += this.KEY_SIZE;
+                ++oldIndex;
             }
+        }
+    }
+
+    /**
+     * This class implements a compact storage area of the contents of many
+     * ColorAreaSet objects (which are actually just long[] = arrays of long).
+     * Individual entries of this storage are accessed via integer keys.
+     */
+    protected static class StateStorage {
+        public static final int MEMORY_BLOCK_SHIFT = 20; // 20 == 8 MiB
+        public static final int MEMORY_BLOCK_SIZE = 1 << MEMORY_BLOCK_SHIFT; // must be a power of two
+        public static final int MEMORY_BLOCK_MASK = MEMORY_BLOCK_SIZE - 1;
+        public final long[][] memoryBlocks = new long[1 << (Integer.SIZE - MEMORY_BLOCK_SHIFT)][];
+        private int numMemoryBlocks = 1, entry = 0, offset = 0;
+        private final int stateSize, endOffset;
+
+        /** the constructor */
+        public StateStorage(final Board board) {
+            memoryBlocks[0] = new long[MEMORY_BLOCK_SIZE];
+            stateSize = board.getSizeColorAreas64(); // equal to the length of ColorAreaSet objects (arrays of "long")
+            endOffset = MEMORY_BLOCK_SIZE - stateSize;
+        }
+
+        /** copy the contents of the storage entry to the ColorAreaSet. */
+        public void get(int keySrc, long[] casDest) {
+            System.arraycopy(memoryBlocks[keySrc >>> MEMORY_BLOCK_SHIFT], keySrc & MEMORY_BLOCK_MASK, casDest, 0, stateSize);
+        }
+
+        /** copy the contents of the ColorAreaSet to a new storage entry. */
+        public int put(long[] casSrc) {
+            final int keyDest = this.add();
+            System.arraycopy(casSrc, 0, memoryBlocks[keyDest >>> MEMORY_BLOCK_SHIFT], keyDest & MEMORY_BLOCK_MASK, stateSize);
+            return keyDest;
+        }
+
+        /** add a new storage entry and return the key. */
+        private int add() {
+            final int result = entry;
+            entry += stateSize;
+            offset += stateSize;
+            if (offset > endOffset) { // must allocate another block of memory
+                if (offset == MEMORY_BLOCK_SIZE) {
+                    offset = 0;
+                } else {
+                    entry += stateSize;
+                    offset -= endOffset;
+                }
+                if (numMemoryBlocks >= memoryBlocks.length) {
+                    throw new IllegalStateException("Integer overflow! (32 GB of data storage exceeded)");
+                }
+                memoryBlocks[numMemoryBlocks++] = new long[MEMORY_BLOCK_SIZE];
+            }
+            return result;
         }
     }
 }

@@ -43,13 +43,6 @@ public final class ColorAreaSet {
     }
 
     /**
-     * copy constructor
-     */
-    public static long[] constructor(final long[] casOther) {
-        return casOther.clone();
-    }
-
-    /**
      * copy the contents of the other set into this set
      */
     public static void copyFrom(final long[] casThis, final long[] casOther) {
@@ -68,14 +61,6 @@ public final class ColorAreaSet {
      */
     public static void add(final long[] casThis, final ColorArea ca) {
         final int caId = ca.getId();
-        final int i = caId >>> 6;       // index is always >= 0
-        casThis[i] |= 1L << caId;       // implicit shift distance (caId & 0x3f)
-    }
-
-    /**
-     * add the ColorArea to this set
-     */
-    public static void add(final long[] casThis, final int caId) {
         final int i = caId >>> 6;       // index is always >= 0
         casThis[i] |= 1L << caId;       // implicit shift distance (caId & 0x3f)
     }
@@ -170,6 +155,15 @@ public final class ColorAreaSet {
     public static void addAll(final long[] casThis, final long[] casOther) {
         for (int i = 0;  i < casThis.length;  ++i) {
             casThis[i] |= casOther[i];
+        }
+    }
+
+    /**
+     * add all ColorAreas in the AND-combined other sets to this set
+     */
+    public static void addAllAnd(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
+        for (int i = 0;  i < casThis.length;  ++i) {
+            casThis[i] |= (casOtherOne[i] & casOtherTwo[i]);
         }
     }
 

@@ -19,6 +19,7 @@ package colorfill.solver;
 
 import colorfill.model.Board;
 import colorfill.model.ColorAreaSet;
+import colorfill.solver.AStarSolver.StateStorage;
 
 /**
  * a specific strategy for the AStar (A*) solver.
@@ -28,12 +29,14 @@ import colorfill.model.ColorAreaSet;
  */
 public class AStarFlolleStrategy extends AStarPuchertStrategy {
 
-    protected final long[] casNextOne, casNextTwo;
+    private final ColorAreaSet.Iterator iter;
+    private final long[] casNextOne, casNextTwo;
     private final int caLimit;
     private final int[] idsMemberSize;
 
-    public AStarFlolleStrategy(final Board board) {
-        super(board);
+    public AStarFlolleStrategy(final Board board, final StateStorage storage) {
+        super(board, storage);
+        this.iter = new ColorAreaSet.Iterator();
         this.caLimit = board.getColorAreasArray().length / 3; // TODO: find a good value for caLimit
         this.casNextOne = ColorAreaSet.constructor(board);
         this.casNextTwo = ColorAreaSet.constructor(board);
@@ -50,17 +53,17 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
         // Otherwise, it works very similar to AStarPuchertStrategy, with the difference that instead of purely color-blind
         // moves it will only take two of the colors sorted by the amount of new border fields they give access to.
 
-        int distance = 0;
+        this.storage.get(node.getFlooded(), this.casVisited);
         // already more than <caLimit> of the color areas are flooded, so call the admissible strategy.
         // note: we're counting color areas here, unlike Flolle's "terminal-flood" which counted the individual fields (slower)
-        if (node.getFloodedSize() > this.caLimit) {
+        if (ColorAreaSet.size(this.casVisited) > this.caLimit) {
             return super.estimateCost(node, nonCompletedColors); // AStarPuchertStrategy
         }
 
+        int distance = 0;
         long[] next = this.casNext;
         long[] current = this.casCurrent;
-        node.copyNeighborsTo(current);
-        node.copyFloodedTo(this.casVisited);
+        this.storage.get(node.getNeighbors(), current);
         long[] nextOne = this.casNextOne;
         long[] nextTwo = this.casNextTwo;
 
