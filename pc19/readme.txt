@@ -18,11 +18,8 @@ results_ColorFill_exhaustive_details.txt
 
 These two files contain the output of this program, ColorFill.
 
-Its ExhaustiveDfsStrategy scores 20086, which is the same score as the
+Its AStarPuchertStrategy scores 20086, which is the same score as the
 winning program by Aliaksei Sanko.
 
 20086 has to be the optimal (lowest possible) result, because it was found by
-an exhaustive search. That run took about 1 CPU hour. (see details file)
-
-The other DFS strategies of ColorFill are weaker but much faster, achieving
-a score of 20708 using only 1 CPU minute.
+an exhaustive search. That run took just a few seconds. (see details file)
