@@ -4,7 +4,7 @@ run_benchmark () {
     {
         date -Iseconds
         echo
-        time java -Xms12G -Xmx12G -jar ../colorfill.jar -benchmark "$1" "$2"
+        time java -Xms6G -Xmx6G -jar ../colorfill.jar -benchmark "$1" "$2"
         echo
         date -Iseconds
         echo
