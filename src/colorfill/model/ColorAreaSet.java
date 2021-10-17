@@ -183,12 +183,10 @@ public final class ColorAreaSet {
     public static void addAllLookup(final long[] casThis, final long[] casOther, final long[][] casLookup) {
         for (int o = 0;  o < casOther.length;  ++o) {
             long buf = casOther[o];
-            final int offset = (o << 6) + 63;
+            final int offset = (o << 6);
             while (buf != 0) {
-                final long l1b = buf & -buf; // Long.lowestOneBit
-                final int caId = offset - Long.numberOfLeadingZeros(l1b);
-                buf ^= l1b;
-                final long[] casAdd = casLookup[caId];
+                final long[] casAdd = casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                buf &= buf - 1; // clear the least significant bit set
                 for (int i = 0;  i < casThis.length;  ++i) {
                     casThis[i] |= casAdd[i];
                 }
@@ -203,12 +201,10 @@ public final class ColorAreaSet {
     public static void addAllAndLookup(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo, final long[][] casLookup) {
         for (int o = 0;  o < casOtherOne.length;  ++o) {
             long buf = (casOtherOne[o] & casOtherTwo[o]);
-            final int offset = (o << 6) + 63;
+            final int offset = (o << 6);
             while (buf != 0) {
-                final long l1b = buf & -buf; // Long.lowestOneBit
-                final int caId = offset - Long.numberOfLeadingZeros(l1b);
-                buf ^= l1b;
-                final long[] casAdd = casLookup[caId];
+                final long[] casAdd = casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                buf &= buf - 1; // clear the least significant bit set
                 for (int i = 0;  i < casThis.length;  ++i) {
                     casThis[i] |= casAdd[i];
                 }
