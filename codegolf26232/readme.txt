@@ -108,3 +108,29 @@ len=22  3108 |****                                                        |  3%
 len=23   103 |                                                            |  0%
 len=24     1 |                                                            |  0%
 
+
+---
+added 2021-10-31:
+output of this program, ColorFill: optimized AStar search on faster computer
+
+_steps.txt  = A* (Puchert heuristic) optimal solutions
+_steps_.txt = detailed output, including timing information
+
+Since the first complete run of the AStar solver in early 2018 (see above),
+I've worked to optimize the code for lower memory usage and higher speed.
+Also, I've got a new, more powerful computer with 8 CPU cores and 64 GB of RAM.
+
+The latest run completed in less than 78 minutes, while the first run in 2018
+took 7242 minutes. This is a speedup factor greater than 92.
+
+The new computer contributed to this speedup in two ways:
+- faster CPU: single-threaded, about 2 to 2.5 times as fast as the old CPU
+- more CPU cores and more memory: 8 solver instances worked in parallel
+
+Thus, the speedup factor contributed by improvements of algorithm and code
+is:  92 / 2.5 / 8 = 4.6
+
+So, the current version of Colorfill is much faster and would have worked on
+the old computer for estimated 26 hours, instead of the 120 hours (5 days!)
+it took the old version in 2018.
+
