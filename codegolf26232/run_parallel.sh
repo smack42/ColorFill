@@ -30,11 +30,19 @@ run_part () {
 ## main
 SECONDS=0
 
+## configure this: how many processes shall run in parallel?
+## (consider the number of CPU cores and the amount of available RAM)
+## possible values are: 1, 2, 4, 5, 8, 10, 16  (these are divisors of 100000)
+num_parts=10
+
+
 ## split input file into 8 parts of 250000 lines = 12500 tasks each: floodtest_a ... floodtest_h
-split --number=8 --suffix-length=1 floodtest floodtest_
-parts="a b c d e f g h"
+split --number=$num_parts --suffix-length=1 floodtest floodtest_
+parts="a b c d e f g h i j k l m n o p "
+parts=${parts:0:2*$num_parts}
 
 ## run the process for each part of the input file
+echo starting $num_parts processes: $parts
 for i in $parts
 do
     run_part $i

@@ -134,3 +134,17 @@ So, the current version of Colorfill is much faster and would have worked on
 the old computer for estimated 26 hours, instead of the 120 hours (5 days!)
 it took the old version in 2018.
 
+
+---
+added 2022-02-13:
+
+output of this program, ColorFill: optimized AStar search on faster computer
+
+_steps.txt  = A* (Puchert heuristic) optimal solutions
+_steps_.txt = detailed output, including timing information
+
+Repeated the complete run of the improved AStar solver.
+Running with 10 parallel processes, it used nearly 60 GB RAM and took about
+75 minutes. This small speedup, compared to the 78 minutes of the 8-parallel
+run, is due to the hardware multithreading of this 8-cores/16-threads CPU.
+
