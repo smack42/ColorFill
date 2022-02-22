@@ -1,6 +1,6 @@
 ColorFill - yet another Flood-It clone (game and solver algorithm)
 
-Version   1.3.1 (2020-12-19)
+Version   1.3.2 (2022-02-22)
 Homepage  https://github.com/smack42/ColorFill/wiki
 
 
@@ -30,8 +30,8 @@ usage
 
 Java SE Runtime Environment (JRE version 8 or newer) is required to run
 this program. You can download Java here:
-https://www.oracle.com/java/technologies/javase-downloads.html
-https://adoptopenjdk.net/
+https://www.oracle.com/java/technologies/downloads/
+https://adoptium.net/
 
 To run the program just doubleclick "colorfill.jar".
 
@@ -43,7 +43,7 @@ On the command line run it like this:
 license
 
 ColorFill game and solver
-Copyright (C) 2020 Michael Henke <smack42@gmail.com>
+Copyright (C) 2022 Michael Henke <smack42@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

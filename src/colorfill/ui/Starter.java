@@ -42,8 +42,8 @@ public class Starter {
     
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill";
-        final String version  = "1.3.1 (2020-12-19)";
-        final String author   = "Copyright (C) 2020 Michael Henke <smack42@gmail.com>";
+        final String version  = "1.3.2 (2022-02-22)";
+        final String author   = "Copyright (C) 2022 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
 
@@ -622,9 +622,9 @@ public class Starter {
                     System.out.println(checkResult);
                     System.out.println();
                 }
-                if (0 == (countOK + countFAIL) % 1000) {
-                    System.out.println("checked " + (countOK + countFAIL) + " ...");
-                }
+//                if (0 == (countOK + countFAIL) % 1000) {
+//                    System.out.println("checked " + (countOK + countFAIL) + " ...");
+//                }
             }
             System.out.println("check finished:  total=" + (countOK + countFAIL) + " checkOK=" + countOK + " checkFAIL=" + countFAIL);
             System.out.println("solution steps:  total=" + totalSolutionSteps + " average=" + ((double)totalSolutionSteps / (countOK + countFAIL)));

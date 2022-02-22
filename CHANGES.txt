@@ -2,6 +2,20 @@ ColorFill  CHANGES
 
 
 
+1.3.2 (2022-02-22)
+- updated FlatLaf - Flat Look and Feel to version 2.0.1
+  * https://github.com/JFormDesigner/FlatLaf/releases
+- improved AStarPuchertStrategy and AStarFlolleStrategy
+  * they use less memory and run slightly faster
+- performed another complete benchmark run of codegolf26232
+  * same optimal result of 1,985,078 steps
+  * first run in early 2018 (using version 1.1.1) took about 120 hours
+  * latest run took 75 minutes - this huge speedup was made possible by:
+  * the numerous code optimizations (about 5 times as fast as version 1.1.1)
+  * and the much more powerful computer (8-cores CPU with 64 GB of RAM)
+
+
+
 1.3.1 (2020-12-19)
 - added GUI Look&Feel configuration to settings dialog
 - added FlatLaf - Flat Look and Feel (with 2 light and 2 dark themes)
