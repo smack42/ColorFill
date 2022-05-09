@@ -89,7 +89,7 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
                     ColorAreaSet.clear(next);
                     // completed colors
                     final long[] colorCas = this.casByColorBits[completedColors];
-                    ColorAreaSet.addAllAndLookup(next, current, colorCas, this.idsNeighborColorAreaSets);
+                    this.unrolledFunctions.addAllAndLookup(next, current, colorCas);
                     ColorAreaSet.removeAll(current, colorCas);
                     ColorAreaSet.removeAll(next, this.casVisited);
                     // non-completed colors
@@ -106,7 +106,7 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
                     final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
                     colors ^= colorBit;
                     ColorAreaSet.clear(next);
-                    ColorAreaSet.addAllAndLookup(next, current, this.casByColorBits[colorBit], this.idsNeighborColorAreaSets);
+                    this.unrolledFunctions.addAllAndLookup(next, current, this.casByColorBits[colorBit]);
                     ColorAreaSet.removeAll(next, this.casVisited);
                     int size = 0;
                     this.iter.init(next);

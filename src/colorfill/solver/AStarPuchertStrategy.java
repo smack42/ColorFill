@@ -31,16 +31,16 @@ public class AStarPuchertStrategy implements AStarStrategy {
 
     protected final long[] casVisited, casCurrent, casNext;
     protected final long[][] casByColorBits;
-    protected final long[][] idsNeighborColorAreaSets;
     protected final StateStorage storage;
+    protected final UnrolledFunctions unrolledFunctions;
 
     public AStarPuchertStrategy(final Board board, final StateStorage storage) {
         this.casVisited = ColorAreaSet.constructor(board);
         this.casCurrent = ColorAreaSet.constructor(board);
         this.casNext = ColorAreaSet.constructor(board);
         this.casByColorBits = board.getCasByColorBitsArray();
-        this.idsNeighborColorAreaSets = board.getNeighborColorAreaSet4IdArray();
         this.storage = storage;
+        this.unrolledFunctions = UnrolledFunctions.getInstance(board);
     }
 
     @Override
@@ -84,7 +84,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                     ColorAreaSet.clear(next);
                     // completed colors
                     final long[] colorCas = this.casByColorBits[completedColors];
-                    ColorAreaSet.addAllAndLookup(next, current, colorCas, this.idsNeighborColorAreaSets);
+                    this.unrolledFunctions.addAllAndLookup(next, current, colorCas);
                     ColorAreaSet.removeAll(current, colorCas);
                     ColorAreaSet.removeAll(next, this.casVisited);
                     // non-completed colors
@@ -96,7 +96,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 // Nothing found, do the color-blind pseudo-move
                 // Expand current layer of nodes.
                 ++distance;
-                ColorAreaSet.addAllLookup(next, current, this.idsNeighborColorAreaSets);
+                this.unrolledFunctions.addAllLookup(next, current);
                 ColorAreaSet.removeAll(next, this.casVisited);
             }
 
@@ -104,6 +104,449 @@ public class AStarPuchertStrategy implements AStarStrategy {
             final long[] t = current;
             current = next;
             next = t;
+        }
+    }
+
+
+
+
+
+    static class UnrolledFunctions {
+        final long[][] casLookup;
+        UnrolledFunctions(final long[][] casLookup) {
+            this.casLookup = casLookup;
+        }
+        void addAllLookup(final long[] casThis, final long[] casOther) {
+            for (int o = 0;  o < casOther.length;  ++o) {
+                long buf = casOther[o];
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    for (int i = 0;  i < casThis.length;  ++i) {
+                        casThis[i] |= casAdd[i];
+                    }
+                }
+            }
+        }
+        void addAllAndLookup(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
+            for (int o = 0;  o < casOtherOne.length;  ++o) {
+                long buf = (casOtherOne[o] & casOtherTwo[o]);
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    for (int i = 0;  i < casThis.length;  ++i) {
+                        casThis[i] |= casAdd[i];
+                    }
+                }
+            }
+        }
+        static UnrolledFunctions getInstance(final Board board) {
+            final long[][] casLookup = board.getNeighborColorAreaSet4IdArray();
+            switch (board.getSizeColorAreas64()) {
+            case 1:     return new UnrolledFunctions01(casLookup);
+            case 2:     return new UnrolledFunctions02(casLookup);
+            case 3:     return new UnrolledFunctions03(casLookup);
+            case 4:     return new UnrolledFunctions04(casLookup);
+            case 5:     return new UnrolledFunctions05(casLookup);
+            case 6:     return new UnrolledFunctions06(casLookup);
+            case 7:     return new UnrolledFunctions07(casLookup);
+            case 8:     return new UnrolledFunctions08(casLookup);
+            case 9:     return new UnrolledFunctions09(casLookup);
+            case 10:    return new UnrolledFunctions10(casLookup);
+            default:    return new UnrolledFunctions  (casLookup);
+            }
+        }
+    }
+
+    static class UnrolledFunctions01 extends UnrolledFunctions {
+        UnrolledFunctions01(final long[][] casLookup) {
+            super(casLookup);
+        }
+        @Override
+        void addAllLookup(final long[] casThis, final long[] casOther) {
+            for (int o = 0;  o < casOther.length;  ++o) {
+                long buf = casOther[o];
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                }
+            }
+        }
+        @Override
+        void addAllAndLookup(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
+            for (int o = 0;  o < casOtherOne.length;  ++o) {
+                long buf = (casOtherOne[o] & casOtherTwo[o]);
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                }
+            }
+        }
+    }
+
+    static class UnrolledFunctions02 extends UnrolledFunctions {
+        UnrolledFunctions02(final long[][] casLookup) {
+            super(casLookup);
+        }
+        @Override
+        void addAllLookup(final long[] casThis, final long[] casOther) {
+            for (int o = 0;  o < casOther.length;  ++o) {
+                long buf = casOther[o];
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                    casThis[1] |= casAdd[1];
+                }
+            }
+        }
+        @Override
+        void addAllAndLookup(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
+            for (int o = 0;  o < casOtherOne.length;  ++o) {
+                long buf = (casOtherOne[o] & casOtherTwo[o]);
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                    casThis[1] |= casAdd[1];
+                }
+            }
+        }
+    }
+
+    static class UnrolledFunctions03 extends UnrolledFunctions {
+        UnrolledFunctions03(final long[][] casLookup) {
+            super(casLookup);
+        }
+        @Override
+        void addAllLookup(final long[] casThis, final long[] casOther) {
+            for (int o = 0;  o < casOther.length;  ++o) {
+                long buf = casOther[o];
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                    casThis[1] |= casAdd[1];
+                    casThis[2] |= casAdd[2];
+                }
+            }
+        }
+        @Override
+        void addAllAndLookup(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
+            for (int o = 0;  o < casOtherOne.length;  ++o) {
+                long buf = (casOtherOne[o] & casOtherTwo[o]);
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                    casThis[1] |= casAdd[1];
+                    casThis[2] |= casAdd[2];
+                }
+            }
+        }
+    }
+
+    static class UnrolledFunctions04 extends UnrolledFunctions {
+        UnrolledFunctions04(final long[][] casLookup) {
+            super(casLookup);
+        }
+        @Override
+        void addAllLookup(final long[] casThis, final long[] casOther) {
+            for (int o = 0;  o < casOther.length;  ++o) {
+                long buf = casOther[o];
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                    casThis[1] |= casAdd[1];
+                    casThis[2] |= casAdd[2];
+                    casThis[3] |= casAdd[3];
+                }
+            }
+        }
+        @Override
+        void addAllAndLookup(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
+            for (int o = 0;  o < casOtherOne.length;  ++o) {
+                long buf = (casOtherOne[o] & casOtherTwo[o]);
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                    casThis[1] |= casAdd[1];
+                    casThis[2] |= casAdd[2];
+                    casThis[3] |= casAdd[3];
+                }
+            }
+        }
+    }
+
+    static class UnrolledFunctions05 extends UnrolledFunctions {
+        UnrolledFunctions05(final long[][] casLookup) {
+            super(casLookup);
+        }
+        @Override
+        void addAllLookup(final long[] casThis, final long[] casOther) {
+            for (int o = 0;  o < casOther.length;  ++o) {
+                long buf = casOther[o];
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                    casThis[1] |= casAdd[1];
+                    casThis[2] |= casAdd[2];
+                    casThis[3] |= casAdd[3];
+                    casThis[4] |= casAdd[4];
+                }
+            }
+        }
+        @Override
+        void addAllAndLookup(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
+            for (int o = 0;  o < casOtherOne.length;  ++o) {
+                long buf = (casOtherOne[o] & casOtherTwo[o]);
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                    casThis[1] |= casAdd[1];
+                    casThis[2] |= casAdd[2];
+                    casThis[3] |= casAdd[3];
+                    casThis[4] |= casAdd[4];
+                }
+            }
+        }
+    }
+
+    static class UnrolledFunctions06 extends UnrolledFunctions {
+        UnrolledFunctions06(final long[][] casLookup) {
+            super(casLookup);
+        }
+        @Override
+        void addAllLookup(final long[] casThis, final long[] casOther) {
+            for (int o = 0;  o < casOther.length;  ++o) {
+                long buf = casOther[o];
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                    casThis[1] |= casAdd[1];
+                    casThis[2] |= casAdd[2];
+                    casThis[3] |= casAdd[3];
+                    casThis[4] |= casAdd[4];
+                    casThis[5] |= casAdd[5];
+                }
+            }
+        }
+        @Override
+        void addAllAndLookup(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
+            for (int o = 0;  o < casOtherOne.length;  ++o) {
+                long buf = (casOtherOne[o] & casOtherTwo[o]);
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                    casThis[1] |= casAdd[1];
+                    casThis[2] |= casAdd[2];
+                    casThis[3] |= casAdd[3];
+                    casThis[4] |= casAdd[4];
+                    casThis[5] |= casAdd[5];
+                }
+            }
+        }
+    }
+
+    static class UnrolledFunctions07 extends UnrolledFunctions {
+        UnrolledFunctions07(final long[][] casLookup) {
+            super(casLookup);
+        }
+        @Override
+        void addAllLookup(final long[] casThis, final long[] casOther) {
+            for (int o = 0;  o < casOther.length;  ++o) {
+                long buf = casOther[o];
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                    casThis[1] |= casAdd[1];
+                    casThis[2] |= casAdd[2];
+                    casThis[3] |= casAdd[3];
+                    casThis[4] |= casAdd[4];
+                    casThis[5] |= casAdd[5];
+                    casThis[6] |= casAdd[6];
+                }
+            }
+        }
+        @Override
+        void addAllAndLookup(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
+            for (int o = 0;  o < casOtherOne.length;  ++o) {
+                long buf = (casOtherOne[o] & casOtherTwo[o]);
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                    casThis[1] |= casAdd[1];
+                    casThis[2] |= casAdd[2];
+                    casThis[3] |= casAdd[3];
+                    casThis[4] |= casAdd[4];
+                    casThis[5] |= casAdd[5];
+                    casThis[6] |= casAdd[6];
+                }
+            }
+        }
+    }
+
+    static class UnrolledFunctions08 extends UnrolledFunctions {
+        UnrolledFunctions08(final long[][] casLookup) {
+            super(casLookup);
+        }
+        @Override
+        void addAllLookup(final long[] casThis, final long[] casOther) {
+            for (int o = 0;  o < casOther.length;  ++o) {
+                long buf = casOther[o];
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                    casThis[1] |= casAdd[1];
+                    casThis[2] |= casAdd[2];
+                    casThis[3] |= casAdd[3];
+                    casThis[4] |= casAdd[4];
+                    casThis[5] |= casAdd[5];
+                    casThis[6] |= casAdd[6];
+                    casThis[7] |= casAdd[7];
+                }
+            }
+        }
+        @Override
+        void addAllAndLookup(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
+            for (int o = 0;  o < casOtherOne.length;  ++o) {
+                long buf = (casOtherOne[o] & casOtherTwo[o]);
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                    casThis[1] |= casAdd[1];
+                    casThis[2] |= casAdd[2];
+                    casThis[3] |= casAdd[3];
+                    casThis[4] |= casAdd[4];
+                    casThis[5] |= casAdd[5];
+                    casThis[6] |= casAdd[6];
+                    casThis[7] |= casAdd[7];
+                }
+            }
+        }
+    }
+
+    static class UnrolledFunctions09 extends UnrolledFunctions {
+        UnrolledFunctions09(final long[][] casLookup) {
+            super(casLookup);
+        }
+        @Override
+        void addAllLookup(final long[] casThis, final long[] casOther) {
+            for (int o = 0;  o < casOther.length;  ++o) {
+                long buf = casOther[o];
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                    casThis[1] |= casAdd[1];
+                    casThis[2] |= casAdd[2];
+                    casThis[3] |= casAdd[3];
+                    casThis[4] |= casAdd[4];
+                    casThis[5] |= casAdd[5];
+                    casThis[6] |= casAdd[6];
+                    casThis[7] |= casAdd[7];
+                    casThis[8] |= casAdd[8];
+                }
+            }
+        }
+        @Override
+        void addAllAndLookup(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
+            for (int o = 0;  o < casOtherOne.length;  ++o) {
+                long buf = (casOtherOne[o] & casOtherTwo[o]);
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                    casThis[1] |= casAdd[1];
+                    casThis[2] |= casAdd[2];
+                    casThis[3] |= casAdd[3];
+                    casThis[4] |= casAdd[4];
+                    casThis[5] |= casAdd[5];
+                    casThis[6] |= casAdd[6];
+                    casThis[7] |= casAdd[7];
+                    casThis[8] |= casAdd[8];
+                }
+            }
+        }
+    }
+
+    static class UnrolledFunctions10 extends UnrolledFunctions {
+        UnrolledFunctions10(final long[][] casLookup) {
+            super(casLookup);
+        }
+        @Override
+        void addAllLookup(final long[] casThis, final long[] casOther) {
+            for (int o = 0;  o < casOther.length;  ++o) {
+                long buf = casOther[o];
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                    casThis[1] |= casAdd[1];
+                    casThis[2] |= casAdd[2];
+                    casThis[3] |= casAdd[3];
+                    casThis[4] |= casAdd[4];
+                    casThis[5] |= casAdd[5];
+                    casThis[6] |= casAdd[6];
+                    casThis[7] |= casAdd[7];
+                    casThis[8] |= casAdd[8];
+                    casThis[9] |= casAdd[9];
+                }
+            }
+        }
+        @Override
+        void addAllAndLookup(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
+            for (int o = 0;  o < casOtherOne.length;  ++o) {
+                long buf = (casOtherOne[o] & casOtherTwo[o]);
+                final int offset = (o << 6);
+                while (buf != 0) {
+                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
+                    buf &= buf - 1; // clear the least significant bit set
+                    casThis[0] |= casAdd[0];
+                    casThis[1] |= casAdd[1];
+                    casThis[2] |= casAdd[2];
+                    casThis[3] |= casAdd[3];
+                    casThis[4] |= casAdd[4];
+                    casThis[5] |= casAdd[5];
+                    casThis[6] |= casAdd[6];
+                    casThis[7] |= casAdd[7];
+                    casThis[8] |= casAdd[8];
+                    casThis[9] |= casAdd[9];
+                }
+            }
         }
     }
 }
