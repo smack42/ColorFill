@@ -19,15 +19,15 @@ STRATEGY=AStarPuchertStrategy
 #STRATEGY=AStarFlolleStrategy
 
 ### short runtime
+run_benchmark "pc19 tiles.txt"            $STRATEGY
 run_benchmark "dataset b10c15n1000.txt"   $STRATEGY
 run_benchmark "dataset b24c4n1000.txt"    $STRATEGY
-run_benchmark "pc19 tiles.txt"            $STRATEGY
 
 ### long runtime
+run_benchmark "floodtest 1000.txt"        $STRATEGY
 run_benchmark "dataset b12c12n1000.txt"   $STRATEGY
 run_benchmark "dataset b14c8n1000.txt"    $STRATEGY
 run_benchmark "dataset b18c6n1000.txt"    $STRATEGY
-run_benchmark "floodtest 1000.txt"        $STRATEGY
 
 ### very long runtime
 #run_benchmark "dataset b24c6n1000.txt"    $STRATEGY
