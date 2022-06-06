@@ -89,7 +89,7 @@ public class AStarSolver extends AbstractSolver {
     private AStarStrategy makeStrategy(final StateStorage storage) {
         final AStarStrategy result;
         if (AStarPuchertStrategy.class.equals(this.strategyClass)) {
-            result = new AStarPuchertStrategy(this.board, storage);
+            result = AStarPuchertStrategy.getInstance(this.board, storage);
         } else if (AStarFlolleStrategy.class.equals(this.strategyClass)) {
             result = new AStarFlolleStrategy(this.board, storage);
         } else {

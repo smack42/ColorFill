@@ -31,16 +31,28 @@ public class AStarPuchertStrategy implements AStarStrategy {
 
     protected final long[] casVisited, casCurrent, casNext;
     protected final long[][] casByColorBits;
+    protected final long[][] idsNeighborColorAreaSets;
     protected final StateStorage storage;
-    protected final UnrolledFunctions unrolledFunctions;
+
+    public static AStarPuchertStrategy getInstance(final Board board, final StateStorage storage) {
+        switch (board.getSizeColorAreas64()) {
+        case 1:  return new AStarPuchertStrategy_1(board, storage);
+        case 2:  return new AStarPuchertStrategy_2(board, storage);
+        case 3:  return new AStarPuchertStrategy_3(board, storage);
+        case 4:  return new AStarPuchertStrategy_4(board, storage);
+        case 5:  return new AStarPuchertStrategy_5(board, storage);
+        case 6:  return new AStarPuchertStrategy_6(board, storage);
+        default: return new AStarPuchertStrategy  (board, storage);
+        }
+    }
 
     public AStarPuchertStrategy(final Board board, final StateStorage storage) {
         this.casVisited = ColorAreaSet.constructor(board);
         this.casCurrent = ColorAreaSet.constructor(board);
         this.casNext = ColorAreaSet.constructor(board);
         this.casByColorBits = board.getCasByColorBitsArray();
+        this.idsNeighborColorAreaSets = board.getNeighborColorAreaSet4IdArray();
         this.storage = storage;
-        this.unrolledFunctions = UnrolledFunctions.getInstance(board, this.casVisited);
     }
 
     @Override
@@ -84,8 +96,9 @@ public class AStarPuchertStrategy implements AStarStrategy {
                     ColorAreaSet.clear(next);
                     // completed colors
                     final long[] colorCas = this.casByColorBits[completedColors];
-                    this.unrolledFunctions.addAllAndLookupRemoveVisited(next, current, colorCas);
+                    ColorAreaSet.addAllAndLookup(next, current, colorCas, this.idsNeighborColorAreaSets);
                     ColorAreaSet.removeAll(current, colorCas);
+                    ColorAreaSet.removeAll(next, this.casVisited);
                     // non-completed colors
                     // move nodes to next layer
                     ColorAreaSet.addAll(next, current);
@@ -95,7 +108,8 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 // Nothing found, do the color-blind pseudo-move
                 // Expand current layer of nodes.
                 ++distance;
-                this.unrolledFunctions.addAllLookupRemoveVisited(next, current);
+                ColorAreaSet.addAllLookup(next, current, this.idsNeighborColorAreaSets);
+                ColorAreaSet.removeAll(next, this.casVisited);
             }
 
             // Move the next layer into the current.
@@ -108,671 +122,790 @@ public class AStarPuchertStrategy implements AStarStrategy {
 
 
 
+    // below are the performance-optimized versions of this class
+    // (manually inlined functions and unrolled loops)
 
-    static class UnrolledFunctions {
-        final long[][] casLookup;
-        final long[] casVisited;
-        UnrolledFunctions(final long[][] casLookup, final long[] casVisited) {
-            this.casLookup = casLookup;
-            this.casVisited = casVisited;
+
+    static class AStarPuchertStrategy_1 extends AStarPuchertStrategy {
+        public AStarPuchertStrategy_1(final Board board, final StateStorage storage) {
+            super(board, storage);  //System.out.println("-64-1 !!");
         }
-        void addAllLookupRemoveVisited(final long[] casThis, final long[] casOther) {
-            for (int o = 0;  o < casOther.length;  ++o) {
-                long buf = casOther[o];
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    for (int i = 0;  i < casThis.length;  ++i) {
-                        casThis[i] |= casAdd[i];
+        @Override
+        public int estimateCost(final AStarNode node, int nonCompletedColors) {
+            int distance = 0;
+            this.storage.get(node.getNeighbors(), this.casCurrent);
+            long current0 = this.casCurrent[0];
+            this.storage.get(node.getFlooded(), this.casVisited);
+            long visited0 = this.casVisited[0];
+            while (true) {
+                visited0 |= current0;
+                int completedColors = 0;
+                for (int colors = nonCompletedColors;  0 != colors;  ) {
+                    final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
+                    colors ^= colorBit;
+                    final long[] casColor = this.casByColorBits[colorBit];
+                    if (((visited0 & casColor[0]) == casColor[0])) {
+                        completedColors |= colorBit;
                     }
                 }
-            }
-            for (int i = 0;  i < casThis.length;  ++i) {
-                casThis[i] &= ~(this.casVisited[i]);
+                if (0 != completedColors) {
+                    nonCompletedColors ^= completedColors;
+                    // We can eliminate colors. Do just that.
+                    // We also combine all these elimination moves.
+                    distance += Integer.bitCount(completedColors);
+                    if (0 == (nonCompletedColors & (nonCompletedColors - 1))) { // one or zero colors remaining
+                        distance += (-nonCompletedColors >>> 31); // nonCompletedColors is never negative // (0 == nonCompletedColors ? 0 : 1)
+                        return distance; // done
+                    } else {
+                        // completed colors
+                        final long[] colorCas = this.casByColorBits[completedColors];
+                        // non-completed colors
+                        // move nodes to next layer
+                        long l0 = 0;
+                        long buf = (current0 & colorCas[0]);
+                        current0 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                        }
+                        current0 |= l0 & ~visited0;
+                    }
+                } else {
+                    // Nothing found, do the color-blind pseudo-move
+                    // Expand current layer of nodes.
+                    ++distance;
+                    long l0 = 0;
+                    while (current0 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(current0)];
+                        current0 &= current0 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                    }
+                    current0 = l0 & ~visited0;
+                }
             }
         }
-        void addAllAndLookupRemoveVisited(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
-            for (int o = 0;  o < casOtherOne.length;  ++o) {
-                long buf = (casOtherOne[o] & casOtherTwo[o]);
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    for (int i = 0;  i < casThis.length;  ++i) {
-                        casThis[i] |= casAdd[i];
+    }
+
+
+    static class AStarPuchertStrategy_2 extends AStarPuchertStrategy {
+        public AStarPuchertStrategy_2(final Board board, final StateStorage storage) {
+            super(board, storage);  //System.out.println("-64-2 !!");
+        }
+        @Override
+        public int estimateCost(final AStarNode node, int nonCompletedColors) {
+            int distance = 0;
+            this.storage.get(node.getNeighbors(), this.casCurrent);
+            long current0 = this.casCurrent[0];
+            long current1 = this.casCurrent[1];
+            this.storage.get(node.getFlooded(), this.casVisited);
+            long visited0 = this.casVisited[0];
+            long visited1 = this.casVisited[1];
+            while (true) {
+                visited0 |= current0;
+                visited1 |= current1;
+                int completedColors = 0;
+                for (int colors = nonCompletedColors;  0 != colors;  ) {
+                    final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
+                    colors ^= colorBit;
+                    final long[] casColor = this.casByColorBits[colorBit];
+                    if (((visited0 & casColor[0]) == casColor[0]) &&
+                        ((visited1 & casColor[1]) == casColor[1])) {
+                        completedColors |= colorBit;
                     }
                 }
-            }
-            for (int i = 0;  i < casThis.length;  ++i) {
-                casThis[i] &= ~(this.casVisited[i]);
-            }
-        }
-        static UnrolledFunctions getInstance(final Board board, final long[] casVisited) {
-            final long[][] casLookup = board.getNeighborColorAreaSet4IdArray();
-            switch (board.getSizeColorAreas64()) {
-            case 1:     return new UnrolledFunctions01(casLookup, casVisited);
-            case 2:     return new UnrolledFunctions02(casLookup, casVisited);
-            case 3:     return new UnrolledFunctions03(casLookup, casVisited);
-            case 4:     return new UnrolledFunctions04(casLookup, casVisited);
-            case 5:     return new UnrolledFunctions05(casLookup, casVisited);
-            case 6:     return new UnrolledFunctions06(casLookup, casVisited);
-            case 7:     return new UnrolledFunctions07(casLookup, casVisited);
-            case 8:     return new UnrolledFunctions08(casLookup, casVisited);
-            case 9:     return new UnrolledFunctions09(casLookup, casVisited);
-            case 10:    return new UnrolledFunctions10(casLookup, casVisited);
-            default:    return new UnrolledFunctions  (casLookup, casVisited);
+                if (0 != completedColors) {
+                    nonCompletedColors ^= completedColors;
+                    // We can eliminate colors. Do just that.
+                    // We also combine all these elimination moves.
+                    distance += Integer.bitCount(completedColors);
+                    if (0 == (nonCompletedColors & (nonCompletedColors - 1))) { // one or zero colors remaining
+                        distance += (-nonCompletedColors >>> 31); // nonCompletedColors is never negative // (0 == nonCompletedColors ? 0 : 1)
+                        return distance; // done
+                    } else {
+                        // completed colors
+                        final long[] colorCas = this.casByColorBits[completedColors];
+                        // non-completed colors
+                        // move nodes to next layer
+                        long l0 = 0, l1 = 0;
+                        long buf = (current0 & colorCas[0]);
+                        current0 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                        }
+                        buf = (current1 & colorCas[1]);
+                        current1 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                        }
+                        current0 |= l0 & ~visited0;
+                        current1 |= l1 & ~visited1;
+                    }
+                } else {
+                    // Nothing found, do the color-blind pseudo-move
+                    // Expand current layer of nodes.
+                    ++distance;
+                    long l0 = 0, l1 = 0;
+                    while (current0 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(current0)];
+                        current0 &= current0 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                    }
+                    while (current1 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(current1)];
+                        current1 &= current1 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                    }
+                    current0 = l0 & ~visited0;
+                    current1 = l1 & ~visited1;
+                }
             }
         }
     }
 
-    static class UnrolledFunctions01 extends UnrolledFunctions {
-        UnrolledFunctions01(final long[][] casLookup, final long[] casVisited) {
-            super(casLookup, casVisited);
+
+    static class AStarPuchertStrategy_3 extends AStarPuchertStrategy {
+        public AStarPuchertStrategy_3(final Board board, final StateStorage storage) {
+            super(board, storage);  //System.out.println("-64-3 !!");
         }
         @Override
-        void addAllLookupRemoveVisited(final long[] casThis, final long[] casOther) {
-            long l0 = casThis[0];
-            for (int o = 0;  o < casOther.length;  ++o) {
-                long buf = casOther[o];
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
+        public int estimateCost(final AStarNode node, int nonCompletedColors) {
+            int distance = 0;
+            this.storage.get(node.getNeighbors(), this.casCurrent);
+            long current0 = this.casCurrent[0];
+            long current1 = this.casCurrent[1];
+            long current2 = this.casCurrent[2];
+            this.storage.get(node.getFlooded(), this.casVisited);
+            long visited0 = this.casVisited[0];
+            long visited1 = this.casVisited[1];
+            long visited2 = this.casVisited[2];
+            while (true) {
+                visited0 |= current0;
+                visited1 |= current1;
+                visited2 |= current2;
+                int completedColors = 0;
+                for (int colors = nonCompletedColors;  0 != colors;  ) {
+                    final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
+                    colors ^= colorBit;
+                    final long[] casColor = this.casByColorBits[colorBit];
+                    if (((visited0 & casColor[0]) == casColor[0]) &&
+                        ((visited1 & casColor[1]) == casColor[1]) &&
+                        ((visited2 & casColor[2]) == casColor[2])) {
+                        completedColors |= colorBit;
+                    }
+                }
+                if (0 != completedColors) {
+                    nonCompletedColors ^= completedColors;
+                    // We can eliminate colors. Do just that.
+                    // We also combine all these elimination moves.
+                    distance += Integer.bitCount(completedColors);
+                    if (0 == (nonCompletedColors & (nonCompletedColors - 1))) { // one or zero colors remaining
+                        distance += (-nonCompletedColors >>> 31); // nonCompletedColors is never negative // (0 == nonCompletedColors ? 0 : 1)
+                        return distance; // done
+                    } else {
+                        // completed colors
+                        final long[] colorCas = this.casByColorBits[completedColors];
+                        // non-completed colors
+                        // move nodes to next layer
+                        long l0 = 0, l1 = 0, l2 = 0;
+                        long buf = (current0 & colorCas[0]);
+                        current0 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                            l2 |= casAdd[2];
+                        }
+                        buf = (current1 & colorCas[1]);
+                        current1 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                            l2 |= casAdd[2];
+                        }
+                        buf = (current2 & colorCas[2]);
+                        current2 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                            l2 |= casAdd[2];
+                        }
+                        current0 |= l0 & ~visited0;
+                        current1 |= l1 & ~visited1;
+                        current2 |= l2 & ~visited2;
+                    }
+                } else {
+                    // Nothing found, do the color-blind pseudo-move
+                    // Expand current layer of nodes.
+                    ++distance;
+                    long l0 = 0, l1 = 0, l2 = 0;
+                    while (current0 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(current0)];
+                        current0 &= current0 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                        l2 |= casAdd[2];
+                    }
+                    while (current1 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(current1)];
+                        current1 &= current1 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                        l2 |= casAdd[2];
+                    }
+                    while (current2 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(current2)];
+                        current2 &= current2 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                        l2 |= casAdd[2];
+                    }
+                    current0 = l0 & ~visited0;
+                    current1 = l1 & ~visited1;
+                    current2 = l2 & ~visited2;
                 }
             }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-        }
-        @Override
-        void addAllAndLookupRemoveVisited(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
-            long l0 = casThis[0];
-            for (int o = 0;  o < casOtherOne.length;  ++o) {
-                long buf = (casOtherOne[o] & casOtherTwo[o]);
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                }
-            }
-            casThis[0] = l0 & ~(this.casVisited[0]);
         }
     }
 
-    static class UnrolledFunctions02 extends UnrolledFunctions {
-        UnrolledFunctions02(final long[][] casLookup, final long[] casVisited) {
-            super(casLookup, casVisited);
+
+    static class AStarPuchertStrategy_4 extends AStarPuchertStrategy {
+        public AStarPuchertStrategy_4(final Board board, final StateStorage storage) {
+            super(board, storage);  //System.out.println("-64-4 !!");
         }
         @Override
-        void addAllLookupRemoveVisited(final long[] casThis, final long[] casOther) {
-            long l0 = casThis[0];
-            long l1 = casThis[1];
-            for (int o = 0;  o < casOther.length;  ++o) {
-                long buf = casOther[o];
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                    l1 |= casAdd[1];
+        public int estimateCost(final AStarNode node, int nonCompletedColors) {
+            int distance = 0;
+            this.storage.get(node.getNeighbors(), this.casCurrent);
+            long current0 = this.casCurrent[0];
+            long current1 = this.casCurrent[1];
+            long current2 = this.casCurrent[2];
+            long current3 = this.casCurrent[3];
+            this.storage.get(node.getFlooded(), this.casVisited);
+            long visited0 = this.casVisited[0];
+            long visited1 = this.casVisited[1];
+            long visited2 = this.casVisited[2];
+            long visited3 = this.casVisited[3];
+            while (true) {
+                visited0 |= current0;
+                visited1 |= current1;
+                visited2 |= current2;
+                visited3 |= current3;
+                int completedColors = 0;
+                for (int colors = nonCompletedColors;  0 != colors;  ) {
+                    final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
+                    colors ^= colorBit;
+                    final long[] casColor = this.casByColorBits[colorBit];
+                    if (((visited0 & casColor[0]) == casColor[0]) &&
+                        ((visited1 & casColor[1]) == casColor[1]) &&
+                        ((visited2 & casColor[2]) == casColor[2]) &&
+                        ((visited3 & casColor[3]) == casColor[3])) {
+                        completedColors |= colorBit;
+                    }
+                }
+                if (0 != completedColors) {
+                    nonCompletedColors ^= completedColors;
+                    // We can eliminate colors. Do just that.
+                    // We also combine all these elimination moves.
+                    distance += Integer.bitCount(completedColors);
+                    if (0 == (nonCompletedColors & (nonCompletedColors - 1))) { // one or zero colors remaining
+                        distance += (-nonCompletedColors >>> 31); // nonCompletedColors is never negative // (0 == nonCompletedColors ? 0 : 1)
+                        return distance; // done
+                    } else {
+                        // completed colors
+                        final long[] colorCas = this.casByColorBits[completedColors];
+                        // non-completed colors
+                        // move nodes to next layer
+                        long l0 = 0, l1 = 0, l2 = 0, l3 = 0;
+                        long buf = (current0 & colorCas[0]);
+                        current0 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                            l2 |= casAdd[2];
+                            l3 |= casAdd[3];
+                        }
+                        buf = (current1 & colorCas[1]);
+                        current1 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                            l2 |= casAdd[2];
+                            l3 |= casAdd[3];
+                        }
+                        buf = (current2 & colorCas[2]);
+                        current2 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                            l2 |= casAdd[2];
+                            l3 |= casAdd[3];
+                        }
+                        buf = (current3 & colorCas[3]);
+                        current3 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 3 + Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                            l2 |= casAdd[2];
+                            l3 |= casAdd[3];
+                        }
+                        current0 |= l0 & ~visited0;
+                        current1 |= l1 & ~visited1;
+                        current2 |= l2 & ~visited2;
+                        current3 |= l3 & ~visited3;
+                    }
+                } else {
+                    // Nothing found, do the color-blind pseudo-move
+                    // Expand current layer of nodes.
+                    ++distance;
+                    long l0 = 0, l1 = 0, l2 = 0, l3 = 0;
+                    while (current0 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(current0)];
+                        current0 &= current0 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                        l2 |= casAdd[2];
+                        l3 |= casAdd[3];
+                    }
+                    while (current1 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(current1)];
+                        current1 &= current1 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                        l2 |= casAdd[2];
+                        l3 |= casAdd[3];
+                    }
+                    while (current2 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(current2)];
+                        current2 &= current2 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                        l2 |= casAdd[2];
+                        l3 |= casAdd[3];
+                    }
+                    while (current3 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 3 + Long.numberOfTrailingZeros(current3)];
+                        current3 &= current3 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                        l2 |= casAdd[2];
+                        l3 |= casAdd[3];
+                    }
+                    current0 = l0 & ~visited0;
+                    current1 = l1 & ~visited1;
+                    current2 = l2 & ~visited2;
+                    current3 = l3 & ~visited3;
                 }
             }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-            casThis[1] = l1 & ~(this.casVisited[1]);
-        }
-        @Override
-        void addAllAndLookupRemoveVisited(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
-            long l0 = casThis[0];
-            long l1 = casThis[1];
-            for (int o = 0;  o < casOtherOne.length;  ++o) {
-                long buf = (casOtherOne[o] & casOtherTwo[o]);
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                    l1 |= casAdd[1];
-                }
-            }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-            casThis[1] = l1 & ~(this.casVisited[1]);
         }
     }
 
-    static class UnrolledFunctions03 extends UnrolledFunctions {
-        UnrolledFunctions03(final long[][] casLookup, final long[] casVisited) {
-            super(casLookup, casVisited);
+
+    static class AStarPuchertStrategy_5 extends AStarPuchertStrategy {
+        public AStarPuchertStrategy_5(final Board board, final StateStorage storage) {
+            super(board, storage);  //System.out.println("-64-5 !!");
         }
         @Override
-        void addAllLookupRemoveVisited(final long[] casThis, final long[] casOther) {
-            long l0 = casThis[0];
-            long l1 = casThis[1];
-            long l2 = casThis[2];
-            for (int o = 0;  o < casOther.length;  ++o) {
-                long buf = casOther[o];
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                    l1 |= casAdd[1];
-                    l2 |= casAdd[2];
+        public int estimateCost(final AStarNode node, int nonCompletedColors) {
+            int distance = 0;
+            this.storage.get(node.getNeighbors(), this.casCurrent);
+            long current0 = this.casCurrent[0];
+            long current1 = this.casCurrent[1];
+            long current2 = this.casCurrent[2];
+            long current3 = this.casCurrent[3];
+            long current4 = this.casCurrent[4];
+            this.storage.get(node.getFlooded(), this.casVisited);
+            long visited0 = this.casVisited[0];
+            long visited1 = this.casVisited[1];
+            long visited2 = this.casVisited[2];
+            long visited3 = this.casVisited[3];
+            long visited4 = this.casVisited[4];
+            while (true) {
+                visited0 |= current0;
+                visited1 |= current1;
+                visited2 |= current2;
+                visited3 |= current3;
+                visited4 |= current4;
+                int completedColors = 0;
+                for (int colors = nonCompletedColors;  0 != colors;  ) {
+                    final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
+                    colors ^= colorBit;
+                    final long[] casColor = this.casByColorBits[colorBit];
+                    if (((visited0 & casColor[0]) == casColor[0]) &&
+                        ((visited1 & casColor[1]) == casColor[1]) &&
+                        ((visited2 & casColor[2]) == casColor[2]) &&
+                        ((visited3 & casColor[3]) == casColor[3]) &&
+                        ((visited4 & casColor[4]) == casColor[4])) {
+                        completedColors |= colorBit;
+                    }
+                }
+                if (0 != completedColors) {
+                    nonCompletedColors ^= completedColors;
+                    // We can eliminate colors. Do just that.
+                    // We also combine all these elimination moves.
+                    distance += Integer.bitCount(completedColors);
+                    if (0 == (nonCompletedColors & (nonCompletedColors - 1))) { // one or zero colors remaining
+                        distance += (-nonCompletedColors >>> 31); // nonCompletedColors is never negative // (0 == nonCompletedColors ? 0 : 1)
+                        return distance; // done
+                    } else {
+                        // completed colors
+                        final long[] colorCas = this.casByColorBits[completedColors];
+                        // non-completed colors
+                        // move nodes to next layer
+                        long l0 = 0, l1 = 0, l2 = 0, l3 = 0, l4 = 0;
+                        long buf = (current0 & colorCas[0]);
+                        current0 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                            l2 |= casAdd[2];
+                            l3 |= casAdd[3];
+                            l4 |= casAdd[4];
+                        }
+                        buf = (current1 & colorCas[1]);
+                        current1 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                            l2 |= casAdd[2];
+                            l3 |= casAdd[3];
+                            l4 |= casAdd[4];
+                        }
+                        buf = (current2 & colorCas[2]);
+                        current2 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                            l2 |= casAdd[2];
+                            l3 |= casAdd[3];
+                            l4 |= casAdd[4];
+                        }
+                        buf = (current3 & colorCas[3]);
+                        current3 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 3 + Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                            l2 |= casAdd[2];
+                            l3 |= casAdd[3];
+                            l4 |= casAdd[4];
+                        }
+                        buf = (current4 & colorCas[4]);
+                        current4 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 4 + Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                            l2 |= casAdd[2];
+                            l3 |= casAdd[3];
+                            l4 |= casAdd[4];
+                        }
+                        current0 |= l0 & ~visited0;
+                        current1 |= l1 & ~visited1;
+                        current2 |= l2 & ~visited2;
+                        current3 |= l3 & ~visited3;
+                        current4 |= l4 & ~visited4;
+                    }
+                } else {
+                    // Nothing found, do the color-blind pseudo-move
+                    // Expand current layer of nodes.
+                    ++distance;
+                    long l0 = 0, l1 = 0, l2 = 0, l3 = 0, l4 = 0;
+                    while (current0 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(current0)];
+                        current0 &= current0 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                        l2 |= casAdd[2];
+                        l3 |= casAdd[3];
+                        l4 |= casAdd[4];
+                    }
+                    while (current1 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(current1)];
+                        current1 &= current1 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                        l2 |= casAdd[2];
+                        l3 |= casAdd[3];
+                        l4 |= casAdd[4];
+                    }
+                    while (current2 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(current2)];
+                        current2 &= current2 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                        l2 |= casAdd[2];
+                        l3 |= casAdd[3];
+                        l4 |= casAdd[4];
+                    }
+                    while (current3 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 3 + Long.numberOfTrailingZeros(current3)];
+                        current3 &= current3 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                        l2 |= casAdd[2];
+                        l3 |= casAdd[3];
+                        l4 |= casAdd[4];
+                    }
+                    while (current4 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 4 + Long.numberOfTrailingZeros(current4)];
+                        current4 &= current4 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                        l2 |= casAdd[2];
+                        l3 |= casAdd[3];
+                        l4 |= casAdd[4];
+                    }
+                    current0 = l0 & ~visited0;
+                    current1 = l1 & ~visited1;
+                    current2 = l2 & ~visited2;
+                    current3 = l3 & ~visited3;
+                    current4 = l4 & ~visited4;
                 }
             }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-            casThis[1] = l1 & ~(this.casVisited[1]);
-            casThis[2] = l2 & ~(this.casVisited[2]);
-        }
-        @Override
-        void addAllAndLookupRemoveVisited(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
-            long l0 = casThis[0];
-            long l1 = casThis[1];
-            long l2 = casThis[2];
-            for (int o = 0;  o < casOtherOne.length;  ++o) {
-                long buf = (casOtherOne[o] & casOtherTwo[o]);
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                    l1 |= casAdd[1];
-                    l2 |= casAdd[2];
-                }
-            }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-            casThis[1] = l1 & ~(this.casVisited[1]);
-            casThis[2] = l2 & ~(this.casVisited[2]);
         }
     }
 
-    static class UnrolledFunctions04 extends UnrolledFunctions {
-        UnrolledFunctions04(final long[][] casLookup, final long[] casVisited) {
-            super(casLookup, casVisited);
+
+    static class AStarPuchertStrategy_6 extends AStarPuchertStrategy {
+        public AStarPuchertStrategy_6(final Board board, final StateStorage storage) {
+            super(board, storage);  //System.out.println("-64-6 !!");
         }
         @Override
-        void addAllLookupRemoveVisited(final long[] casThis, final long[] casOther) {
-            long l0 = casThis[0];
-            long l1 = casThis[1];
-            long l2 = casThis[2];
-            long l3 = casThis[3];
-            for (int o = 0;  o < casOther.length;  ++o) {
-                long buf = casOther[o];
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                    l1 |= casAdd[1];
-                    l2 |= casAdd[2];
-                    l3 |= casAdd[3];
+        public int estimateCost(final AStarNode node, int nonCompletedColors) {
+            int distance = 0;
+            this.storage.get(node.getNeighbors(), this.casCurrent);
+            long current0 = this.casCurrent[0];
+            long current1 = this.casCurrent[1];
+            long current2 = this.casCurrent[2];
+            long current3 = this.casCurrent[3];
+            long current4 = this.casCurrent[4];
+            long current5 = this.casCurrent[5];
+            this.storage.get(node.getFlooded(), this.casVisited);
+            long visited0 = this.casVisited[0];
+            long visited1 = this.casVisited[1];
+            long visited2 = this.casVisited[2];
+            long visited3 = this.casVisited[3];
+            long visited4 = this.casVisited[4];
+            long visited5 = this.casVisited[5];
+            while (true) {
+                visited0 |= current0;
+                visited1 |= current1;
+                visited2 |= current2;
+                visited3 |= current3;
+                visited4 |= current4;
+                visited5 |= current5;
+                int completedColors = 0;
+                for (int colors = nonCompletedColors;  0 != colors;  ) {
+                    final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
+                    colors ^= colorBit;
+                    final long[] casColor = this.casByColorBits[colorBit];
+                    if (((visited0 & casColor[0]) == casColor[0]) &&
+                        ((visited1 & casColor[1]) == casColor[1]) &&
+                        ((visited2 & casColor[2]) == casColor[2]) &&
+                        ((visited3 & casColor[3]) == casColor[3]) &&
+                        ((visited4 & casColor[4]) == casColor[4]) &&
+                        ((visited5 & casColor[5]) == casColor[5])) {
+                        completedColors |= colorBit;
+                    }
+                }
+                if (0 != completedColors) {
+                    nonCompletedColors ^= completedColors;
+                    // We can eliminate colors. Do just that.
+                    // We also combine all these elimination moves.
+                    distance += Integer.bitCount(completedColors);
+                    if (0 == (nonCompletedColors & (nonCompletedColors - 1))) { // one or zero colors remaining
+                        distance += (-nonCompletedColors >>> 31); // nonCompletedColors is never negative // (0 == nonCompletedColors ? 0 : 1)
+                        return distance; // done
+                    } else {
+                        // completed colors
+                        final long[] colorCas = this.casByColorBits[completedColors];
+                        // non-completed colors
+                        // move nodes to next layer
+                        long l0 = 0, l1 = 0, l2 = 0, l3 = 0, l4 = 0, l5 = 0;
+                        long buf = (current0 & colorCas[0]);
+                        current0 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                            l2 |= casAdd[2];
+                            l3 |= casAdd[3];
+                            l4 |= casAdd[4];
+                            l5 |= casAdd[5];
+                        }
+                        buf = (current1 & colorCas[1]);
+                        current1 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                            l2 |= casAdd[2];
+                            l3 |= casAdd[3];
+                            l4 |= casAdd[4];
+                            l5 |= casAdd[5];
+                        }
+                        buf = (current2 & colorCas[2]);
+                        current2 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                            l2 |= casAdd[2];
+                            l3 |= casAdd[3];
+                            l4 |= casAdd[4];
+                            l5 |= casAdd[5];
+                        }
+                        buf = (current3 & colorCas[3]);
+                        current3 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 3 + Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                            l2 |= casAdd[2];
+                            l3 |= casAdd[3];
+                            l4 |= casAdd[4];
+                            l5 |= casAdd[5];
+                        }
+                        buf = (current4 & colorCas[4]);
+                        current4 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 4 + Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                            l2 |= casAdd[2];
+                            l3 |= casAdd[3];
+                            l4 |= casAdd[4];
+                            l5 |= casAdd[5];
+                        }
+                        buf = (current5 & colorCas[5]);
+                        current5 &= ~buf;
+                        while (buf != 0) {
+                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 5 + Long.numberOfTrailingZeros(buf)];
+                            buf &= buf - 1; // clear the least significant bit set
+                            l0 |= casAdd[0];
+                            l1 |= casAdd[1];
+                            l2 |= casAdd[2];
+                            l3 |= casAdd[3];
+                            l4 |= casAdd[4];
+                            l5 |= casAdd[5];
+                        }
+                        current0 |= l0 & ~visited0;
+                        current1 |= l1 & ~visited1;
+                        current2 |= l2 & ~visited2;
+                        current3 |= l3 & ~visited3;
+                        current4 |= l4 & ~visited4;
+                        current5 |= l5 & ~visited5;
+                    }
+                } else {
+                    // Nothing found, do the color-blind pseudo-move
+                    // Expand current layer of nodes.
+                    ++distance;
+                    long l0 = 0, l1 = 0, l2 = 0, l3 = 0, l4 = 0, l5 = 0;
+                    while (current0 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(current0)];
+                        current0 &= current0 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                        l2 |= casAdd[2];
+                        l3 |= casAdd[3];
+                        l4 |= casAdd[4];
+                        l5 |= casAdd[5];
+                    }
+                    while (current1 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(current1)];
+                        current1 &= current1 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                        l2 |= casAdd[2];
+                        l3 |= casAdd[3];
+                        l4 |= casAdd[4];
+                        l5 |= casAdd[5];
+                    }
+                    while (current2 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(current2)];
+                        current2 &= current2 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                        l2 |= casAdd[2];
+                        l3 |= casAdd[3];
+                        l4 |= casAdd[4];
+                        l5 |= casAdd[5];
+                    }
+                    while (current3 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 3 + Long.numberOfTrailingZeros(current3)];
+                        current3 &= current3 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                        l2 |= casAdd[2];
+                        l3 |= casAdd[3];
+                        l4 |= casAdd[4];
+                        l5 |= casAdd[5];
+                    }
+                    while (current4 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 4 + Long.numberOfTrailingZeros(current4)];
+                        current4 &= current4 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                        l2 |= casAdd[2];
+                        l3 |= casAdd[3];
+                        l4 |= casAdd[4];
+                        l5 |= casAdd[5];
+                    }
+                    while (current5 != 0) {
+                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 5 + Long.numberOfTrailingZeros(current5)];
+                        current5 &= current5 - 1; // clear the least significant bit set
+                        l0 |= casAdd[0];
+                        l1 |= casAdd[1];
+                        l2 |= casAdd[2];
+                        l3 |= casAdd[3];
+                        l4 |= casAdd[4];
+                        l5 |= casAdd[5];
+                    }
+                    current0 = l0 & ~visited0;
+                    current1 = l1 & ~visited1;
+                    current2 = l2 & ~visited2;
+                    current3 = l3 & ~visited3;
+                    current4 = l4 & ~visited4;
+                    current5 = l5 & ~visited5;
                 }
             }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-            casThis[1] = l1 & ~(this.casVisited[1]);
-            casThis[2] = l2 & ~(this.casVisited[2]);
-            casThis[3] = l3 & ~(this.casVisited[3]);
-        }
-        @Override
-        void addAllAndLookupRemoveVisited(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
-            long l0 = casThis[0];
-            long l1 = casThis[1];
-            long l2 = casThis[2];
-            long l3 = casThis[3];
-            for (int o = 0;  o < casOtherOne.length;  ++o) {
-                long buf = (casOtherOne[o] & casOtherTwo[o]);
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                    l1 |= casAdd[1];
-                    l2 |= casAdd[2];
-                    l3 |= casAdd[3];
-                }
-            }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-            casThis[1] = l1 & ~(this.casVisited[1]);
-            casThis[2] = l2 & ~(this.casVisited[2]);
-            casThis[3] = l3 & ~(this.casVisited[3]);
         }
     }
 
-    static class UnrolledFunctions05 extends UnrolledFunctions {
-        UnrolledFunctions05(final long[][] casLookup, final long[] casVisited) {
-            super(casLookup, casVisited);
-        }
-        @Override
-        void addAllLookupRemoveVisited(final long[] casThis, final long[] casOther) {
-            long l0 = casThis[0];
-            long l1 = casThis[1];
-            long l2 = casThis[2];
-            long l3 = casThis[3];
-            long l4 = casThis[4];
-            for (int o = 0;  o < casOther.length;  ++o) {
-                long buf = casOther[o];
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                    l1 |= casAdd[1];
-                    l2 |= casAdd[2];
-                    l3 |= casAdd[3];
-                    l4 |= casAdd[4];
-                }
-            }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-            casThis[1] = l1 & ~(this.casVisited[1]);
-            casThis[2] = l2 & ~(this.casVisited[2]);
-            casThis[3] = l3 & ~(this.casVisited[3]);
-            casThis[4] = l4 & ~(this.casVisited[4]);
-        }
-        @Override
-        void addAllAndLookupRemoveVisited(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
-            long l0 = casThis[0];
-            long l1 = casThis[1];
-            long l2 = casThis[2];
-            long l3 = casThis[3];
-            long l4 = casThis[4];
-            for (int o = 0;  o < casOtherOne.length;  ++o) {
-                long buf = (casOtherOne[o] & casOtherTwo[o]);
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                    l1 |= casAdd[1];
-                    l2 |= casAdd[2];
-                    l3 |= casAdd[3];
-                    l4 |= casAdd[4];
-                }
-            }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-            casThis[1] = l1 & ~(this.casVisited[1]);
-            casThis[2] = l2 & ~(this.casVisited[2]);
-            casThis[3] = l3 & ~(this.casVisited[3]);
-            casThis[4] = l4 & ~(this.casVisited[4]);
-        }
-    }
 
-    static class UnrolledFunctions06 extends UnrolledFunctions {
-        UnrolledFunctions06(final long[][] casLookup, final long[] casVisited) {
-            super(casLookup, casVisited);
-        }
-        @Override
-        void addAllLookupRemoveVisited(final long[] casThis, final long[] casOther) {
-            long l0 = casThis[0];
-            long l1 = casThis[1];
-            long l2 = casThis[2];
-            long l3 = casThis[3];
-            long l4 = casThis[4];
-            long l5 = casThis[5];
-            for (int o = 0;  o < casOther.length;  ++o) {
-                long buf = casOther[o];
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                    l1 |= casAdd[1];
-                    l2 |= casAdd[2];
-                    l3 |= casAdd[3];
-                    l4 |= casAdd[4];
-                    l5 |= casAdd[5];
-                }
-            }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-            casThis[1] = l1 & ~(this.casVisited[1]);
-            casThis[2] = l2 & ~(this.casVisited[2]);
-            casThis[3] = l3 & ~(this.casVisited[3]);
-            casThis[4] = l4 & ~(this.casVisited[4]);
-            casThis[5] = l5 & ~(this.casVisited[5]);
-        }
-        @Override
-        void addAllAndLookupRemoveVisited(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
-            long l0 = casThis[0];
-            long l1 = casThis[1];
-            long l2 = casThis[2];
-            long l3 = casThis[3];
-            long l4 = casThis[4];
-            long l5 = casThis[5];
-            for (int o = 0;  o < casOtherOne.length;  ++o) {
-                long buf = (casOtherOne[o] & casOtherTwo[o]);
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                    l1 |= casAdd[1];
-                    l2 |= casAdd[2];
-                    l3 |= casAdd[3];
-                    l4 |= casAdd[4];
-                    l5 |= casAdd[5];
-                }
-            }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-            casThis[1] = l1 & ~(this.casVisited[1]);
-            casThis[2] = l2 & ~(this.casVisited[2]);
-            casThis[3] = l3 & ~(this.casVisited[3]);
-            casThis[4] = l4 & ~(this.casVisited[4]);
-            casThis[5] = l5 & ~(this.casVisited[5]);
-        }
-    }
-
-    static class UnrolledFunctions07 extends UnrolledFunctions {
-        UnrolledFunctions07(final long[][] casLookup, final long[] casVisited) {
-            super(casLookup, casVisited);
-        }
-        @Override
-        void addAllLookupRemoveVisited(final long[] casThis, final long[] casOther) {
-            long l0 = casThis[0];
-            long l1 = casThis[1];
-            long l2 = casThis[2];
-            long l3 = casThis[3];
-            long l4 = casThis[4];
-            long l5 = casThis[5];
-            long l6 = casThis[6];
-            for (int o = 0;  o < casOther.length;  ++o) {
-                long buf = casOther[o];
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                    l1 |= casAdd[1];
-                    l2 |= casAdd[2];
-                    l3 |= casAdd[3];
-                    l4 |= casAdd[4];
-                    l5 |= casAdd[5];
-                    l6 |= casAdd[6];
-                }
-            }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-            casThis[1] = l1 & ~(this.casVisited[1]);
-            casThis[2] = l2 & ~(this.casVisited[2]);
-            casThis[3] = l3 & ~(this.casVisited[3]);
-            casThis[4] = l4 & ~(this.casVisited[4]);
-            casThis[5] = l5 & ~(this.casVisited[5]);
-            casThis[6] = l6 & ~(this.casVisited[6]);
-        }
-        @Override
-        void addAllAndLookupRemoveVisited(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
-            long l0 = casThis[0];
-            long l1 = casThis[1];
-            long l2 = casThis[2];
-            long l3 = casThis[3];
-            long l4 = casThis[4];
-            long l5 = casThis[5];
-            long l6 = casThis[6];
-            for (int o = 0;  o < casOtherOne.length;  ++o) {
-                long buf = (casOtherOne[o] & casOtherTwo[o]);
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                    l1 |= casAdd[1];
-                    l2 |= casAdd[2];
-                    l3 |= casAdd[3];
-                    l4 |= casAdd[4];
-                    l5 |= casAdd[5];
-                    l6 |= casAdd[6];
-                }
-            }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-            casThis[1] = l1 & ~(this.casVisited[1]);
-            casThis[2] = l2 & ~(this.casVisited[2]);
-            casThis[3] = l3 & ~(this.casVisited[3]);
-            casThis[4] = l4 & ~(this.casVisited[4]);
-            casThis[5] = l5 & ~(this.casVisited[5]);
-            casThis[6] = l6 & ~(this.casVisited[6]);
-        }
-    }
-
-    static class UnrolledFunctions08 extends UnrolledFunctions {
-        UnrolledFunctions08(final long[][] casLookup, final long[] casVisited) {
-            super(casLookup, casVisited);
-        }
-        @Override
-        void addAllLookupRemoveVisited(final long[] casThis, final long[] casOther) {
-            long l0 = casThis[0];
-            long l1 = casThis[1];
-            long l2 = casThis[2];
-            long l3 = casThis[3];
-            long l4 = casThis[4];
-            long l5 = casThis[5];
-            long l6 = casThis[6];
-            long l7 = casThis[7];
-            for (int o = 0;  o < casOther.length;  ++o) {
-                long buf = casOther[o];
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                    l1 |= casAdd[1];
-                    l2 |= casAdd[2];
-                    l3 |= casAdd[3];
-                    l4 |= casAdd[4];
-                    l5 |= casAdd[5];
-                    l6 |= casAdd[6];
-                    l7 |= casAdd[7];
-                }
-            }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-            casThis[1] = l1 & ~(this.casVisited[1]);
-            casThis[2] = l2 & ~(this.casVisited[2]);
-            casThis[3] = l3 & ~(this.casVisited[3]);
-            casThis[4] = l4 & ~(this.casVisited[4]);
-            casThis[5] = l5 & ~(this.casVisited[5]);
-            casThis[6] = l6 & ~(this.casVisited[6]);
-            casThis[7] = l7 & ~(this.casVisited[7]);
-        }
-        @Override
-        void addAllAndLookupRemoveVisited(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
-            long l0 = casThis[0];
-            long l1 = casThis[1];
-            long l2 = casThis[2];
-            long l3 = casThis[3];
-            long l4 = casThis[4];
-            long l5 = casThis[5];
-            long l6 = casThis[6];
-            long l7 = casThis[7];
-            for (int o = 0;  o < casOtherOne.length;  ++o) {
-                long buf = (casOtherOne[o] & casOtherTwo[o]);
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                    l1 |= casAdd[1];
-                    l2 |= casAdd[2];
-                    l3 |= casAdd[3];
-                    l4 |= casAdd[4];
-                    l5 |= casAdd[5];
-                    l6 |= casAdd[6];
-                    l7 |= casAdd[7];
-                }
-            }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-            casThis[1] = l1 & ~(this.casVisited[1]);
-            casThis[2] = l2 & ~(this.casVisited[2]);
-            casThis[3] = l3 & ~(this.casVisited[3]);
-            casThis[4] = l4 & ~(this.casVisited[4]);
-            casThis[5] = l5 & ~(this.casVisited[5]);
-            casThis[6] = l6 & ~(this.casVisited[6]);
-            casThis[7] = l7 & ~(this.casVisited[7]);
-        }
-    }
-
-    static class UnrolledFunctions09 extends UnrolledFunctions {
-        UnrolledFunctions09(final long[][] casLookup, final long[] casVisited) {
-            super(casLookup, casVisited);
-        }
-        @Override
-        void addAllLookupRemoveVisited(final long[] casThis, final long[] casOther) {
-            long l0 = casThis[0];
-            long l1 = casThis[1];
-            long l2 = casThis[2];
-            long l3 = casThis[3];
-            long l4 = casThis[4];
-            long l5 = casThis[5];
-            long l6 = casThis[6];
-            long l7 = casThis[7];
-            long l8 = casThis[8];
-            for (int o = 0;  o < casOther.length;  ++o) {
-                long buf = casOther[o];
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                    l1 |= casAdd[1];
-                    l2 |= casAdd[2];
-                    l3 |= casAdd[3];
-                    l4 |= casAdd[4];
-                    l5 |= casAdd[5];
-                    l6 |= casAdd[6];
-                    l7 |= casAdd[7];
-                    l8 |= casAdd[8];
-                }
-            }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-            casThis[1] = l1 & ~(this.casVisited[1]);
-            casThis[2] = l2 & ~(this.casVisited[2]);
-            casThis[3] = l3 & ~(this.casVisited[3]);
-            casThis[4] = l4 & ~(this.casVisited[4]);
-            casThis[5] = l5 & ~(this.casVisited[5]);
-            casThis[6] = l6 & ~(this.casVisited[6]);
-            casThis[7] = l7 & ~(this.casVisited[7]);
-            casThis[8] = l8 & ~(this.casVisited[8]);
-        }
-        @Override
-        void addAllAndLookupRemoveVisited(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
-            long l0 = casThis[0];
-            long l1 = casThis[1];
-            long l2 = casThis[2];
-            long l3 = casThis[3];
-            long l4 = casThis[4];
-            long l5 = casThis[5];
-            long l6 = casThis[6];
-            long l7 = casThis[7];
-            long l8 = casThis[8];
-            for (int o = 0;  o < casOtherOne.length;  ++o) {
-                long buf = (casOtherOne[o] & casOtherTwo[o]);
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                    l1 |= casAdd[1];
-                    l2 |= casAdd[2];
-                    l3 |= casAdd[3];
-                    l4 |= casAdd[4];
-                    l5 |= casAdd[5];
-                    l6 |= casAdd[6];
-                    l7 |= casAdd[7];
-                    l8 |= casAdd[8];
-                }
-            }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-            casThis[1] = l1 & ~(this.casVisited[1]);
-            casThis[2] = l2 & ~(this.casVisited[2]);
-            casThis[3] = l3 & ~(this.casVisited[3]);
-            casThis[4] = l4 & ~(this.casVisited[4]);
-            casThis[5] = l5 & ~(this.casVisited[5]);
-            casThis[6] = l6 & ~(this.casVisited[6]);
-            casThis[7] = l7 & ~(this.casVisited[7]);
-            casThis[8] = l8 & ~(this.casVisited[8]);
-        }
-    }
-
-    static class UnrolledFunctions10 extends UnrolledFunctions {
-        UnrolledFunctions10(final long[][] casLookup, final long[] casVisited) {
-            super(casLookup, casVisited);
-        }
-        @Override
-        void addAllLookupRemoveVisited(final long[] casThis, final long[] casOther) {
-            long l0 = casThis[0];
-            long l1 = casThis[1];
-            long l2 = casThis[2];
-            long l3 = casThis[3];
-            long l4 = casThis[4];
-            long l5 = casThis[5];
-            long l6 = casThis[6];
-            long l7 = casThis[7];
-            long l8 = casThis[8];
-            long l9 = casThis[9];
-            for (int o = 0;  o < casOther.length;  ++o) {
-                long buf = casOther[o];
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                    l1 |= casAdd[1];
-                    l2 |= casAdd[2];
-                    l3 |= casAdd[3];
-                    l4 |= casAdd[4];
-                    l5 |= casAdd[5];
-                    l6 |= casAdd[6];
-                    l7 |= casAdd[7];
-                    l8 |= casAdd[8];
-                    l9 |= casAdd[9];
-                }
-            }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-            casThis[1] = l1 & ~(this.casVisited[1]);
-            casThis[2] = l2 & ~(this.casVisited[2]);
-            casThis[3] = l3 & ~(this.casVisited[3]);
-            casThis[4] = l4 & ~(this.casVisited[4]);
-            casThis[5] = l5 & ~(this.casVisited[5]);
-            casThis[6] = l6 & ~(this.casVisited[6]);
-            casThis[7] = l7 & ~(this.casVisited[7]);
-            casThis[8] = l8 & ~(this.casVisited[8]);
-            casThis[9] = l9 & ~(this.casVisited[9]);
-        }
-        @Override
-        void addAllAndLookupRemoveVisited(final long[] casThis, final long[] casOtherOne, final long[] casOtherTwo) {
-            long l0 = casThis[0];
-            long l1 = casThis[1];
-            long l2 = casThis[2];
-            long l3 = casThis[3];
-            long l4 = casThis[4];
-            long l5 = casThis[5];
-            long l6 = casThis[6];
-            long l7 = casThis[7];
-            long l8 = casThis[8];
-            long l9 = casThis[9];
-            for (int o = 0;  o < casOtherOne.length;  ++o) {
-                long buf = (casOtherOne[o] & casOtherTwo[o]);
-                final int offset = (o << 6);
-                while (buf != 0) {
-                    final long[] casAdd = this.casLookup[offset + Long.numberOfTrailingZeros(buf)];
-                    buf &= buf - 1; // clear the least significant bit set
-                    l0 |= casAdd[0];
-                    l1 |= casAdd[1];
-                    l2 |= casAdd[2];
-                    l3 |= casAdd[3];
-                    l4 |= casAdd[4];
-                    l5 |= casAdd[5];
-                    l6 |= casAdd[6];
-                    l7 |= casAdd[7];
-                    l8 |= casAdd[8];
-                    l9 |= casAdd[9];
-                }
-            }
-            casThis[0] = l0 & ~(this.casVisited[0]);
-            casThis[1] = l1 & ~(this.casVisited[1]);
-            casThis[2] = l2 & ~(this.casVisited[2]);
-            casThis[3] = l3 & ~(this.casVisited[3]);
-            casThis[4] = l4 & ~(this.casVisited[4]);
-            casThis[5] = l5 & ~(this.casVisited[5]);
-            casThis[6] = l6 & ~(this.casVisited[6]);
-            casThis[7] = l7 & ~(this.casVisited[7]);
-            casThis[8] = l8 & ~(this.casVisited[8]);
-            casThis[9] = l9 & ~(this.casVisited[9]);
-        }
-    }
 }
