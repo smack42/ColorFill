@@ -245,10 +245,8 @@ public final class ColorAreaSet {
                     this.buf = this.array[++this.longIdx];
                 }
             }
-            final long l1b = this.buf & -this.buf;  // Long.lowestOneBit(this.buf)
-            final int clz = Long.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
-            final int caId = (this.longIdx << 6) + 63 - clz;
-            this.buf ^= l1b;
+            final int caId = (this.longIdx << 6) + Long.numberOfTrailingZeros(this.buf);
+            this.buf &= this.buf - 1; // clear the least significant bit set
             return caId;
         }
     }
@@ -297,10 +295,8 @@ public final class ColorAreaSet {
                     this.buf = this.array1[this.longIdx] & this.array2[this.longIdx];
                 }
             }
-            final long l1b = this.buf & -this.buf;  // Long.lowestOneBit(this.buf)
-            final int clz = Long.numberOfLeadingZeros(l1b); // hopefully an intrinsic function using instruction BSR / LZCNT / CLZ
-            final int caId = (this.longIdx << 6) + 63 - clz;
-            this.buf ^= l1b;
+            final int caId = (this.longIdx << 6) + Long.numberOfTrailingZeros(this.buf);
+            this.buf &= this.buf - 1; // clear the least significant bit set
             return caId;
         }
     }
