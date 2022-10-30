@@ -25,7 +25,6 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import colorfill.model.Board;
-import colorfill.model.ColorArea;
 import colorfill.model.ColorAreaSet;
 
 /**
@@ -38,10 +37,12 @@ public class AStarSolver extends AbstractSolver {
     private final SolutionTree solutionTree = new SolutionTree();
     private final ColorAreaSet.IteratorAnd iterAnd;
     private final long[][] casByColorBits;
+    private final int allColorBits;
     private Queue<AStarNode> open;
     private HashMapLongArray2Byte map;
     private StateStorage storage;
     private final long[] casFlooded, casNeighbors, casNextFlooded, casNextNeighbors;
+    private final long[][] idsNeighborColorAreaSets;
 
     /**
      * construct a new solver for this Board.
@@ -51,10 +52,12 @@ public class AStarSolver extends AbstractSolver {
         super(board);
         this.iterAnd = new ColorAreaSet.IteratorAnd();
         this.casByColorBits = board.getCasByColorBitsArray();
+        this.allColorBits = this.casByColorBits.length - 1;
         this.casFlooded = ColorAreaSet.constructor(board);
         this.casNeighbors = ColorAreaSet.constructor(board);
         this.casNextFlooded = ColorAreaSet.constructor(board);
         this.casNextNeighbors = ColorAreaSet.constructor(board);
+        this.idsNeighborColorAreaSets = board.getNeighborColorAreaSet4IdArray();
     }
 
     /* (non-Javadoc)
@@ -115,7 +118,7 @@ public class AStarSolver extends AbstractSolver {
             if (Thread.interrupted()) { throw new InterruptedException(); }
             final AStarNode currentNode = this.open.poll();
             this.storage.get(currentNode.getFlooded(), this.casFlooded);
-            int nonCompletedColors = colorBitLimit - 1;
+            int nonCompletedColors = this.allColorBits;
             for (int colorBit = 1;  colorBit < colorBitLimit;  colorBit <<= 1) {
                 if (ColorAreaSet.containsAll(this.casFlooded, this.casByColorBits[colorBit])) {
                     nonCompletedColors ^= colorBit;
@@ -130,7 +133,7 @@ public class AStarSolver extends AbstractSolver {
                 colors ^= colorBit;
                 final long[] casColorBit = this.casByColorBits[colorBit];
                 if (ColorAreaSet.intersects(this.casNeighbors, casColorBit)
-                        && this.canPlay(colorBit, this.iterAnd.init(this.casNeighbors, casColorBit), currentNode)) {
+                        && this.canPlay(colorBit, this.iterAnd.init(this.casNeighbors, casColorBit), prevColorBit)) {
                     // play, part 1
                     ColorAreaSet.copyFrom(this.casNextFlooded, this.casFlooded);
                     ColorAreaSet.addAllAnd(this.casNextFlooded, this.casNeighbors, casColorBit);
@@ -191,25 +194,29 @@ public class AStarSolver extends AbstractSolver {
      * the idea is taken from the program "floodit" by Aaron and Simon Puchert,
      * which can be found at <a>https://github.com/aaronpuchert/floodit</a>
      */
-    private boolean canPlay(final int nextColorBit, final ColorAreaSet.IteratorAnd nextColorNeighbors, final AStarNode currentNode) {
-        final byte currColor = (byte)(currentNode.getSolutionEntry() & SolutionTree.COLOR_BIT_MASK);
+    private boolean canPlay(final int nextColorBit, final ColorAreaSet.IteratorAnd nextColorNeighbors, final int currentColorBit) {
         // did the previous move add any new "nextColor" neighbors?
+        final long[] casNotCurrentColor = this.casByColorBits[this.allColorBits ^ currentColorBit];
 next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
-            for (final ColorArea prevNeighbor : this.board.getColorArea4Id(nextColorNeighbor).getNeighborsArray()) {
-                if ((prevNeighbor.getColor() != currColor) && ColorAreaSet.contains(this.casFlooded, prevNeighbor)) {
+            final long[] casPrevNeighbors = this.idsNeighborColorAreaSets[nextColorNeighbor];
+            for (int i = 0;  i < casNotCurrentColor.length;  ++i) {
+                if ((casNotCurrentColor[i] & casPrevNeighbors[i] & this.casFlooded[i]) != 0) {
                     continue next;
                 }
             }
             return true;
         }
-        if (nextColorBit < (1 << currColor)) {
+        if (nextColorBit < currentColorBit) {
             return false;
         } else {
             nextColorNeighbors.restart();
             // should nextColor have been played before currColor?
+            final long[] casCurrentColor = this.casByColorBits[currentColorBit];
             for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nextOrNegative()) >= 0;  ) {
-                for (final ColorArea prevNeighbor : this.board.getColorArea4Id(nextColorNeighbor).getNeighborsArray()) {
-                    if ((prevNeighbor.getColor() == currColor) && !ColorAreaSet.contains(this.casFlooded, prevNeighbor)) {
+                final long[] casPrevNeighbors = this.idsNeighborColorAreaSets[nextColorNeighbor];
+                for (int i = 0;  i < casCurrentColor.length;  ++i) {
+                    final long n = casCurrentColor[i] & casPrevNeighbors[i];
+                    if ((n & this.casFlooded[i]) != n) {
                         return false;
                     }
                 }
