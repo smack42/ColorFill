@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2020, 2021 Michael Henke
+    Copyright (C) 2014, 2020, 2021, 2022 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -113,13 +113,12 @@ public class AStarSolver extends AbstractSolver {
         this.open.offer(new AStarNode(this.board, this.board.getColorArea4Cell(startPos), this.storage, this.solutionTree));
         this.map = new HashMapLongArray2Byte(this.board, this.storage);
         AStarNode recycleNode = null;
-        final int colorBitLimit = this.casByColorBits.length;
         while (this.open.size() > 0) {
             if (Thread.interrupted()) { throw new InterruptedException(); }
             final AStarNode currentNode = this.open.poll();
             this.storage.get(currentNode.getFlooded(), this.casFlooded);
             int nonCompletedColors = this.allColorBits;
-            for (int colorBit = 1;  colorBit < colorBitLimit;  colorBit <<= 1) {
+            for (int colorBit = 1;  colorBit < this.casByColorBits.length;  colorBit <<= 1) {
                 if (ColorAreaSet.containsAll(this.casFlooded, this.casByColorBits[colorBit])) {
                     nonCompletedColors ^= colorBit;
                 }
@@ -128,9 +127,8 @@ public class AStarSolver extends AbstractSolver {
             // play all possible colors
             this.storage.get(currentNode.getNeighbors(), this.casNeighbors);
             final int nextSolutionSize = currentNode.getSolutionSize() + 1;
-            for (int colors = (nonCompletedColors & ~prevColorBit);  0 != colors;  ) {
-                final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
-                colors ^= colorBit;
+            for (int colors = (nonCompletedColors & ~prevColorBit);  0 != colors;  colors &= colors - 1) {
+                final int colorBit = Integer.lowestOneBit(colors);
                 final long[] casColorBit = this.casByColorBits[colorBit];
                 if (ColorAreaSet.intersects(this.casNeighbors, casColorBit)
                         && this.canPlay(colorBit, this.iterAnd.init(this.casNeighbors, casColorBit), prevColorBit)) {
@@ -141,17 +139,17 @@ public class AStarSolver extends AbstractSolver {
                     if (nextFloodedEntry != 0) {
                         // play, part 2
                         ColorAreaSet.copyFrom(this.casNextNeighbors, this.casNeighbors);
-                        ColorAreaSet.addAllAndLookup(this.casNextNeighbors, this.casNeighbors, casColorBit, this.board.getNeighborColorAreaSet4IdArray());
+                        ColorAreaSet.addAllAndLookup(this.casNextNeighbors, this.casNeighbors, casColorBit, this.idsNeighborColorAreaSets);
                         ColorAreaSet.removeAll(this.casNextNeighbors, this.casNextFlooded);
                         final AStarNode nextNode = currentNode.recycleOrNew(recycleNode);
                         nextNode.setFlooded(nextFloodedEntry);
                         nextNode.setNeighbors(this.storage.put(this.casNextNeighbors));
-                        nextNode.addSolutionEntry((byte)(31 - Integer.numberOfLeadingZeros(colorBit)), this.solutionTree);
+                        nextNode.addSolutionEntry((byte)Integer.numberOfTrailingZeros(colorBit), this.solutionTree);
                         // finished?
                         if (ColorAreaSet.containsAll(this.casNextFlooded, casColorBit) // color completed
                                 && (0 == ((nonCompletedColors ^= colorBit) & (nonCompletedColors - 1)))) { // one or zero colors remaining
                             if (0 != nonCompletedColors) {
-                                nextNode.addSolutionEntry((byte)(31 - Integer.numberOfLeadingZeros(nonCompletedColors)), this.solutionTree);
+                                nextNode.addSolutionEntry((byte)Integer.numberOfTrailingZeros(nonCompletedColors), this.solutionTree);
                             }
                             this.addSolution(nextNode.getSolution(this.solutionTree));
                             assert printQueueStatistics(this.open);

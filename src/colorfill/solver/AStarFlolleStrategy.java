@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2020, 2021 Michael Henke
+    Copyright (C) 2020, 2021, 2022 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -70,9 +70,8 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
         while (true) {
             ColorAreaSet.addAll(this.casVisited, current);
             int completedColors = 0;
-            for (int colors = nonCompletedColors;  0 != colors;  ) {
-                final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
-                colors ^= colorBit;
+            for (int colors = nonCompletedColors;  0 != colors;  colors &= colors - 1) {
+                final int colorBit = Integer.lowestOneBit(colors);
                 if (ColorAreaSet.containsAll(this.casVisited, this.casByColorBits[colorBit])) {
                     completedColors |= colorBit;
                 }
@@ -102,9 +101,8 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
                 // Flolle's "terminal-flood" InadmissibleSlowStrategy: choose the two colors that give access to the most new border fields.
                 ++distance;
                 int sizeOne = 0, colorBitOne = 0, sizeTwo = 0, colorBitTwo = 0;
-                for (int colors = nonCompletedColors;  0 != colors;  ) {
-                    final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
-                    colors ^= colorBit;
+                for (int colors = nonCompletedColors;  0 != colors;  colors &= colors - 1) {
+                    final int colorBit = Integer.lowestOneBit(colors);
                     ColorAreaSet.clear(next);
                     ColorAreaSet.addAllAndLookup(next, current, this.casByColorBits[colorBit], this.idsNeighborColorAreaSets);
                     ColorAreaSet.removeAll(next, this.casVisited);

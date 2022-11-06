@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2017, 2020, 2021 Michael Henke
+    Copyright (C) 2017, 2020, 2021, 2022 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -77,9 +77,8 @@ public class AStarPuchertStrategy implements AStarStrategy {
         while (true) {
             ColorAreaSet.addAll(this.casVisited, current);
             int completedColors = 0;
-            for (int colors = nonCompletedColors;  0 != colors;  ) {
-                final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
-                colors ^= colorBit;
+            for (int colors = nonCompletedColors;  0 != colors;  colors &= colors - 1) {
+                final int colorBit = Integer.lowestOneBit(colors);
                 if (ColorAreaSet.containsAll(this.casVisited, this.casByColorBits[colorBit])) {
                     completedColors |= colorBit;
                 }
@@ -140,9 +139,8 @@ public class AStarPuchertStrategy implements AStarStrategy {
             while (true) {
                 visited0 |= current0;
                 int completedColors = 0;
-                for (int colors = nonCompletedColors;  0 != colors;  ) {
-                    final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
-                    colors ^= colorBit;
+                for (int colors = nonCompletedColors;  0 != colors;  colors &= colors - 1) {
+                    final int colorBit = Integer.lowestOneBit(colors);
                     final long[] casColor = this.casByColorBits[colorBit];
                     if (((visited0 & casColor[0]) == casColor[0])) {
                         completedColors |= colorBit;
@@ -163,7 +161,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                         // move nodes to next layer
                         long l0 = 0;
                         long buf = (current0 & colorCas[0]);
-                        current0 &= ~buf;
+                        current0 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -205,9 +203,8 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 visited0 |= current0;
                 visited1 |= current1;
                 int completedColors = 0;
-                for (int colors = nonCompletedColors;  0 != colors;  ) {
-                    final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
-                    colors ^= colorBit;
+                for (int colors = nonCompletedColors;  0 != colors;  colors &= colors - 1) {
+                    final int colorBit = Integer.lowestOneBit(colors);
                     final long[] casColor = this.casByColorBits[colorBit];
                     if (((visited0 & casColor[0]) == casColor[0]) &&
                         ((visited1 & casColor[1]) == casColor[1])) {
@@ -229,7 +226,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                         // move nodes to next layer
                         long l0 = 0, l1 = 0;
                         long buf = (current0 & colorCas[0]);
-                        current0 &= ~buf;
+                        current0 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -237,7 +234,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                             l1 |= casAdd[1];
                         }
                         buf = (current1 & colorCas[1]);
-                        current1 &= ~buf;
+                        current1 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -292,9 +289,8 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 visited1 |= current1;
                 visited2 |= current2;
                 int completedColors = 0;
-                for (int colors = nonCompletedColors;  0 != colors;  ) {
-                    final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
-                    colors ^= colorBit;
+                for (int colors = nonCompletedColors;  0 != colors;  colors &= colors - 1) {
+                    final int colorBit = Integer.lowestOneBit(colors);
                     final long[] casColor = this.casByColorBits[colorBit];
                     if (((visited0 & casColor[0]) == casColor[0]) &&
                         ((visited1 & casColor[1]) == casColor[1]) &&
@@ -317,7 +313,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                         // move nodes to next layer
                         long l0 = 0, l1 = 0, l2 = 0;
                         long buf = (current0 & colorCas[0]);
-                        current0 &= ~buf;
+                        current0 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -326,7 +322,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                             l2 |= casAdd[2];
                         }
                         buf = (current1 & colorCas[1]);
-                        current1 &= ~buf;
+                        current1 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -335,7 +331,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                             l2 |= casAdd[2];
                         }
                         buf = (current2 & colorCas[2]);
-                        current2 &= ~buf;
+                        current2 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -405,9 +401,8 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 visited2 |= current2;
                 visited3 |= current3;
                 int completedColors = 0;
-                for (int colors = nonCompletedColors;  0 != colors;  ) {
-                    final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
-                    colors ^= colorBit;
+                for (int colors = nonCompletedColors;  0 != colors;  colors &= colors - 1) {
+                    final int colorBit = Integer.lowestOneBit(colors);
                     final long[] casColor = this.casByColorBits[colorBit];
                     if (((visited0 & casColor[0]) == casColor[0]) &&
                         ((visited1 & casColor[1]) == casColor[1]) &&
@@ -431,7 +426,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                         // move nodes to next layer
                         long l0 = 0, l1 = 0, l2 = 0, l3 = 0;
                         long buf = (current0 & colorCas[0]);
-                        current0 &= ~buf;
+                        current0 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -441,7 +436,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                             l3 |= casAdd[3];
                         }
                         buf = (current1 & colorCas[1]);
-                        current1 &= ~buf;
+                        current1 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -451,7 +446,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                             l3 |= casAdd[3];
                         }
                         buf = (current2 & colorCas[2]);
-                        current2 &= ~buf;
+                        current2 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -461,7 +456,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                             l3 |= casAdd[3];
                         }
                         buf = (current3 & colorCas[3]);
-                        current3 &= ~buf;
+                        current3 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[64 * 3 + Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -548,9 +543,8 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 visited3 |= current3;
                 visited4 |= current4;
                 int completedColors = 0;
-                for (int colors = nonCompletedColors;  0 != colors;  ) {
-                    final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
-                    colors ^= colorBit;
+                for (int colors = nonCompletedColors;  0 != colors;  colors &= colors - 1) {
+                    final int colorBit = Integer.lowestOneBit(colors);
                     final long[] casColor = this.casByColorBits[colorBit];
                     if (((visited0 & casColor[0]) == casColor[0]) &&
                         ((visited1 & casColor[1]) == casColor[1]) &&
@@ -575,7 +569,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                         // move nodes to next layer
                         long l0 = 0, l1 = 0, l2 = 0, l3 = 0, l4 = 0;
                         long buf = (current0 & colorCas[0]);
-                        current0 &= ~buf;
+                        current0 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -586,7 +580,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                             l4 |= casAdd[4];
                         }
                         buf = (current1 & colorCas[1]);
-                        current1 &= ~buf;
+                        current1 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -597,7 +591,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                             l4 |= casAdd[4];
                         }
                         buf = (current2 & colorCas[2]);
-                        current2 &= ~buf;
+                        current2 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -608,7 +602,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                             l4 |= casAdd[4];
                         }
                         buf = (current3 & colorCas[3]);
-                        current3 &= ~buf;
+                        current3 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[64 * 3 + Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -619,7 +613,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                             l4 |= casAdd[4];
                         }
                         buf = (current4 & colorCas[4]);
-                        current4 &= ~buf;
+                        current4 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[64 * 4 + Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -725,9 +719,8 @@ public class AStarPuchertStrategy implements AStarStrategy {
                 visited4 |= current4;
                 visited5 |= current5;
                 int completedColors = 0;
-                for (int colors = nonCompletedColors;  0 != colors;  ) {
-                    final int colorBit = colors & -colors;  // Integer.lowestOneBit(colors);
-                    colors ^= colorBit;
+                for (int colors = nonCompletedColors;  0 != colors;  colors &= colors - 1) {
+                    final int colorBit = Integer.lowestOneBit(colors);
                     final long[] casColor = this.casByColorBits[colorBit];
                     if (((visited0 & casColor[0]) == casColor[0]) &&
                         ((visited1 & casColor[1]) == casColor[1]) &&
@@ -753,7 +746,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                         // move nodes to next layer
                         long l0 = 0, l1 = 0, l2 = 0, l3 = 0, l4 = 0, l5 = 0;
                         long buf = (current0 & colorCas[0]);
-                        current0 &= ~buf;
+                        current0 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -765,7 +758,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                             l5 |= casAdd[5];
                         }
                         buf = (current1 & colorCas[1]);
-                        current1 &= ~buf;
+                        current1 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -777,7 +770,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                             l5 |= casAdd[5];
                         }
                         buf = (current2 & colorCas[2]);
-                        current2 &= ~buf;
+                        current2 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -789,7 +782,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                             l5 |= casAdd[5];
                         }
                         buf = (current3 & colorCas[3]);
-                        current3 &= ~buf;
+                        current3 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[64 * 3 + Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -801,7 +794,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                             l5 |= casAdd[5];
                         }
                         buf = (current4 & colorCas[4]);
-                        current4 &= ~buf;
+                        current4 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[64 * 4 + Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
@@ -813,7 +806,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
                             l5 |= casAdd[5];
                         }
                         buf = (current5 & colorCas[5]);
-                        current5 &= ~buf;
+                        current5 ^= buf;
                         while (buf != 0) {
                             final long[] casAdd = this.idsNeighborColorAreaSets[64 * 5 + Long.numberOfTrailingZeros(buf)];
                             buf &= buf - 1; // clear the least significant bit set
