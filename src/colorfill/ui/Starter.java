@@ -21,10 +21,17 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.NumberFormat;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Scanner;
+
 import colorfill.model.Board;
 import colorfill.solver.AStarFlolleStrategy;
 import colorfill.solver.AStarPuchertStrategy;
@@ -42,10 +49,11 @@ public class Starter {
     
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill";
-        final String version  = "1.3.2 (2022-02-22)";
-        final String author   = "Copyright (C) 2022 Michael Henke <smack42@gmail.com>";
+        final String version  = "1.3.3__DEV__ (2023-07-24)";
+        final String author   = "Copyright (C) 2023 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
+//System.in.read();
 
         switch (args.length) {
         case 0:
@@ -59,6 +67,8 @@ public class Starter {
         case 2:
             if ("-benchmark".equals(args[0])) {
                 runBenchmark(args);
+            } else if ("-99problems".equals(args[0])) {
+                run99Problems(args[1]);
             } else {
                 runValidator(args[0], args[1]);
             }
@@ -649,6 +659,81 @@ public class Starter {
                 }
             }
         }
+    }
+
+    /**
+     * process the "99problems" files from repo https://github.com/manteuffel723/flood-it-boards
+     * <p>
+     * solve each board with our optimal solver (A-Star with Puchert strategy) and compare our
+     * number of moves with the one specified the file.
+     * 
+     * @param strPath path that contains the "99problems" files
+     */
+    private static void run99Problems(String strPath) throws Exception {
+        System.out.println(LocalDateTime.now());
+        final long nanoStartAll = System.nanoTime();
+        ArrayList<Path> paths = Files.list(Paths.get(strPath)).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+        Collections.sort(paths);
+        int numPath = 0;
+        for (Path path : paths) {
+            if (path.getFileName().toString().matches("^\\d.*")) { // file names start with a digit (0-9)
+                System.out.print(padLeft(++numPath + ": ", 5) + path);
+                List<String> lines = Files.readAllLines(path);
+                int typeLine = 0;
+                int boardRows = 0, boardColumns = 0, boardColors = 0, boardSolutionMoves = 0;
+                String boardCells = null;
+                for (String line : lines) {
+                    if (line == null || line.trim().isEmpty() || line.startsWith("#")) {
+                        continue; // skip comment lines
+                    }
+                    switch (typeLine) {
+                    case 0:
+                        // first line specifies the board dimensions and number of colors
+                        try (Scanner scanner = new Scanner(line)) {
+                            boardRows = scanner.nextInt();
+                            boardColumns = scanner.nextInt();
+                            boardColors = scanner.nextInt();
+                        }
+                        ++typeLine;
+                        break;
+                    case 1:
+                        // second line contains the colored cells
+                        boardCells = line.replace("10","A");
+                        boardCells = boardCells.replaceAll("\\s", ""); // remove whitespace
+                        ++typeLine;
+                        break;
+                    case 2:
+                        // third line contains the number of moves of an optimal solution
+                        try (Scanner scanner = new Scanner(line)) {
+                            boardSolutionMoves = scanner.nextInt();
+                        }
+                        ++typeLine;
+                        break;
+                    default:
+                        break; // unexpected
+                    }
+                }
+                System.out.print("  columns=" + boardColumns + " rows=" + boardRows + padRight(" colors=" + boardColors, 10) + " moves=" + boardSolutionMoves);
+                System.out.flush();
+                Board board = new Board(boardColumns, boardRows, boardColors, boardCells, 0); // start position is 0 = top left
+                final Solver solver = AbstractSolver.createSolver(AStarPuchertStrategy.class, board);
+                final long nanoStart = System.nanoTime();
+                solver.execute(board.getStartPos(), null);
+                final long nanoEnd = System.nanoTime();
+                final int millis = (int)((nanoEnd - nanoStart + 999999L) / 1000000L);
+                final Solution solution = solver.getSolution();
+                String compare = "===="; // equal number of moves
+                if (solution.getNumSteps() > boardSolutionMoves) compare = "++++"; // we have more moves
+                if (solution.getNumSteps() < boardSolutionMoves) compare = "----"; // we have less moves
+                System.out.print("  " + compare + " " + "myMoves=" + solution.getNumSteps() + "  in " + millis + " ms");
+                System.out.println();
+            }
+        }
+        final long nanoEndAll = System.nanoTime();
+        final int millisAll = (int)((nanoEndAll - nanoStartAll + 999999L) / 1000000L);
+        Duration duration = Duration.ofMillis(millisAll);
+        System.out.println("finished!     duration: " + duration);
+        System.out.println(LocalDateTime.now());
     }
 
 
