@@ -2,6 +2,19 @@ ColorFill  CHANGES
 
 
 
+1.3.3 (2023-08-25)
+- updated FlatLaf - Flat Look and Feel to current version 3.2
+  * https://github.com/JFormDesigner/FlatLaf/releases
+- improved AStarPuchertStrategy - runs even faster
+- added 99problems, another set of test cases
+  * https://github.com/manteuffel723/flood-it-boards
+  * all specified optimal solutions in the files are confirmed by ColorFill
+- performed another complete benchmark run of codegolf26232
+  * latest run took 54 minutes 16 seconds
+    (21 minutes faster than previous version 1.3.2)
+
+
+
 1.3.2 (2022-02-22)
 - updated FlatLaf - Flat Look and Feel to version 2.0.1
   * https://github.com/JFormDesigner/FlatLaf/releases
