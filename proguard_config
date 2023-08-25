@@ -3,7 +3,7 @@
 
 -libraryjars <java.home>/lib/rt.jar
 -libraryjars ./lib/designgridlayout-1.11.jar
--libraryjars ./lib/flatlaf-2.4.jar
+-libraryjars ./lib/flatlaf-3.2.jar
 
 -target 1.8
 
