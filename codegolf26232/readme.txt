@@ -148,3 +148,11 @@ Running with 10 parallel processes, it used nearly 60 GB RAM and took about
 75 minutes. This small speedup, compared to the 78 minutes of the 8-parallel
 run, is due to the hardware multithreading of this 8-cores/16-threads CPU.
 
+
+---
+added 2023-08-25:
+
+The performance-improved solver of ColorFill 1.3.3 completed the 10-parallel
+run in 54 minutes 16 seconds, which is about 21 minutes faster than the
+75 minutes 5 seconds of version 1.3.2 more than 1.5 years ago.
+
