@@ -545,6 +545,10 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
             endOffset = MEMORY_BLOCK_SIZE - stateSize;
         }
 
+        public long get(int keySrc, int item) {
+            return memoryBlocks[keySrc >>> MEMORY_BLOCK_SHIFT][(keySrc + item) & MEMORY_BLOCK_MASK];
+        }
+
         /** copy the contents of the storage entry to the ColorAreaSet. */
         public void get(int keySrc, long[] casDest) {
             System.arraycopy(memoryBlocks[keySrc >>> MEMORY_BLOCK_SHIFT], keySrc & MEMORY_BLOCK_MASK, casDest, 0, stateSize);

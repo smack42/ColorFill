@@ -132,10 +132,8 @@ public class AStarPuchertStrategy implements AStarStrategy {
         @Override
         public int estimateCost(final AStarNode node, int nonCompletedColors) {
             int distance = 0;
-            this.storage.get(node.getNeighbors(), this.casCurrent);
-            long current0 = this.casCurrent[0];
-            this.storage.get(node.getFlooded(), this.casVisited);
-            long visited0 = this.casVisited[0];
+            long current0 = this.storage.get(node.getNeighbors(), 0);
+            long visited0 = this.storage.get(node.getFlooded(), 0);
             while (true) {
                 visited0 |= current0;
                 int completedColors = 0;
@@ -193,12 +191,10 @@ public class AStarPuchertStrategy implements AStarStrategy {
         @Override
         public int estimateCost(final AStarNode node, int nonCompletedColors) {
             int distance = 0;
-            this.storage.get(node.getNeighbors(), this.casCurrent);
-            long current0 = this.casCurrent[0];
-            long current1 = this.casCurrent[1];
-            this.storage.get(node.getFlooded(), this.casVisited);
-            long visited0 = this.casVisited[0];
-            long visited1 = this.casVisited[1];
+            long current0 = this.storage.get(node.getNeighbors(), 0);
+            long current1 = this.storage.get(node.getNeighbors(), 1);
+            long visited0 = this.storage.get(node.getFlooded(), 0);
+            long visited1 = this.storage.get(node.getFlooded(), 1);
             while (true) {
                 visited0 |= current0;
                 visited1 |= current1;
@@ -276,14 +272,12 @@ public class AStarPuchertStrategy implements AStarStrategy {
         @Override
         public int estimateCost(final AStarNode node, int nonCompletedColors) {
             int distance = 0;
-            this.storage.get(node.getNeighbors(), this.casCurrent);
-            long current0 = this.casCurrent[0];
-            long current1 = this.casCurrent[1];
-            long current2 = this.casCurrent[2];
-            this.storage.get(node.getFlooded(), this.casVisited);
-            long visited0 = this.casVisited[0];
-            long visited1 = this.casVisited[1];
-            long visited2 = this.casVisited[2];
+            long current0 = this.storage.get(node.getNeighbors(), 0);
+            long current1 = this.storage.get(node.getNeighbors(), 1);
+            long current2 = this.storage.get(node.getNeighbors(), 2);
+            long visited0 = this.storage.get(node.getFlooded(), 0);
+            long visited1 = this.storage.get(node.getFlooded(), 1);
+            long visited2 = this.storage.get(node.getFlooded(), 2);
             while (true) {
                 visited0 |= current0;
                 visited1 |= current1;
@@ -385,16 +379,14 @@ public class AStarPuchertStrategy implements AStarStrategy {
         @Override
         public int estimateCost(final AStarNode node, int nonCompletedColors) {
             int distance = 0;
-            this.storage.get(node.getNeighbors(), this.casCurrent);
-            long current0 = this.casCurrent[0];
-            long current1 = this.casCurrent[1];
-            long current2 = this.casCurrent[2];
-            long current3 = this.casCurrent[3];
-            this.storage.get(node.getFlooded(), this.casVisited);
-            long visited0 = this.casVisited[0];
-            long visited1 = this.casVisited[1];
-            long visited2 = this.casVisited[2];
-            long visited3 = this.casVisited[3];
+            long current0 = this.storage.get(node.getNeighbors(), 0);
+            long current1 = this.storage.get(node.getNeighbors(), 1);
+            long current2 = this.storage.get(node.getNeighbors(), 2);
+            long current3 = this.storage.get(node.getNeighbors(), 3);
+            long visited0 = this.storage.get(node.getFlooded(), 0);
+            long visited1 = this.storage.get(node.getFlooded(), 1);
+            long visited2 = this.storage.get(node.getFlooded(), 2);
+            long visited3 = this.storage.get(node.getFlooded(), 3);
             while (true) {
                 visited0 |= current0;
                 visited1 |= current1;
@@ -524,18 +516,16 @@ public class AStarPuchertStrategy implements AStarStrategy {
         @Override
         public int estimateCost(final AStarNode node, int nonCompletedColors) {
             int distance = 0;
-            this.storage.get(node.getNeighbors(), this.casCurrent);
-            long current0 = this.casCurrent[0];
-            long current1 = this.casCurrent[1];
-            long current2 = this.casCurrent[2];
-            long current3 = this.casCurrent[3];
-            long current4 = this.casCurrent[4];
-            this.storage.get(node.getFlooded(), this.casVisited);
-            long visited0 = this.casVisited[0];
-            long visited1 = this.casVisited[1];
-            long visited2 = this.casVisited[2];
-            long visited3 = this.casVisited[3];
-            long visited4 = this.casVisited[4];
+            long current0 = this.storage.get(node.getNeighbors(), 0);
+            long current1 = this.storage.get(node.getNeighbors(), 1);
+            long current2 = this.storage.get(node.getNeighbors(), 2);
+            long current3 = this.storage.get(node.getNeighbors(), 3);
+            long current4 = this.storage.get(node.getNeighbors(), 4);
+            long visited0 = this.storage.get(node.getFlooded(), 0);
+            long visited1 = this.storage.get(node.getFlooded(), 1);
+            long visited2 = this.storage.get(node.getFlooded(), 2);
+            long visited3 = this.storage.get(node.getFlooded(), 3);
+            long visited4 = this.storage.get(node.getFlooded(), 4);
             while (true) {
                 visited0 |= current0;
                 visited1 |= current1;
@@ -697,20 +687,18 @@ public class AStarPuchertStrategy implements AStarStrategy {
         @Override
         public int estimateCost(final AStarNode node, int nonCompletedColors) {
             int distance = 0;
-            this.storage.get(node.getNeighbors(), this.casCurrent);
-            long current0 = this.casCurrent[0];
-            long current1 = this.casCurrent[1];
-            long current2 = this.casCurrent[2];
-            long current3 = this.casCurrent[3];
-            long current4 = this.casCurrent[4];
-            long current5 = this.casCurrent[5];
-            this.storage.get(node.getFlooded(), this.casVisited);
-            long visited0 = this.casVisited[0];
-            long visited1 = this.casVisited[1];
-            long visited2 = this.casVisited[2];
-            long visited3 = this.casVisited[3];
-            long visited4 = this.casVisited[4];
-            long visited5 = this.casVisited[5];
+            long current0 = this.storage.get(node.getNeighbors(), 0);
+            long current1 = this.storage.get(node.getNeighbors(), 1);
+            long current2 = this.storage.get(node.getNeighbors(), 2);
+            long current3 = this.storage.get(node.getNeighbors(), 3);
+            long current4 = this.storage.get(node.getNeighbors(), 4);
+            long current5 = this.storage.get(node.getNeighbors(), 5);
+            long visited0 = this.storage.get(node.getFlooded(), 0);
+            long visited1 = this.storage.get(node.getFlooded(), 1);
+            long visited2 = this.storage.get(node.getFlooded(), 2);
+            long visited3 = this.storage.get(node.getFlooded(), 3);
+            long visited4 = this.storage.get(node.getFlooded(), 4);
+            long visited5 = this.storage.get(node.getFlooded(), 5);
             while (true) {
                 visited0 |= current0;
                 visited1 |= current1;
