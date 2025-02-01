@@ -96,4 +96,4 @@ Programming
     https://github.com/aaronpuchert/floodit
     https://github.com/Flolle/terminal-flood
     https://www.formdev.com/flatlaf   https://github.com/JFormDesigner/FlatLaf
-    https://github.com/manteuffel723/flood-it-boards
+    https://github.com/manteuffel723/flood-it-boards    https://doc.neuro.tu-berlin.de/bachelor/2023-BA-PhilippVonManteuffel-mc.pdf
