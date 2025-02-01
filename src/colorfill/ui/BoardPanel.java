@@ -47,7 +47,7 @@ public class BoardPanel extends JPanel {
     private int columns, rows, startPos;
     private int[] cellColors = new int[0];
     private boolean[] cellHighlights = new boolean[0];
-    private boolean cellHighlightSpecial;
+    private boolean cellHighlightO, cellHighlightX;
     private boolean[] cellColorNumbers = new boolean[0];
     private GridLinesEnum gridLines;
     private HighlightColorEnum highlightColor;
@@ -172,8 +172,12 @@ public class BoardPanel extends JPanel {
                 if (this.cellHighlights[index]) {
                     if (g instanceof Graphics2D) ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     g.fillOval(x + cw4, y + ch4, cwHighlight, chHighlight);
-                    if (this.cellHighlightSpecial) {
+                    if (this.cellHighlightO) {
                         g.drawOval(x, y, cw1, ch1);
+                    }
+                    if (this.cellHighlightX) {
+                        g.drawLine(x, y, x + cw1, y + ch1);
+                        g.drawLine(x + cw1, y, x, y + ch1);
                     }
                     if (g instanceof Graphics2D) ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
                 }
@@ -186,12 +190,13 @@ public class BoardPanel extends JPanel {
      * collection are set to true, all others to false.
      * @param highlightCells
      */
-    public void highlightCells(final Collection<Integer> highlightCells, final boolean highlightSpecial) {
+    public void highlightCells(final Collection<Integer> highlightCells, final boolean highlightO, final boolean highlightX) {
         Arrays.fill(this.cellHighlights, false);
         for (final Integer cell : highlightCells) {
             this.cellHighlights[cell.intValue()] = true;
         }
-        this.cellHighlightSpecial = highlightSpecial;
+        this.cellHighlightO = highlightO;
+        this.cellHighlightX = highlightX;
         this.repaint();
     }
 

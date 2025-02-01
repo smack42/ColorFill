@@ -280,6 +280,25 @@ public class GameProgress {
     }
 
     /**
+     * is the specified color deferrable?
+     * which means that it has no neighbors outside of the known area (current flooded and neighbors)
+     * and therefore this move would not expand the known neighbors (frontier) area.
+     * @param color the color
+     * @return true if the color is deferrable
+     */
+    public boolean isFloodNeighborCellsDeferrable(final int color) {
+        final HashSet<ColorArea> nextFlooded = new HashSet<>(this.stepFlooded.get(this.numSteps));
+        nextFlooded.addAll(this.stepFloodNext.get(this.numSteps));
+        for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
+            if (ca.getColor() == color
+                    && nextFlooded.containsAll(ca.getNeighbors()) == false) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * return the collection of cells matching the specified BoardColorNumbersEnum.
      * @param bcne
      * @return collection of board cells

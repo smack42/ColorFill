@@ -143,15 +143,17 @@ public class BoardController {
     protected void userMovedMouseToCell(MouseEvent e, int index, int color) {
         if (this.gameState.isUserProgress()) {
             final Collection<Integer> neighborCells;
-            final boolean isCompleted;
+            final boolean isCompleted, isDeferrable;
             if (this.gameState.getSelectedProgress().isFloodNeighborCell(index)) {
                 neighborCells = this.gameState.getSelectedProgress().getFloodNeighborCells(color);
                 isCompleted = this.gameState.getSelectedProgress().isFloodNeighborCellsCompleted(color);
+                isDeferrable = !isCompleted && this.gameState.getSelectedProgress().isFloodNeighborCellsDeferrable(color);
             } else {
                 neighborCells = Collections.emptyList();
                 isCompleted = false;
+                isDeferrable = false;
             }
-            this.boardPanel.highlightCells(neighborCells, isCompleted);
+            this.boardPanel.highlightCells(neighborCells, isCompleted, isDeferrable);
         }
     }
 
@@ -161,14 +163,16 @@ public class BoardController {
      */
     protected void actionHightlightFloodNeighborCells(final int color) {
         final Collection<Integer> neighborCells;
-        final boolean isCompleted;
+        final boolean isCompleted, isDeferrable;
         if (color < 0) {
             neighborCells = Collections.emptyList();
             isCompleted = false;
+            isDeferrable = false;
         } else {
             neighborCells = this.gameState.getSelectedProgress().getFloodNeighborCells(color);
             isCompleted = this.gameState.getSelectedProgress().isFloodNeighborCellsCompleted(color);
+            isDeferrable = !isCompleted && this.gameState.getSelectedProgress().isFloodNeighborCellsDeferrable(color);
         }
-        this.boardPanel.highlightCells(neighborCells, isCompleted);
+        this.boardPanel.highlightCells(neighborCells, isCompleted, isDeferrable);
     }
 }
