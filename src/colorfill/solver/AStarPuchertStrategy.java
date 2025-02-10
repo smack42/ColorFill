@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2017, 2020, 2021, 2022 Michael Henke
+    Copyright (C) 2017 - 2025 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
     }
 
     @Override
-    public int estimateCost(final AStarNode node, int nonCompletedColors) {
+    public int estimateCost(final AStarNode node, int nonCompletedColorBits) {
 
         // quote from floodit.cpp: int State::computeValuation()
         // (in branch "performance")
@@ -76,27 +76,27 @@ public class AStarPuchertStrategy implements AStarStrategy {
 
         while (true) {
             ColorAreaSet.addAll(this.casVisited, current);
-            int completedColors = 0;
-            for (int colors = nonCompletedColors;  0 != colors;  colors &= colors - 1) {
+            int completedColorBits = 0;
+            for (int colors = nonCompletedColorBits;  0 != colors;  colors &= colors - 1) {
                 final int colorBit = Integer.lowestOneBit(colors);
                 if (ColorAreaSet.containsAll(this.casVisited, this.casByColorBits[colorBit])) {
-                    completedColors |= colorBit;
+                    completedColorBits |= colorBit;
                 }
             }
-            if (0 != completedColors) {
-                nonCompletedColors ^= completedColors;
+            if (0 != completedColorBits) {
+                nonCompletedColorBits ^= completedColorBits;
                 // We can eliminate colors. Do just that.
                 // We also combine all these elimination moves.
-                distance += Integer.bitCount(completedColors);
-                if (0 == (nonCompletedColors & (nonCompletedColors - 1))) { // one or zero colors remaining
-                    distance += (-nonCompletedColors >>> 31); // nonCompletedColors is never negative // (0 == nonCompletedColors ? 0 : 1)
+                distance += Integer.bitCount(completedColorBits);
+                if (0 == (nonCompletedColorBits & (nonCompletedColorBits - 1))) { // one or zero colors remaining
+                    distance += (-nonCompletedColorBits >>> 31); // nonCompletedColorBits is never negative // (0 == nonCompletedColorBits ? 0 : 1)
                     return distance; // done
                 } else {
                     ColorAreaSet.clear(next);
                     // completed colors
-                    final long[] colorCas = this.casByColorBits[completedColors];
-                    ColorAreaSet.addAllAndLookup(next, current, colorCas, this.idsNeighborColorAreaSets);
-                    ColorAreaSet.removeAll(current, colorCas);
+                    final long[] casColors = this.casByColorBits[completedColorBits];
+                    ColorAreaSet.addAllAndLookup(next, current, casColors, this.idsNeighborColorAreaSets);
+                    ColorAreaSet.removeAll(current, casColors);
                     ColorAreaSet.removeAll(next, this.casVisited);
                     // non-completed colors
                     // move nodes to next layer
@@ -130,55 +130,37 @@ public class AStarPuchertStrategy implements AStarStrategy {
             super(board, storage);  //System.out.println("-64-1 !!");
         }
         @Override
-        public int estimateCost(final AStarNode node, int nonCompletedColors) {
+        public int estimateCost(final AStarNode node, int nonCompletedColorBits) {
             int distance = 0;
             long current0 = this.storage.get(node.getNeighbors(), 0);
             long visited0 = this.storage.get(node.getFlooded(), 0);
             while (true) {
+                ++distance;
                 visited0 |= current0;
-                int completedColors = 0;
-                for (int colors = nonCompletedColors;  0 != colors;  colors &= colors - 1) {
+                int completedColorBits = 0;
+                for (int colors = nonCompletedColorBits;  0 != colors;  colors &= colors - 1) {
                     final int colorBit = Integer.lowestOneBit(colors);
                     final long[] casColor = this.casByColorBits[colorBit];
                     if (((visited0 & casColor[0]) == casColor[0])) {
-                        completedColors |= colorBit;
+                        completedColorBits |= colorBit;
                     }
                 }
-                if (0 != completedColors) {
-                    nonCompletedColors ^= completedColors;
-                    // We can eliminate colors. Do just that.
-                    // We also combine all these elimination moves.
-                    distance += Integer.bitCount(completedColors);
-                    if (0 == (nonCompletedColors & (nonCompletedColors - 1))) { // one or zero colors remaining
-                        distance += (-nonCompletedColors >>> 31); // nonCompletedColors is never negative // (0 == nonCompletedColors ? 0 : 1)
-                        return distance; // done
-                    } else {
-                        // completed colors
-                        final long[] colorCas = this.casByColorBits[completedColors];
-                        // non-completed colors
-                        // move nodes to next layer
-                        long l0 = 0;
-                        long buf = (current0 & colorCas[0]);
-                        current0 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                        }
-                        current0 |= l0 & ~visited0;
+                long next0 = 0;
+                if (0 != completedColorBits) {
+                    nonCompletedColorBits ^= completedColorBits;
+                    distance += Integer.bitCount(completedColorBits) - 1;
+                    if (0 == (nonCompletedColorBits & (nonCompletedColorBits - 1))) { // one or zero colors remaining
+                        return distance + (-nonCompletedColorBits >>> 31); // done
                     }
-                } else {
-                    // Nothing found, do the color-blind pseudo-move
-                    // Expand current layer of nodes.
-                    ++distance;
-                    long l0 = 0;
-                    while (current0 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(current0)];
-                        current0 &= current0 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                    }
-                    current0 = l0 & ~visited0;
+                    final long[] casColors = this.casByColorBits[completedColorBits];
+                    next0 = (current0 & ~casColors[0]);   current0 ^= next0;   visited0 ^= next0;
                 }
+                while (current0 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(current0)];
+                    current0 &= current0 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                }
+                current0 = next0 & ~visited0;
             }
         }
     }
@@ -189,77 +171,50 @@ public class AStarPuchertStrategy implements AStarStrategy {
             super(board, storage);  //System.out.println("-64-2 !!");
         }
         @Override
-        public int estimateCost(final AStarNode node, int nonCompletedColors) {
+        public int estimateCost(final AStarNode node, int nonCompletedColorBits) {
             int distance = 0;
             long current0 = this.storage.get(node.getNeighbors(), 0);
             long current1 = this.storage.get(node.getNeighbors(), 1);
             long visited0 = this.storage.get(node.getFlooded(), 0);
             long visited1 = this.storage.get(node.getFlooded(), 1);
             while (true) {
+                ++distance;
                 visited0 |= current0;
                 visited1 |= current1;
-                int completedColors = 0;
-                for (int colors = nonCompletedColors;  0 != colors;  colors &= colors - 1) {
+                int completedColorBits = 0;
+                for (int colors = nonCompletedColorBits;  0 != colors;  colors &= colors - 1) {
                     final int colorBit = Integer.lowestOneBit(colors);
                     final long[] casColor = this.casByColorBits[colorBit];
                     if (((visited0 & casColor[0]) == casColor[0]) &&
                         ((visited1 & casColor[1]) == casColor[1])) {
-                        completedColors |= colorBit;
+                        completedColorBits |= colorBit;
                     }
                 }
-                if (0 != completedColors) {
-                    nonCompletedColors ^= completedColors;
-                    // We can eliminate colors. Do just that.
-                    // We also combine all these elimination moves.
-                    distance += Integer.bitCount(completedColors);
-                    if (0 == (nonCompletedColors & (nonCompletedColors - 1))) { // one or zero colors remaining
-                        distance += (-nonCompletedColors >>> 31); // nonCompletedColors is never negative // (0 == nonCompletedColors ? 0 : 1)
-                        return distance; // done
-                    } else {
-                        // completed colors
-                        final long[] colorCas = this.casByColorBits[completedColors];
-                        // non-completed colors
-                        // move nodes to next layer
-                        long l0 = 0, l1 = 0;
-                        long buf = (current0 & colorCas[0]);
-                        current0 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                        }
-                        buf = (current1 & colorCas[1]);
-                        current1 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                        }
-                        current0 |= l0 & ~visited0;
-                        current1 |= l1 & ~visited1;
+                long next0 = 0, next1 = 0;
+                if (0 != completedColorBits) {
+                    nonCompletedColorBits ^= completedColorBits;
+                    distance += Integer.bitCount(completedColorBits) - 1;
+                    if (0 == (nonCompletedColorBits & (nonCompletedColorBits - 1))) { // one or zero colors remaining
+                        return distance + (-nonCompletedColorBits >>> 31); // done
                     }
-                } else {
-                    // Nothing found, do the color-blind pseudo-move
-                    // Expand current layer of nodes.
-                    ++distance;
-                    long l0 = 0, l1 = 0;
-                    while (current0 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(current0)];
-                        current0 &= current0 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                    }
-                    while (current1 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(current1)];
-                        current1 &= current1 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                    }
-                    current0 = l0 & ~visited0;
-                    current1 = l1 & ~visited1;
+                    final long[] casColors = this.casByColorBits[completedColorBits];
+                    next0 = (current0 & ~casColors[0]);   current0 ^= next0;   visited0 ^= next0;
+                    next1 = (current1 & ~casColors[1]);   current1 ^= next1;   visited1 ^= next1;
                 }
+                while (current0 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(current0)];
+                    current0 &= current0 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                }
+                while (current1 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(current1)];
+                    current1 &= current1 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                }
+                current0 = next0 & ~visited0;
+                current1 = next1 & ~visited1;
             }
         }
     }
@@ -270,7 +225,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
             super(board, storage);  //System.out.println("-64-3 !!");
         }
         @Override
-        public int estimateCost(final AStarNode node, int nonCompletedColors) {
+        public int estimateCost(final AStarNode node, int nonCompletedColorBits) {
             int distance = 0;
             long current0 = this.storage.get(node.getNeighbors(), 0);
             long current1 = this.storage.get(node.getNeighbors(), 1);
@@ -279,94 +234,56 @@ public class AStarPuchertStrategy implements AStarStrategy {
             long visited1 = this.storage.get(node.getFlooded(), 1);
             long visited2 = this.storage.get(node.getFlooded(), 2);
             while (true) {
+                ++distance;
                 visited0 |= current0;
                 visited1 |= current1;
                 visited2 |= current2;
-                int completedColors = 0;
-                for (int colors = nonCompletedColors;  0 != colors;  colors &= colors - 1) {
+                int completedColorBits = 0;
+                for (int colors = nonCompletedColorBits;  0 != colors;  colors &= colors - 1) {
                     final int colorBit = Integer.lowestOneBit(colors);
                     final long[] casColor = this.casByColorBits[colorBit];
                     if (((visited0 & casColor[0]) == casColor[0]) &&
                         ((visited1 & casColor[1]) == casColor[1]) &&
                         ((visited2 & casColor[2]) == casColor[2])) {
-                        completedColors |= colorBit;
+                        completedColorBits |= colorBit;
                     }
                 }
-                if (0 != completedColors) {
-                    nonCompletedColors ^= completedColors;
-                    // We can eliminate colors. Do just that.
-                    // We also combine all these elimination moves.
-                    distance += Integer.bitCount(completedColors);
-                    if (0 == (nonCompletedColors & (nonCompletedColors - 1))) { // one or zero colors remaining
-                        distance += (-nonCompletedColors >>> 31); // nonCompletedColors is never negative // (0 == nonCompletedColors ? 0 : 1)
-                        return distance; // done
-                    } else {
-                        // completed colors
-                        final long[] colorCas = this.casByColorBits[completedColors];
-                        // non-completed colors
-                        // move nodes to next layer
-                        long l0 = 0, l1 = 0, l2 = 0;
-                        long buf = (current0 & colorCas[0]);
-                        current0 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                            l2 |= casAdd[2];
-                        }
-                        buf = (current1 & colorCas[1]);
-                        current1 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                            l2 |= casAdd[2];
-                        }
-                        buf = (current2 & colorCas[2]);
-                        current2 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                            l2 |= casAdd[2];
-                        }
-                        current0 |= l0 & ~visited0;
-                        current1 |= l1 & ~visited1;
-                        current2 |= l2 & ~visited2;
+                long next0 = 0, next1 = 0, next2 = 0;
+                if (0 != completedColorBits) {
+                    nonCompletedColorBits ^= completedColorBits;
+                    distance += Integer.bitCount(completedColorBits) - 1;
+                    if (0 == (nonCompletedColorBits & (nonCompletedColorBits - 1))) { // one or zero colors remaining
+                        return distance + (-nonCompletedColorBits >>> 31); // done
                     }
-                } else {
-                    // Nothing found, do the color-blind pseudo-move
-                    // Expand current layer of nodes.
-                    ++distance;
-                    long l0 = 0, l1 = 0, l2 = 0;
-                    while (current0 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(current0)];
-                        current0 &= current0 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                        l2 |= casAdd[2];
-                    }
-                    while (current1 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(current1)];
-                        current1 &= current1 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                        l2 |= casAdd[2];
-                    }
-                    while (current2 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(current2)];
-                        current2 &= current2 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                        l2 |= casAdd[2];
-                    }
-                    current0 = l0 & ~visited0;
-                    current1 = l1 & ~visited1;
-                    current2 = l2 & ~visited2;
+                    final long[] casColors = this.casByColorBits[completedColorBits];
+                    next0 = (current0 & ~casColors[0]);   current0 ^= next0;   visited0 ^= next0;
+                    next1 = (current1 & ~casColors[1]);   current1 ^= next1;   visited1 ^= next1;
+                    next2 = (current2 & ~casColors[2]);   current2 ^= next2;   visited2 ^= next2;
                 }
+                while (current0 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(current0)];
+                    current0 &= current0 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                    next2 |= casAdd[2];
+                }
+                while (current1 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(current1)];
+                    current1 &= current1 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                    next2 |= casAdd[2];
+                }
+                while (current2 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(current2)];
+                    current2 &= current2 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                    next2 |= casAdd[2];
+                }
+                current0 = next0 & ~visited0;
+                current1 = next1 & ~visited1;
+                current2 = next2 & ~visited2;
             }
         }
     }
@@ -377,7 +294,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
             super(board, storage);  //System.out.println("-64-4 !!");
         }
         @Override
-        public int estimateCost(final AStarNode node, int nonCompletedColors) {
+        public int estimateCost(final AStarNode node, int nonCompletedColorBits) {
             int distance = 0;
             long current0 = this.storage.get(node.getNeighbors(), 0);
             long current1 = this.storage.get(node.getNeighbors(), 1);
@@ -388,122 +305,71 @@ public class AStarPuchertStrategy implements AStarStrategy {
             long visited2 = this.storage.get(node.getFlooded(), 2);
             long visited3 = this.storage.get(node.getFlooded(), 3);
             while (true) {
+                ++distance;
                 visited0 |= current0;
                 visited1 |= current1;
                 visited2 |= current2;
                 visited3 |= current3;
-                int completedColors = 0;
-                for (int colors = nonCompletedColors;  0 != colors;  colors &= colors - 1) {
+                int completedColorBits = 0;
+                for (int colors = nonCompletedColorBits;  0 != colors;  colors &= colors - 1) {
                     final int colorBit = Integer.lowestOneBit(colors);
                     final long[] casColor = this.casByColorBits[colorBit];
                     if (((visited0 & casColor[0]) == casColor[0]) &&
                         ((visited1 & casColor[1]) == casColor[1]) &&
                         ((visited2 & casColor[2]) == casColor[2]) &&
                         ((visited3 & casColor[3]) == casColor[3])) {
-                        completedColors |= colorBit;
+                        completedColorBits |= colorBit;
                     }
                 }
-                if (0 != completedColors) {
-                    nonCompletedColors ^= completedColors;
-                    // We can eliminate colors. Do just that.
-                    // We also combine all these elimination moves.
-                    distance += Integer.bitCount(completedColors);
-                    if (0 == (nonCompletedColors & (nonCompletedColors - 1))) { // one or zero colors remaining
-                        distance += (-nonCompletedColors >>> 31); // nonCompletedColors is never negative // (0 == nonCompletedColors ? 0 : 1)
-                        return distance; // done
-                    } else {
-                        // completed colors
-                        final long[] colorCas = this.casByColorBits[completedColors];
-                        // non-completed colors
-                        // move nodes to next layer
-                        long l0 = 0, l1 = 0, l2 = 0, l3 = 0;
-                        long buf = (current0 & colorCas[0]);
-                        current0 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                            l2 |= casAdd[2];
-                            l3 |= casAdd[3];
-                        }
-                        buf = (current1 & colorCas[1]);
-                        current1 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                            l2 |= casAdd[2];
-                            l3 |= casAdd[3];
-                        }
-                        buf = (current2 & colorCas[2]);
-                        current2 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                            l2 |= casAdd[2];
-                            l3 |= casAdd[3];
-                        }
-                        buf = (current3 & colorCas[3]);
-                        current3 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 3 + Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                            l2 |= casAdd[2];
-                            l3 |= casAdd[3];
-                        }
-                        current0 |= l0 & ~visited0;
-                        current1 |= l1 & ~visited1;
-                        current2 |= l2 & ~visited2;
-                        current3 |= l3 & ~visited3;
+                long next0 = 0, next1 = 0, next2 = 0, next3 = 0;
+                if (0 != completedColorBits) {
+                    nonCompletedColorBits ^= completedColorBits;
+                    distance += Integer.bitCount(completedColorBits) - 1;
+                    if (0 == (nonCompletedColorBits & (nonCompletedColorBits - 1))) { // one or zero colors remaining
+                        return distance + (-nonCompletedColorBits >>> 31); // done
                     }
-                } else {
-                    // Nothing found, do the color-blind pseudo-move
-                    // Expand current layer of nodes.
-                    ++distance;
-                    long l0 = 0, l1 = 0, l2 = 0, l3 = 0;
-                    while (current0 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(current0)];
-                        current0 &= current0 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                        l2 |= casAdd[2];
-                        l3 |= casAdd[3];
-                    }
-                    while (current1 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(current1)];
-                        current1 &= current1 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                        l2 |= casAdd[2];
-                        l3 |= casAdd[3];
-                    }
-                    while (current2 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(current2)];
-                        current2 &= current2 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                        l2 |= casAdd[2];
-                        l3 |= casAdd[3];
-                    }
-                    while (current3 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 3 + Long.numberOfTrailingZeros(current3)];
-                        current3 &= current3 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                        l2 |= casAdd[2];
-                        l3 |= casAdd[3];
-                    }
-                    current0 = l0 & ~visited0;
-                    current1 = l1 & ~visited1;
-                    current2 = l2 & ~visited2;
-                    current3 = l3 & ~visited3;
+                    final long[] casColors = this.casByColorBits[completedColorBits];
+                    next0 = (current0 & ~casColors[0]);   current0 ^= next0;   visited0 ^= next0;
+                    next1 = (current1 & ~casColors[1]);   current1 ^= next1;   visited1 ^= next1;
+                    next2 = (current2 & ~casColors[2]);   current2 ^= next2;   visited2 ^= next2;
+                    next3 = (current3 & ~casColors[3]);   current3 ^= next3;   visited3 ^= next3;
                 }
+                while (current0 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(current0)];
+                    current0 &= current0 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                    next2 |= casAdd[2];
+                    next3 |= casAdd[3];
+                }
+                while (current1 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(current1)];
+                    current1 &= current1 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                    next2 |= casAdd[2];
+                    next3 |= casAdd[3];
+                }
+                while (current2 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(current2)];
+                    current2 &= current2 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                    next2 |= casAdd[2];
+                    next3 |= casAdd[3];
+                }
+                while (current3 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[64 * 3 + Long.numberOfTrailingZeros(current3)];
+                    current3 &= current3 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                    next2 |= casAdd[2];
+                    next3 |= casAdd[3];
+                }
+                current0 = next0 & ~visited0;
+                current1 = next1 & ~visited1;
+                current2 = next2 & ~visited2;
+                current3 = next3 & ~visited3;
             }
         }
     }
@@ -514,7 +380,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
             super(board, storage);  //System.out.println("-64-5 !!");
         }
         @Override
-        public int estimateCost(final AStarNode node, int nonCompletedColors) {
+        public int estimateCost(final AStarNode node, int nonCompletedColorBits) {
             int distance = 0;
             long current0 = this.storage.get(node.getNeighbors(), 0);
             long current1 = this.storage.get(node.getNeighbors(), 1);
@@ -527,13 +393,14 @@ public class AStarPuchertStrategy implements AStarStrategy {
             long visited3 = this.storage.get(node.getFlooded(), 3);
             long visited4 = this.storage.get(node.getFlooded(), 4);
             while (true) {
+                ++distance;
                 visited0 |= current0;
                 visited1 |= current1;
                 visited2 |= current2;
                 visited3 |= current3;
                 visited4 |= current4;
-                int completedColors = 0;
-                for (int colors = nonCompletedColors;  0 != colors;  colors &= colors - 1) {
+                int completedColorBits = 0;
+                for (int colors = nonCompletedColorBits;  0 != colors;  colors &= colors - 1) {
                     final int colorBit = Integer.lowestOneBit(colors);
                     final long[] casColor = this.casByColorBits[colorBit];
                     if (((visited0 & casColor[0]) == casColor[0]) &&
@@ -541,140 +408,73 @@ public class AStarPuchertStrategy implements AStarStrategy {
                         ((visited2 & casColor[2]) == casColor[2]) &&
                         ((visited3 & casColor[3]) == casColor[3]) &&
                         ((visited4 & casColor[4]) == casColor[4])) {
-                        completedColors |= colorBit;
+                        completedColorBits |= colorBit;
                     }
                 }
-                if (0 != completedColors) {
-                    nonCompletedColors ^= completedColors;
-                    // We can eliminate colors. Do just that.
-                    // We also combine all these elimination moves.
-                    distance += Integer.bitCount(completedColors);
-                    if (0 == (nonCompletedColors & (nonCompletedColors - 1))) { // one or zero colors remaining
-                        distance += (-nonCompletedColors >>> 31); // nonCompletedColors is never negative // (0 == nonCompletedColors ? 0 : 1)
-                        return distance; // done
-                    } else {
-                        // completed colors
-                        final long[] colorCas = this.casByColorBits[completedColors];
-                        // non-completed colors
-                        // move nodes to next layer
-                        long l0 = 0, l1 = 0, l2 = 0, l3 = 0, l4 = 0;
-                        long buf = (current0 & colorCas[0]);
-                        current0 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                            l2 |= casAdd[2];
-                            l3 |= casAdd[3];
-                            l4 |= casAdd[4];
-                        }
-                        buf = (current1 & colorCas[1]);
-                        current1 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                            l2 |= casAdd[2];
-                            l3 |= casAdd[3];
-                            l4 |= casAdd[4];
-                        }
-                        buf = (current2 & colorCas[2]);
-                        current2 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                            l2 |= casAdd[2];
-                            l3 |= casAdd[3];
-                            l4 |= casAdd[4];
-                        }
-                        buf = (current3 & colorCas[3]);
-                        current3 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 3 + Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                            l2 |= casAdd[2];
-                            l3 |= casAdd[3];
-                            l4 |= casAdd[4];
-                        }
-                        buf = (current4 & colorCas[4]);
-                        current4 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 4 + Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                            l2 |= casAdd[2];
-                            l3 |= casAdd[3];
-                            l4 |= casAdd[4];
-                        }
-                        current0 |= l0 & ~visited0;
-                        current1 |= l1 & ~visited1;
-                        current2 |= l2 & ~visited2;
-                        current3 |= l3 & ~visited3;
-                        current4 |= l4 & ~visited4;
+                long next0 = 0, next1 = 0, next2 = 0, next3 = 0, next4 = 0;
+                if (0 != completedColorBits) {
+                    nonCompletedColorBits ^= completedColorBits;
+                    distance += Integer.bitCount(completedColorBits) - 1;
+                    if (0 == (nonCompletedColorBits & (nonCompletedColorBits - 1))) { // one or zero colors remaining
+                        return distance + (-nonCompletedColorBits >>> 31); // done
                     }
-                } else {
-                    // Nothing found, do the color-blind pseudo-move
-                    // Expand current layer of nodes.
-                    ++distance;
-                    long l0 = 0, l1 = 0, l2 = 0, l3 = 0, l4 = 0;
-                    while (current0 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(current0)];
-                        current0 &= current0 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                        l2 |= casAdd[2];
-                        l3 |= casAdd[3];
-                        l4 |= casAdd[4];
-                    }
-                    while (current1 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(current1)];
-                        current1 &= current1 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                        l2 |= casAdd[2];
-                        l3 |= casAdd[3];
-                        l4 |= casAdd[4];
-                    }
-                    while (current2 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(current2)];
-                        current2 &= current2 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                        l2 |= casAdd[2];
-                        l3 |= casAdd[3];
-                        l4 |= casAdd[4];
-                    }
-                    while (current3 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 3 + Long.numberOfTrailingZeros(current3)];
-                        current3 &= current3 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                        l2 |= casAdd[2];
-                        l3 |= casAdd[3];
-                        l4 |= casAdd[4];
-                    }
-                    while (current4 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 4 + Long.numberOfTrailingZeros(current4)];
-                        current4 &= current4 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                        l2 |= casAdd[2];
-                        l3 |= casAdd[3];
-                        l4 |= casAdd[4];
-                    }
-                    current0 = l0 & ~visited0;
-                    current1 = l1 & ~visited1;
-                    current2 = l2 & ~visited2;
-                    current3 = l3 & ~visited3;
-                    current4 = l4 & ~visited4;
+                    final long[] casColors = this.casByColorBits[completedColorBits];
+                    next0 = (current0 & ~casColors[0]);   current0 ^= next0;   visited0 ^= next0;
+                    next1 = (current1 & ~casColors[1]);   current1 ^= next1;   visited1 ^= next1;
+                    next2 = (current2 & ~casColors[2]);   current2 ^= next2;   visited2 ^= next2;
+                    next3 = (current3 & ~casColors[3]);   current3 ^= next3;   visited3 ^= next3;
+                    next4 = (current4 & ~casColors[4]);   current4 ^= next4;   visited4 ^= next4;
                 }
+                while (current0 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(current0)];
+                    current0 &= current0 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                    next2 |= casAdd[2];
+                    next3 |= casAdd[3];
+                    next4 |= casAdd[4];
+                }
+                while (current1 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(current1)];
+                    current1 &= current1 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                    next2 |= casAdd[2];
+                    next3 |= casAdd[3];
+                    next4 |= casAdd[4];
+                }
+                while (current2 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(current2)];
+                    current2 &= current2 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                    next2 |= casAdd[2];
+                    next3 |= casAdd[3];
+                    next4 |= casAdd[4];
+                }
+                while (current3 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[64 * 3 + Long.numberOfTrailingZeros(current3)];
+                    current3 &= current3 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                    next2 |= casAdd[2];
+                    next3 |= casAdd[3];
+                    next4 |= casAdd[4];
+                }
+                while (current4 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[64 * 4 + Long.numberOfTrailingZeros(current4)];
+                    current4 &= current4 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                    next2 |= casAdd[2];
+                    next3 |= casAdd[3];
+                    next4 |= casAdd[4];
+                }
+                current0 = next0 & ~visited0;
+                current1 = next1 & ~visited1;
+                current2 = next2 & ~visited2;
+                current3 = next3 & ~visited3;
+                current4 = next4 & ~visited4;
             }
         }
     }
@@ -685,7 +485,7 @@ public class AStarPuchertStrategy implements AStarStrategy {
             super(board, storage);  //System.out.println("-64-6 !!");
         }
         @Override
-        public int estimateCost(final AStarNode node, int nonCompletedColors) {
+        public int estimateCost(final AStarNode node, int nonCompletedColorBits) {
             int distance = 0;
             long current0 = this.storage.get(node.getNeighbors(), 0);
             long current1 = this.storage.get(node.getNeighbors(), 1);
@@ -700,14 +500,15 @@ public class AStarPuchertStrategy implements AStarStrategy {
             long visited4 = this.storage.get(node.getFlooded(), 4);
             long visited5 = this.storage.get(node.getFlooded(), 5);
             while (true) {
+                ++distance;
                 visited0 |= current0;
                 visited1 |= current1;
                 visited2 |= current2;
                 visited3 |= current3;
                 visited4 |= current4;
                 visited5 |= current5;
-                int completedColors = 0;
-                for (int colors = nonCompletedColors;  0 != colors;  colors &= colors - 1) {
+                int completedColorBits = 0;
+                for (int colors = nonCompletedColorBits;  0 != colors;  colors &= colors - 1) {
                     final int colorBit = Integer.lowestOneBit(colors);
                     final long[] casColor = this.casByColorBits[colorBit];
                     if (((visited0 & casColor[0]) == casColor[0]) &&
@@ -716,174 +517,90 @@ public class AStarPuchertStrategy implements AStarStrategy {
                         ((visited3 & casColor[3]) == casColor[3]) &&
                         ((visited4 & casColor[4]) == casColor[4]) &&
                         ((visited5 & casColor[5]) == casColor[5])) {
-                        completedColors |= colorBit;
+                        completedColorBits |= colorBit;
                     }
                 }
-                if (0 != completedColors) {
-                    nonCompletedColors ^= completedColors;
-                    // We can eliminate colors. Do just that.
-                    // We also combine all these elimination moves.
-                    distance += Integer.bitCount(completedColors);
-                    if (0 == (nonCompletedColors & (nonCompletedColors - 1))) { // one or zero colors remaining
-                        distance += (-nonCompletedColors >>> 31); // nonCompletedColors is never negative // (0 == nonCompletedColors ? 0 : 1)
-                        return distance; // done
-                    } else {
-                        // completed colors
-                        final long[] colorCas = this.casByColorBits[completedColors];
-                        // non-completed colors
-                        // move nodes to next layer
-                        long l0 = 0, l1 = 0, l2 = 0, l3 = 0, l4 = 0, l5 = 0;
-                        long buf = (current0 & colorCas[0]);
-                        current0 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                            l2 |= casAdd[2];
-                            l3 |= casAdd[3];
-                            l4 |= casAdd[4];
-                            l5 |= casAdd[5];
-                        }
-                        buf = (current1 & colorCas[1]);
-                        current1 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                            l2 |= casAdd[2];
-                            l3 |= casAdd[3];
-                            l4 |= casAdd[4];
-                            l5 |= casAdd[5];
-                        }
-                        buf = (current2 & colorCas[2]);
-                        current2 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                            l2 |= casAdd[2];
-                            l3 |= casAdd[3];
-                            l4 |= casAdd[4];
-                            l5 |= casAdd[5];
-                        }
-                        buf = (current3 & colorCas[3]);
-                        current3 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 3 + Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                            l2 |= casAdd[2];
-                            l3 |= casAdd[3];
-                            l4 |= casAdd[4];
-                            l5 |= casAdd[5];
-                        }
-                        buf = (current4 & colorCas[4]);
-                        current4 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 4 + Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                            l2 |= casAdd[2];
-                            l3 |= casAdd[3];
-                            l4 |= casAdd[4];
-                            l5 |= casAdd[5];
-                        }
-                        buf = (current5 & colorCas[5]);
-                        current5 ^= buf;
-                        while (buf != 0) {
-                            final long[] casAdd = this.idsNeighborColorAreaSets[64 * 5 + Long.numberOfTrailingZeros(buf)];
-                            buf &= buf - 1; // clear the least significant bit set
-                            l0 |= casAdd[0];
-                            l1 |= casAdd[1];
-                            l2 |= casAdd[2];
-                            l3 |= casAdd[3];
-                            l4 |= casAdd[4];
-                            l5 |= casAdd[5];
-                        }
-                        current0 |= l0 & ~visited0;
-                        current1 |= l1 & ~visited1;
-                        current2 |= l2 & ~visited2;
-                        current3 |= l3 & ~visited3;
-                        current4 |= l4 & ~visited4;
-                        current5 |= l5 & ~visited5;
+                long next0 = 0, next1 = 0, next2 = 0, next3 = 0, next4 = 0, next5 = 0;
+                if (0 != completedColorBits) {
+                    nonCompletedColorBits ^= completedColorBits;
+                    distance += Integer.bitCount(completedColorBits) - 1;
+                    if (0 == (nonCompletedColorBits & (nonCompletedColorBits - 1))) { // one or zero colors remaining
+                        return distance + (-nonCompletedColorBits >>> 31); // done
                     }
-                } else {
-                    // Nothing found, do the color-blind pseudo-move
-                    // Expand current layer of nodes.
-                    ++distance;
-                    long l0 = 0, l1 = 0, l2 = 0, l3 = 0, l4 = 0, l5 = 0;
-                    while (current0 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(current0)];
-                        current0 &= current0 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                        l2 |= casAdd[2];
-                        l3 |= casAdd[3];
-                        l4 |= casAdd[4];
-                        l5 |= casAdd[5];
-                    }
-                    while (current1 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(current1)];
-                        current1 &= current1 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                        l2 |= casAdd[2];
-                        l3 |= casAdd[3];
-                        l4 |= casAdd[4];
-                        l5 |= casAdd[5];
-                    }
-                    while (current2 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(current2)];
-                        current2 &= current2 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                        l2 |= casAdd[2];
-                        l3 |= casAdd[3];
-                        l4 |= casAdd[4];
-                        l5 |= casAdd[5];
-                    }
-                    while (current3 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 3 + Long.numberOfTrailingZeros(current3)];
-                        current3 &= current3 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                        l2 |= casAdd[2];
-                        l3 |= casAdd[3];
-                        l4 |= casAdd[4];
-                        l5 |= casAdd[5];
-                    }
-                    while (current4 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 4 + Long.numberOfTrailingZeros(current4)];
-                        current4 &= current4 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                        l2 |= casAdd[2];
-                        l3 |= casAdd[3];
-                        l4 |= casAdd[4];
-                        l5 |= casAdd[5];
-                    }
-                    while (current5 != 0) {
-                        final long[] casAdd = this.idsNeighborColorAreaSets[64 * 5 + Long.numberOfTrailingZeros(current5)];
-                        current5 &= current5 - 1; // clear the least significant bit set
-                        l0 |= casAdd[0];
-                        l1 |= casAdd[1];
-                        l2 |= casAdd[2];
-                        l3 |= casAdd[3];
-                        l4 |= casAdd[4];
-                        l5 |= casAdd[5];
-                    }
-                    current0 = l0 & ~visited0;
-                    current1 = l1 & ~visited1;
-                    current2 = l2 & ~visited2;
-                    current3 = l3 & ~visited3;
-                    current4 = l4 & ~visited4;
-                    current5 = l5 & ~visited5;
+                    final long[] casColors = this.casByColorBits[completedColorBits];
+                    next0 = (current0 & ~casColors[0]);   current0 ^= next0;   visited0 ^= next0;
+                    next1 = (current1 & ~casColors[1]);   current1 ^= next1;   visited1 ^= next1;
+                    next2 = (current2 & ~casColors[2]);   current2 ^= next2;   visited2 ^= next2;
+                    next3 = (current3 & ~casColors[3]);   current3 ^= next3;   visited3 ^= next3;
+                    next4 = (current4 & ~casColors[4]);   current4 ^= next4;   visited4 ^= next4;
+                    next5 = (current5 & ~casColors[5]);   current5 ^= next5;   visited5 ^= next5;
                 }
+                while (current0 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[Long.numberOfTrailingZeros(current0)];
+                    current0 &= current0 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                    next2 |= casAdd[2];
+                    next3 |= casAdd[3];
+                    next4 |= casAdd[4];
+                    next5 |= casAdd[5];
+                }
+                while (current1 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[64 * 1 + Long.numberOfTrailingZeros(current1)];
+                    current1 &= current1 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                    next2 |= casAdd[2];
+                    next3 |= casAdd[3];
+                    next4 |= casAdd[4];
+                    next5 |= casAdd[5];
+                }
+                while (current2 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[64 * 2 + Long.numberOfTrailingZeros(current2)];
+                    current2 &= current2 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                    next2 |= casAdd[2];
+                    next3 |= casAdd[3];
+                    next4 |= casAdd[4];
+                    next5 |= casAdd[5];
+                }
+                while (current3 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[64 * 3 + Long.numberOfTrailingZeros(current3)];
+                    current3 &= current3 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                    next2 |= casAdd[2];
+                    next3 |= casAdd[3];
+                    next4 |= casAdd[4];
+                    next5 |= casAdd[5];
+                }
+                while (current4 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[64 * 4 + Long.numberOfTrailingZeros(current4)];
+                    current4 &= current4 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                    next2 |= casAdd[2];
+                    next3 |= casAdd[3];
+                    next4 |= casAdd[4];
+                    next5 |= casAdd[5];
+                }
+                while (current5 != 0) {
+                    final long[] casAdd = this.idsNeighborColorAreaSets[64 * 5 + Long.numberOfTrailingZeros(current5)];
+                    current5 &= current5 - 1; // clear the least significant bit set
+                    next0 |= casAdd[0];
+                    next1 |= casAdd[1];
+                    next2 |= casAdd[2];
+                    next3 |= casAdd[3];
+                    next4 |= casAdd[4];
+                    next5 |= casAdd[5];
+                }
+                current0 = next0 & ~visited0;
+                current1 = next1 & ~visited1;
+                current2 = next2 & ~visited2;
+                current3 = next3 & ~visited3;
+                current4 = next4 & ~visited4;
+                current5 = next5 & ~visited5;
             }
         }
     }
