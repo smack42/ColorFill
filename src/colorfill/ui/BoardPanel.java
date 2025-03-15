@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015 Michael Henke
+    Copyright (C) 2014 - 2025 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 
 package colorfill.ui;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -138,49 +139,53 @@ public class BoardPanel extends JPanel {
      */
     @Override
     protected void paintComponent(Graphics g) {
+        final Graphics2D g2d = (Graphics2D)g;
         final Dimension size = this.getSize();
-        final int cellWidth = size.width / this.columns;
-        final int cellHeight = size.height / this.rows;
-        final int cw1 = cellWidth - 1;
-        final int ch1 = cellHeight - 1;
-        final int cw4 = cellWidth / 4;
-        final int ch4 = cellHeight / 4;
-        final int cwHighlight = cellWidth - cw4 - cw4;
-        final int chHighlight = cellHeight - ch4 - ch4;
-        if (g instanceof Graphics2D) ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-        for (int index = 0, y = 0, row = 0;  row < this.rows;  y += cellHeight, ++row) {
-            for (int x = 0, column = 0;  column < this.columns;  x += cellWidth, ++column, ++index) {
+        final int cw = size.width / this.columns;
+        final int ch = size.height / this.rows;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+        for (int index = 0, y = 0, row = 0;  row < this.rows;  y += ch, ++row) {
+            for (int x = 0, column = 0;  column < this.columns;  x += cw, ++column, ++index) {
                 final int color = this.cellColors[index];
                 g.setColor(this.uiColors[color]);
-                g.fillRect(x, y, cellWidth, cellHeight);
-                g.setColor(this.highlightColor.color);
+                g.fillRect(x, y, cw, ch);
                 if (index == this.startPos) {
-                    g.fillRect(x + cellWidth * 3/8, y + cellHeight * 3/8, cw4, ch4);
+                    g.setColor(this.highlightColor.color);
+                    g.fillRect(x + cw * 3/8, y + ch * 3/8, cw/4, ch/4);
                 }
+            }
+        }
+        final float strokeWidth = Math.max(1.0f, cw / 16.0f);
+        final int sw = Math.round(strokeWidth);
+        g2d.setStroke(new BasicStroke(strokeWidth, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL));
+        g.setColor(this.highlightColor.color);
+        for (int index = 0, y = 0, row = 0;  row < this.rows;  y += ch, ++row) {
+            for (int x = 0, column = 0;  column < this.columns;  x += cw, ++column, ++index) {
+                final int color = this.cellColors[index];
                 if (GridLinesEnum.NONE != this.gridLines) {
                     if ((column < this.columns - 1) && ((GridLinesEnum.ALL == this.gridLines) || (color != this.cellColors[index + 1]))) {
-                        g.drawLine(x + cw1, y, x + cw1, y + ch1);
+                        g.drawLine(x + cw, Math.max(0, y - sw/2), x + cw, y + ch + sw/2);  // vertical lines
                     }
                     if ((row < this.rows - 1) && ((GridLinesEnum.ALL == this.gridLines) || (color != this.cellColors[index + this.columns]))) {
-                        g.drawLine(x, y + ch1, x + cw1, y + ch1);
+                        g.drawLine(x, y + ch, x + cw, y + ch);  // horizontal lines
                     }
                 }
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 if (this.cellColorNumbers[index]) {
                     final char[] text = { (char)('1' + color) };
-                    g.drawChars(text, 0, 1, x + 2, y + ch1 - 2);
+                    g.drawChars(text, 0, 1, x + 2 + sw, y + ch - 3 - sw);
                 }
                 if (this.cellHighlights[index]) {
-                    if (g instanceof Graphics2D) ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    g.fillOval(x + cw4, y + ch4, cwHighlight, chHighlight);
+                    g.fillOval(x + cw/4, y + ch/4, cw/2, ch/2);
                     if (this.cellHighlightO) {
-                        g.drawOval(x, y, cw1, ch1);
+                        g.drawOval(x + sw/2, y + sw/2, cw - sw - 1, ch - sw - 1);
                     }
                     if (this.cellHighlightX) {
-                        g.drawLine(x, y, x + cw1, y + ch1);
-                        g.drawLine(x + cw1, y, x, y + ch1);
+                        g.drawLine(x, y, x + cw, y + ch);
+                        g.drawLine(x + cw, y, x, y + ch);
                     }
-                    if (g instanceof Graphics2D) ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
                 }
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
             }
         }
     }
