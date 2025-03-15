@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2020, 2021, 2022 Michael Henke
+    Copyright (C) 2014 - 2025 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -89,12 +89,12 @@ public class AStarSolver extends AbstractSolver {
         return null; // no info available
     }
 
-    private AStarStrategy makeStrategy(final StateStorage storage) {
+    private AStarStrategy makeStrategy() {
         final AStarStrategy result;
         if (AStarPuchertStrategy.class.equals(this.strategyClass)) {
-            result = AStarPuchertStrategy.getInstance(this.board, storage);
+            result = AStarPuchertStrategy.getInstance(this.board);
         } else if (AStarFlolleStrategy.class.equals(this.strategyClass)) {
-            result = new AStarFlolleStrategy(this.board, storage);
+            result = new AStarFlolleStrategy(this.board);
         } else {
             throw new IllegalArgumentException(
                     "unsupported strategy class " + this.strategyClass.getName());
@@ -108,7 +108,7 @@ public class AStarSolver extends AbstractSolver {
     @Override
     protected void executeInternal(final int startPos) throws InterruptedException {
         this.storage = new StateStorage(this.board);
-        this.strategy = this.makeStrategy(this.storage);
+        this.strategy = this.makeStrategy();
         this.open = new PriorityQueue<AStarNode>(AStarNode.strongerComparator());
         this.open.offer(new AStarNode(this.board, this.board.getColorArea4Cell(startPos), this.storage, this.solutionTree));
         this.map = new HashMapLongArray2Byte(this.board, this.storage);
@@ -155,7 +155,7 @@ public class AStarSolver extends AbstractSolver {
                             assert printQueueStatistics(this.open);
                             return;
                         } else {
-                            nextNode.setEstimatedCost(nextSolutionSize + this.strategy.estimateCost(nextNode, nonCompletedColors));
+                            nextNode.setEstimatedCost(nextSolutionSize + this.strategy.estimateCost(this.casNextFlooded, this.casNextNeighbors, nonCompletedColors));
                             this.open.offer(nextNode);
                             nonCompletedColors |= colorBit;
                             recycleNode = null;
@@ -375,7 +375,7 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
                 // key not present yet
                 // -> add new entry
                 final int newKeyEntry = this.storage.put(newKey);
-                this.tableKeys[index] = ((long)newKeyEntry << Integer.SIZE) | (0x00000000ffffffffL & newHash);
+                this.tableKeys[index] = ((long)newKeyEntry << Integer.SIZE) | Integer.toUnsignedLong(newHash);
                 this.tableValues[index] = (byte)newValue;
                 if (++this.size > this.maxSize) {
                     this.increaseSize();
@@ -535,18 +535,17 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
         public static final int MEMORY_BLOCK_SIZE = 1 << MEMORY_BLOCK_SHIFT; // must be a power of two
         public static final int MEMORY_BLOCK_MASK = MEMORY_BLOCK_SIZE - 1;
         public final long[][] memoryBlocks = new long[1 << (Integer.SIZE - MEMORY_BLOCK_SHIFT)][];
-        private int numMemoryBlocks = 1, entry = 0, offset = 0;
-        private final int stateSize, endOffset;
+        private long[] nextMemoryBlock;
+        private int numMemoryBlocks = 1, entry = 0, numEntriesPerMemoryBlock = 0;
+        private final int stateSize, maxNumEntriesPerMemoryBlock;
 
         /** the constructor */
         public StateStorage(final Board board) {
-            memoryBlocks[0] = new long[MEMORY_BLOCK_SIZE];
+            nextMemoryBlock = new long[MEMORY_BLOCK_SIZE];
+            memoryBlocks[0] = nextMemoryBlock;
             stateSize = board.getSizeColorAreas64(); // equal to the length of ColorAreaSet objects (arrays of "long")
-            endOffset = MEMORY_BLOCK_SIZE - stateSize;
-        }
-
-        public long get(int keySrc, int item) {
-            return memoryBlocks[keySrc >>> MEMORY_BLOCK_SHIFT][(keySrc + item) & MEMORY_BLOCK_MASK];
+            maxNumEntriesPerMemoryBlock = MEMORY_BLOCK_SIZE / stateSize;
+            numEntriesPerMemoryBlock = maxNumEntriesPerMemoryBlock;
         }
 
         /** copy the contents of the storage entry to the ColorAreaSet. */
@@ -556,29 +555,19 @@ next:   for (int nextColorNeighbor;  (nextColorNeighbor = nextColorNeighbors.nex
 
         /** copy the contents of the ColorAreaSet to a new storage entry. */
         public int put(long[] casSrc) {
-            final int keyDest = this.add();
-            System.arraycopy(casSrc, 0, memoryBlocks[keyDest >>> MEMORY_BLOCK_SHIFT], keyDest & MEMORY_BLOCK_MASK, stateSize);
-            return keyDest;
-        }
-
-        /** add a new storage entry and return the key. */
-        private int add() {
-            final int result = entry;
+            final int keyDest = entry;
+            System.arraycopy(casSrc, 0, nextMemoryBlock, entry & MEMORY_BLOCK_MASK, stateSize);
             entry += stateSize;
-            offset += stateSize;
-            if (offset > endOffset) { // must allocate another block of memory
-                if (offset == MEMORY_BLOCK_SIZE) {
-                    offset = 0;
-                } else {
-                    entry += stateSize;
-                    offset -= endOffset;
-                }
+            if (--numEntriesPerMemoryBlock <= 0) { // must allocate another block of memory
                 if (numMemoryBlocks >= memoryBlocks.length) {
                     throw new IllegalStateException("Integer overflow! (32 GB of data storage exceeded)");
                 }
-                memoryBlocks[numMemoryBlocks++] = new long[MEMORY_BLOCK_SIZE];
+                entry = ((entry + stateSize) & ~MEMORY_BLOCK_MASK);
+                numEntriesPerMemoryBlock = maxNumEntriesPerMemoryBlock;
+                nextMemoryBlock = new long[MEMORY_BLOCK_SIZE];
+                memoryBlocks[numMemoryBlocks++] = nextMemoryBlock;
             }
-            return result;
+            return keyDest;
         }
     }
 }

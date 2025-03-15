@@ -19,7 +19,6 @@ package colorfill.solver;
 
 import colorfill.model.Board;
 import colorfill.model.ColorAreaSet;
-import colorfill.solver.AStarSolver.StateStorage;
 
 /**
  * a specific strategy for the AStar (A*) solver.
@@ -32,31 +31,29 @@ public class AStarPuchertStrategy implements AStarStrategy {
     protected final long[] casVisited, casCurrent, casNext;
     protected final long[][] casByColorBits;
     protected final long[][] idsNeighborColorAreaSets;
-    protected final StateStorage storage;
 
-    public static AStarPuchertStrategy getInstance(final Board board, final StateStorage storage) {
+    public static AStarPuchertStrategy getInstance(final Board board) {
         switch (board.getSizeColorAreas64()) {
-        case 1:  return new AStarPuchertStrategy_1(board, storage);
-        case 2:  return new AStarPuchertStrategy_2(board, storage);
-        case 3:  return new AStarPuchertStrategy_3(board, storage);
-        case 4:  return new AStarPuchertStrategy_4(board, storage);
-        case 5:  return new AStarPuchertStrategy_5(board, storage);
-        case 6:  return new AStarPuchertStrategy_6(board, storage);
-        default: return new AStarPuchertStrategy  (board, storage);
+        case 1:  return new AStarPuchertStrategy_1(board);
+        case 2:  return new AStarPuchertStrategy_2(board);
+        case 3:  return new AStarPuchertStrategy_3(board);
+        case 4:  return new AStarPuchertStrategy_4(board);
+        case 5:  return new AStarPuchertStrategy_5(board);
+        case 6:  return new AStarPuchertStrategy_6(board);
+        default: return new AStarPuchertStrategy  (board);
         }
     }
 
-    public AStarPuchertStrategy(final Board board, final StateStorage storage) {
+    public AStarPuchertStrategy(final Board board) {
         this.casVisited = ColorAreaSet.constructor(board);
         this.casCurrent = ColorAreaSet.constructor(board);
         this.casNext = ColorAreaSet.constructor(board);
         this.casByColorBits = board.getCasByColorBitsArray();
         this.idsNeighborColorAreaSets = board.getNeighborColorAreaSet4IdArray();
-        this.storage = storage;
     }
 
     @Override
-    public int estimateCost(final AStarNode node, int nonCompletedColorBits) {
+    public int estimateCost(final long[] casFlooded, final long[] casNeighbors, int nonCompletedColorBits) {
 
         // quote from floodit.cpp: int State::computeValuation()
         // (in branch "performance")
@@ -71,8 +68,8 @@ public class AStarPuchertStrategy implements AStarStrategy {
         int distance = 0;
         long[] next = this.casNext;
         long[] current = this.casCurrent;
-        this.storage.get(node.getNeighbors(), current);
-        this.storage.get(node.getFlooded(), this.casVisited);
+        ColorAreaSet.copyFrom(this.casCurrent, casNeighbors);
+        ColorAreaSet.copyFrom(this.casVisited, casFlooded);
 
         while (true) {
             ColorAreaSet.addAll(this.casVisited, current);
@@ -126,14 +123,14 @@ public class AStarPuchertStrategy implements AStarStrategy {
 
 
     static class AStarPuchertStrategy_1 extends AStarPuchertStrategy {
-        public AStarPuchertStrategy_1(final Board board, final StateStorage storage) {
-            super(board, storage);  //System.out.println("-64-1 !!");
+        public AStarPuchertStrategy_1(final Board board) {
+            super(board);  //System.out.println("-64-1 !!");
         }
         @Override
-        public int estimateCost(final AStarNode node, int nonCompletedColorBits) {
+        public int estimateCost(final long[] casFlooded, final long[] casNeighbors, int nonCompletedColorBits) {
             int distance = 0;
-            long current0 = this.storage.get(node.getNeighbors(), 0);
-            long visited0 = this.storage.get(node.getFlooded(), 0);
+            long current0 = casNeighbors[0];
+            long visited0 = casFlooded[0];
             while (true) {
                 ++distance;
                 visited0 |= current0;
@@ -167,16 +164,16 @@ public class AStarPuchertStrategy implements AStarStrategy {
 
 
     static class AStarPuchertStrategy_2 extends AStarPuchertStrategy {
-        public AStarPuchertStrategy_2(final Board board, final StateStorage storage) {
-            super(board, storage);  //System.out.println("-64-2 !!");
+        public AStarPuchertStrategy_2(final Board board) {
+            super(board);  //System.out.println("-64-2 !!");
         }
         @Override
-        public int estimateCost(final AStarNode node, int nonCompletedColorBits) {
+        public int estimateCost(final long[] casFlooded, final long[] casNeighbors, int nonCompletedColorBits) {
             int distance = 0;
-            long current0 = this.storage.get(node.getNeighbors(), 0);
-            long current1 = this.storage.get(node.getNeighbors(), 1);
-            long visited0 = this.storage.get(node.getFlooded(), 0);
-            long visited1 = this.storage.get(node.getFlooded(), 1);
+            long current0 = casNeighbors[0];
+            long current1 = casNeighbors[1];
+            long visited0 = casFlooded[0];
+            long visited1 = casFlooded[1];
             while (true) {
                 ++distance;
                 visited0 |= current0;
@@ -221,18 +218,18 @@ public class AStarPuchertStrategy implements AStarStrategy {
 
 
     static class AStarPuchertStrategy_3 extends AStarPuchertStrategy {
-        public AStarPuchertStrategy_3(final Board board, final StateStorage storage) {
-            super(board, storage);  //System.out.println("-64-3 !!");
+        public AStarPuchertStrategy_3(final Board board) {
+            super(board);  //System.out.println("-64-3 !!");
         }
         @Override
-        public int estimateCost(final AStarNode node, int nonCompletedColorBits) {
+        public int estimateCost(final long[] casFlooded, final long[] casNeighbors, int nonCompletedColorBits) {
             int distance = 0;
-            long current0 = this.storage.get(node.getNeighbors(), 0);
-            long current1 = this.storage.get(node.getNeighbors(), 1);
-            long current2 = this.storage.get(node.getNeighbors(), 2);
-            long visited0 = this.storage.get(node.getFlooded(), 0);
-            long visited1 = this.storage.get(node.getFlooded(), 1);
-            long visited2 = this.storage.get(node.getFlooded(), 2);
+            long current0 = casNeighbors[0];
+            long current1 = casNeighbors[1];
+            long current2 = casNeighbors[2];
+            long visited0 = casFlooded[0];
+            long visited1 = casFlooded[1];
+            long visited2 = casFlooded[2];
             while (true) {
                 ++distance;
                 visited0 |= current0;
@@ -290,20 +287,20 @@ public class AStarPuchertStrategy implements AStarStrategy {
 
 
     static class AStarPuchertStrategy_4 extends AStarPuchertStrategy {
-        public AStarPuchertStrategy_4(final Board board, final StateStorage storage) {
-            super(board, storage);  //System.out.println("-64-4 !!");
+        public AStarPuchertStrategy_4(final Board board) {
+            super(board);  //System.out.println("-64-4 !!");
         }
         @Override
-        public int estimateCost(final AStarNode node, int nonCompletedColorBits) {
+        public int estimateCost(final long[] casFlooded, final long[] casNeighbors, int nonCompletedColorBits) {
             int distance = 0;
-            long current0 = this.storage.get(node.getNeighbors(), 0);
-            long current1 = this.storage.get(node.getNeighbors(), 1);
-            long current2 = this.storage.get(node.getNeighbors(), 2);
-            long current3 = this.storage.get(node.getNeighbors(), 3);
-            long visited0 = this.storage.get(node.getFlooded(), 0);
-            long visited1 = this.storage.get(node.getFlooded(), 1);
-            long visited2 = this.storage.get(node.getFlooded(), 2);
-            long visited3 = this.storage.get(node.getFlooded(), 3);
+            long current0 = casNeighbors[0];
+            long current1 = casNeighbors[1];
+            long current2 = casNeighbors[2];
+            long current3 = casNeighbors[3];
+            long visited0 = casFlooded[0];
+            long visited1 = casFlooded[1];
+            long visited2 = casFlooded[2];
+            long visited3 = casFlooded[3];
             while (true) {
                 ++distance;
                 visited0 |= current0;
@@ -376,22 +373,22 @@ public class AStarPuchertStrategy implements AStarStrategy {
 
 
     static class AStarPuchertStrategy_5 extends AStarPuchertStrategy {
-        public AStarPuchertStrategy_5(final Board board, final StateStorage storage) {
-            super(board, storage);  //System.out.println("-64-5 !!");
+        public AStarPuchertStrategy_5(final Board board) {
+            super(board);  //System.out.println("-64-5 !!");
         }
         @Override
-        public int estimateCost(final AStarNode node, int nonCompletedColorBits) {
+        public int estimateCost(final long[] casFlooded, final long[] casNeighbors, int nonCompletedColorBits) {
             int distance = 0;
-            long current0 = this.storage.get(node.getNeighbors(), 0);
-            long current1 = this.storage.get(node.getNeighbors(), 1);
-            long current2 = this.storage.get(node.getNeighbors(), 2);
-            long current3 = this.storage.get(node.getNeighbors(), 3);
-            long current4 = this.storage.get(node.getNeighbors(), 4);
-            long visited0 = this.storage.get(node.getFlooded(), 0);
-            long visited1 = this.storage.get(node.getFlooded(), 1);
-            long visited2 = this.storage.get(node.getFlooded(), 2);
-            long visited3 = this.storage.get(node.getFlooded(), 3);
-            long visited4 = this.storage.get(node.getFlooded(), 4);
+            long current0 = casNeighbors[0];
+            long current1 = casNeighbors[1];
+            long current2 = casNeighbors[2];
+            long current3 = casNeighbors[3];
+            long current4 = casNeighbors[4];
+            long visited0 = casFlooded[0];
+            long visited1 = casFlooded[1];
+            long visited2 = casFlooded[2];
+            long visited3 = casFlooded[3];
+            long visited4 = casFlooded[4];
             while (true) {
                 ++distance;
                 visited0 |= current0;
@@ -481,24 +478,24 @@ public class AStarPuchertStrategy implements AStarStrategy {
 
 
     static class AStarPuchertStrategy_6 extends AStarPuchertStrategy {
-        public AStarPuchertStrategy_6(final Board board, final StateStorage storage) {
-            super(board, storage);  //System.out.println("-64-6 !!");
+        public AStarPuchertStrategy_6(final Board board) {
+            super(board);  //System.out.println("-64-6 !!");
         }
         @Override
-        public int estimateCost(final AStarNode node, int nonCompletedColorBits) {
+        public int estimateCost(final long[] casFlooded, final long[] casNeighbors, int nonCompletedColorBits) {
             int distance = 0;
-            long current0 = this.storage.get(node.getNeighbors(), 0);
-            long current1 = this.storage.get(node.getNeighbors(), 1);
-            long current2 = this.storage.get(node.getNeighbors(), 2);
-            long current3 = this.storage.get(node.getNeighbors(), 3);
-            long current4 = this.storage.get(node.getNeighbors(), 4);
-            long current5 = this.storage.get(node.getNeighbors(), 5);
-            long visited0 = this.storage.get(node.getFlooded(), 0);
-            long visited1 = this.storage.get(node.getFlooded(), 1);
-            long visited2 = this.storage.get(node.getFlooded(), 2);
-            long visited3 = this.storage.get(node.getFlooded(), 3);
-            long visited4 = this.storage.get(node.getFlooded(), 4);
-            long visited5 = this.storage.get(node.getFlooded(), 5);
+            long current0 = casNeighbors[0];
+            long current1 = casNeighbors[1];
+            long current2 = casNeighbors[2];
+            long current3 = casNeighbors[3];
+            long current4 = casNeighbors[4];
+            long current5 = casNeighbors[5];
+            long visited0 = casFlooded[0];
+            long visited1 = casFlooded[1];
+            long visited2 = casFlooded[2];
+            long visited3 = casFlooded[3];
+            long visited4 = casFlooded[4];
+            long visited5 = casFlooded[5];
             while (true) {
                 ++distance;
                 visited0 |= current0;

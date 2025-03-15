@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015, 2021 Michael Henke
+    Copyright (C) 2014 - 2025 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,5 +25,5 @@ public interface AStarStrategy extends Strategy {
     /**
      * compute the cost estimation using a heuristic
      */
-    public int estimateCost(final AStarNode node, int nonCompletedColors);
+    public int estimateCost(long[] casFlooded, long[] casNeighbors, int nonCompletedColors);
 }
