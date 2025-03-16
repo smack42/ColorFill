@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015, 2016 Michael Henke
+    Copyright (C) 2014 - 2025 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -49,8 +49,8 @@ public class Starter {
     
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill";
-        final String version  = "1.3.3 (2023-08-25)";
-        final String author   = "Copyright (C) 2023 Michael Henke <smack42@gmail.com>";
+        final String version  = "1.4.0 (2025-03-16)";
+        final String author   = "Copyright (C) 2025 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);
 //System.in.read();

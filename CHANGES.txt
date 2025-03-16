@@ -2,6 +2,18 @@ ColorFill  CHANGES
 
 
 
+1.4.0 (2025-03-16)
+- GUI: added special highlight "X" for deferrable colors
+  * they have no neighboring areas outside of the already explored region
+  * therefore, selecting such a deferrable color would be a sub-optimal move
+  * these colors should be selected in a later move
+- GUI: draw wider lines (more than just one pixel) for larger cell sizes
+- improved code of AStar solver and strategies
+- updated FlatLaf - Flat Look and Feel to current version 3.5.4
+  * https://github.com/JFormDesigner/FlatLaf/releases
+
+
+
 1.3.3 (2023-08-25)
 - updated FlatLaf - Flat Look and Feel to current version 3.2
   * https://github.com/JFormDesigner/FlatLaf/releases
