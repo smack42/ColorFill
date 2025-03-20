@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015 Michael Henke
+    Copyright (C) 2014 - 2025 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,8 +20,10 @@ package colorfill.model;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import colorfill.solver.Solution;
@@ -242,17 +244,42 @@ public class GameProgress {
         return false;
     }
 
+    /** has some new neighbor(s) **/
+    public static final Byte HIGHLIGHT_TYPE_SOLID  = Byte.valueOf((byte) 1);
+    /** has no new neighbors, i.e. will not expand the explored area **/
+    public static final Byte HIGHLIGHT_TYPE_HOLLOW = Byte.valueOf((byte) 2);
+    /** is a new neighbor that will be uncovered if this color is selected **/
+    public static final Byte HIGHLIGHT_TYPE_NEW    = Byte.valueOf((byte) 3);
     /**
-     * return a collection of all cells that have the specified color
-     * and that belong to a neighbor area of the flooded area.
+     * return a map of all cells that have the specified color
+     * and that belong to a neighbor area of the flooded area,
+     * as well as some related cells (new neighbors) of different colors,
+     * with the map values being the type of highlight to be displayed:
+     * HIGHLIGHT_TYPE_SOLID  = has some new neighbor(s);
+     * HIGHLIGHT_TYPE_HOLLOW = has no new neighbors, i.e. will not expand the explored area
+     * HIGHLIGHT_TYPE_NEW    = is a new neighbor that will be uncovered if this color is selected
      * @param color the color
-     * @return collection of board cells
+     * @return map of board cells and highlight type
      */
-    public Collection<Integer> getFloodNeighborCells(final int color) {
-        final ArrayList<Integer> result = new ArrayList<Integer>();
+    public Map<Integer, Byte> getFloodNeighborCellsHighlight(final int color) {
+        final HashSet<ColorArea> nextFlooded = new HashSet<>(this.stepFlooded.get(this.numSteps));
+        nextFlooded.addAll(this.stepFloodNext.get(this.numSteps));
+        final Map<Integer, Byte> result = new HashMap<>();
         for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
             if (ca.getColor() == color) {
-                result.addAll(ca.getMembers());
+                final Byte type = (nextFlooded.containsAll(ca.getNeighbors())  ?  HIGHLIGHT_TYPE_HOLLOW  :  HIGHLIGHT_TYPE_SOLID);
+                for (final Integer cell : ca.getMembers()) {
+                    result.put(cell, type);
+                }
+                if (type.equals(HIGHLIGHT_TYPE_SOLID)) {
+                    for (final ColorArea caNeighbor : ca.getNeighbors()) {
+                        if (!nextFlooded.contains(caNeighbor)) {
+                            for (final Integer cell : caNeighbor.getMembers()) {
+                                result.put(cell, HIGHLIGHT_TYPE_NEW);
+                            }
+                        }
+                    }
+                }
             }
         }
         return result;

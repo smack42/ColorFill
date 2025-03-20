@@ -17,6 +17,10 @@
 
 package colorfill.ui;
 
+import static colorfill.model.GameProgress.HIGHLIGHT_TYPE_SOLID;
+import static colorfill.model.GameProgress.HIGHLIGHT_TYPE_HOLLOW;
+import static colorfill.model.GameProgress.HIGHLIGHT_TYPE_NEW;
+
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -29,6 +33,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -47,7 +52,7 @@ public class BoardPanel extends JPanel {
     private Color[] uiColors;
     private int columns, rows, startPos;
     private int[] cellColors = new int[0];
-    private boolean[] cellHighlights = new boolean[0];
+    private byte[] cellHighlights = new byte[0];
     private boolean cellHighlightO, cellHighlightX;
     private boolean[] cellColorNumbers = new boolean[0];
     private GridLinesEnum gridLines;
@@ -67,7 +72,7 @@ public class BoardPanel extends JPanel {
                 final int index = calculateCellIndex(e.getPoint());
                 if ((index >= 0) && (index < BoardPanel.this.cellColors.length)) {
                     final int color = BoardPanel.this.cellColors[index];
-                    BoardPanel.this.controller.userClickedOnCell(e, index, color);
+                    BoardPanel.this.controller.userClickedOnCell(index, color);
                 }
             }
         });
@@ -80,7 +85,7 @@ public class BoardPanel extends JPanel {
                     if (this.currentIndex != index) {
                         this.currentIndex = index;
                         final int color = BoardPanel.this.cellColors[index];
-                        BoardPanel.this.controller.userMovedMouseToCell(e, index, color);
+                        BoardPanel.this.controller.userMovedMouseToCell(index, color);
                     }
                 }
             }
@@ -113,7 +118,7 @@ public class BoardPanel extends JPanel {
         this.rows = rows;
         this.startPos = startPos;
         this.cellColors = new int[columns * rows];
-        this.cellHighlights = new boolean[this.cellColors.length];
+        this.cellHighlights = new byte[this.cellColors.length];
         this.cellColorNumbers = new boolean[this.cellColors.length];
         this.setPreferredSize(new Dimension(columns * cellSize, rows * cellSize));
     }
@@ -123,7 +128,7 @@ public class BoardPanel extends JPanel {
      */
     protected void setCellColors(final int[] cellColors, final GridLinesEnum gle, final Collection<Integer> collectionColorNumbers, final HighlightColorEnum hce) {
         this.cellColors = cellColors;
-        this.cellHighlights = new boolean[this.cellColors.length];
+        this.cellHighlights = new byte[this.cellColors.length];
         this.gridLines = gle;
         this.highlightColor = hce;
         this.cellColorNumbers = new boolean[this.cellColors.length];
@@ -149,10 +154,6 @@ public class BoardPanel extends JPanel {
                 final int color = this.cellColors[index];
                 g.setColor(this.uiColors[color]);
                 g.fillRect(x, y, cw, ch);
-                if (index == this.startPos) {
-                    g.setColor(this.highlightColor.color);
-                    g.fillRect(x + cw * 3/8, y + ch * 3/8, cw/4, ch/4);
-                }
             }
         }
         final float strokeWidth = Math.max(1.0f, cw / 16.0f);
@@ -161,6 +162,9 @@ public class BoardPanel extends JPanel {
         g.setColor(this.highlightColor.color);
         for (int index = 0, y = 0, row = 0;  row < this.rows;  y += ch, ++row) {
             for (int x = 0, column = 0;  column < this.columns;  x += cw, ++column, ++index) {
+                if (index == this.startPos) {
+                    g.fillRect(x + cw * 3/8, y + ch * 3/8, cw/4, ch/4);
+                }
                 final int color = this.cellColors[index];
                 if (GridLinesEnum.NONE != this.gridLines) {
                     if ((column < this.columns - 1) && ((GridLinesEnum.ALL == this.gridLines) || (color != this.cellColors[index + 1]))) {
@@ -175,14 +179,25 @@ public class BoardPanel extends JPanel {
                     final char[] text = { (char)('1' + color) };
                     g.drawChars(text, 0, 1, x + 2 + sw, y + ch - 3 - sw);
                 }
-                if (this.cellHighlights[index]) {
-                    g.fillOval(x + cw/4, y + ch/4, cw/2, ch/2);
-                    if (this.cellHighlightO) {
-                        g.drawOval(x + sw/2, y + sw/2, cw - sw - 1, ch - sw - 1);
+                final byte highlight = this.cellHighlights[index];
+                if (highlight != 0) {
+                    if (highlight == HIGHLIGHT_TYPE_NEW.byteValue()) {  // is a new neighbor -> "small dot"
+                        g.fillOval(x + cw * 3/8, y + ch * 3/8, cw/4, ch/4);
                     }
-                    if (this.cellHighlightX) {
-                        g.drawLine(x, y, x + cw, y + ch);
-                        g.drawLine(x + cw, y, x, y + ch);
+                    else {
+                        if (highlight == HIGHLIGHT_TYPE_SOLID.byteValue()) {  // has new neighbors -> "solid"
+                            g.fillOval(x + cw/4, y + ch/4, cw/2, ch/2);
+                        }
+                        else if (highlight == HIGHLIGHT_TYPE_HOLLOW.byteValue()) {  // no new neighbors -> "hollow"
+                            g.drawOval(x + cw/4, y + ch/4, cw/2, ch/2);
+                        }
+                        if (this.cellHighlightO) {  // completable color -> "target, do it"
+                            g.drawOval(x + sw/2, y + sw/2, cw - sw - 1, ch - sw - 1);
+                        }
+                        if (this.cellHighlightX) {  // deferrable color -> "X mark, don't do it"
+                            g.drawLine(x, y, x + cw, y + ch);
+                            g.drawLine(x + cw, y, x, y + ch);
+                        }
                     }
                 }
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
@@ -190,15 +205,10 @@ public class BoardPanel extends JPanel {
         }
     }
 
-    /**
-     * set the highlight value of all cells - the ones contained in the specified
-     * collection are set to true, all others to false.
-     * @param highlightCells
-     */
-    public void highlightCells(final Collection<Integer> highlightCells, final boolean highlightO, final boolean highlightX) {
-        Arrays.fill(this.cellHighlights, false);
-        for (final Integer cell : highlightCells) {
-            this.cellHighlights[cell.intValue()] = true;
+    public void highlightCells(final Map<Integer, Byte> highlightCells, final boolean highlightO, final boolean highlightX) {
+        Arrays.fill(this.cellHighlights, (byte)0);
+        for (final Map.Entry<Integer, Byte> entry : highlightCells.entrySet()) {
+            this.cellHighlights[entry.getKey().intValue()] = entry.getValue().byteValue();
         }
         this.cellHighlightO = highlightO;
         this.cellHighlightX = highlightX;

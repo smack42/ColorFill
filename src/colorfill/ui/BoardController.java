@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015 Michael Henke
+    Copyright (C) 2014 - 2025 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,9 +21,8 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagLayout;
-import java.awt.event.MouseEvent;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 
 import javax.swing.JPanel;
 
@@ -110,11 +109,10 @@ public class BoardController {
 
     /**
      * called by BoardPanel when user clicks a mouse button on a board cell.
-     * @param e MouseEvent
      * @param index the cell index
      * @param color the cell color
      */
-    protected void userClickedOnCell(final MouseEvent e, final int index, final int color) {
+    protected void userClickedOnCell(final int index, final int color) {
         if (this.gameState.isUserProgress() && this.gameState.getSelectedProgress().isFloodNeighborCell(index)) {
             this.mainController.actionAddStep(color);
         }
@@ -136,24 +134,12 @@ public class BoardController {
 
     /**
      * called by BoardPanel when user moves the mouse pointer to a board cell.
-     * @param e MouseEvent
      * @param index the cell index
      * @param color the cell color
      */
-    protected void userMovedMouseToCell(MouseEvent e, int index, int color) {
+    protected void userMovedMouseToCell(int index, int color) {
         if (this.gameState.isUserProgress()) {
-            final Collection<Integer> neighborCells;
-            final boolean isCompleted, isDeferrable;
-            if (this.gameState.getSelectedProgress().isFloodNeighborCell(index)) {
-                neighborCells = this.gameState.getSelectedProgress().getFloodNeighborCells(color);
-                isCompleted = this.gameState.getSelectedProgress().isFloodNeighborCellsCompleted(color);
-                isDeferrable = !isCompleted && this.gameState.getSelectedProgress().isFloodNeighborCellsDeferrable(color);
-            } else {
-                neighborCells = Collections.emptyList();
-                isCompleted = false;
-                isDeferrable = false;
-            }
-            this.boardPanel.highlightCells(neighborCells, isCompleted, isDeferrable);
+            this.actionHightlightFloodNeighborCells(this.gameState.getSelectedProgress().isFloodNeighborCell(index)  ?  color  :  -1);
         }
     }
 
@@ -162,16 +148,16 @@ public class BoardController {
      * @param color
      */
     protected void actionHightlightFloodNeighborCells(final int color) {
-        final Collection<Integer> neighborCells;
+        final Map<Integer, Byte> neighborCells;
         final boolean isCompleted, isDeferrable;
         if (color < 0) {
-            neighborCells = Collections.emptyList();
+            neighborCells = Collections.emptyMap();
             isCompleted = false;
             isDeferrable = false;
         } else {
-            neighborCells = this.gameState.getSelectedProgress().getFloodNeighborCells(color);
-            isCompleted = this.gameState.getSelectedProgress().isFloodNeighborCellsCompleted(color);
-            isDeferrable = !isCompleted && this.gameState.getSelectedProgress().isFloodNeighborCellsDeferrable(color);
+            neighborCells = this.gameState.getSelectedProgress().getFloodNeighborCellsHighlight(color);
+            isCompleted = !neighborCells.isEmpty() && this.gameState.getSelectedProgress().isFloodNeighborCellsCompleted(color);
+            isDeferrable = !neighborCells.isEmpty() && !isCompleted && this.gameState.getSelectedProgress().isFloodNeighborCellsDeferrable(color);
         }
         this.boardPanel.highlightCells(neighborCells, isCompleted, isDeferrable);
     }
