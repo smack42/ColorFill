@@ -56,7 +56,8 @@ public class PreferencesController {
             final int uiColorsNumber,
             final int cellSize,
             final HighlightColorEnum hce,
-            final String lafName ) {
+            final String lafName,
+            final int highlightTransparency ) {
         boolean isNewBoard = this.gameState.getPreferences().setWidth(width);
         isNewBoard |= this.gameState.getPreferences().setHeight(height);
         boolean isNewSize = isNewBoard;
@@ -68,6 +69,7 @@ public class PreferencesController {
         this.gameState.getPreferences().setUiColorsNumber(uiColorsNumber);
         this.gameState.getPreferences().setHighlightColor(hce);
         boolean isNewLaf = this.gameState.getPreferences().setLafName(lafName);
+        this.gameState.getPreferences().setHighlightTransparency(highlightTransparency);
         this.gameState.getPreferences().savePrefs();
         this.mainController.actionUpdatedPrefs(isNewBoard, isNewSize, isNewLaf);
     }
@@ -86,14 +88,21 @@ public class PreferencesController {
                 GamePreferences.DEFAULT_UI_HIGHLIGHT_COLOR,
                 GamePreferences.DEFAULT_UI_COLSCHEME,
                 GamePreferences.DEFAULT_UI_CELLSIZE,
-                GamePreferences.DEFAULT_UI_LAFNAME );
+                GamePreferences.DEFAULT_UI_LAFNAME,
+                GamePreferences.DEFAULT_UI_HIGHLIGHT_TRANSPARENCY );
     }
 
     /**
      * called by PreferencesDialog when user selects a color scheme or grid line option.
      */
-    protected void userPreviewUiColors(final int colorSchemeNumber, final GridLinesEnum gle, final BoardColorNumbersEnum bcne, final int numColors, final HighlightColorEnum hce) {
-        this.mainController.actionRepaintBoardUiColors(this.getAllUiColors()[colorSchemeNumber], gle, bcne, numColors, hce);
+    protected void userPreviewUiColors(
+            final int colorSchemeNumber,
+            final GridLinesEnum gle,
+            final BoardColorNumbersEnum bcne,
+            final int numColors,
+            final HighlightColorEnum hce,
+            final int highlightTransparency ) {
+        this.mainController.actionRepaintBoardUiColors(this.getAllUiColors()[colorSchemeNumber], gle, bcne, numColors, hce, highlightTransparency);
     }
 
     protected int getWidth() {
@@ -128,5 +137,8 @@ public class PreferencesController {
     }
     protected String getLafName() {
         return this.gameState.getPreferences().getLafName();
+    }
+    protected int getHighlightTransparency() {
+        return this.gameState.getPreferences().getHighlightTransparency();
     }
 }

@@ -89,11 +89,13 @@ public class BoardController {
 
     private void repaintBoardPanel() {
         final BoardColorNumbersEnum bcne = this.gameState.getPreferences().getBoardColorNumbersEnum();
-        this.boardPanel.setCellColors(
-                this.gameState.getSelectedProgress().getColors(),
+        this.boardPanel.setCellColors(this.gameState.getSelectedProgress().getColors());
+        this.boardPanel.applyColorScheme(
+                this.gameState.getPreferences().getUiColors(),
                 this.gameState.getPreferences().getGridLinesEnum(),
                 this.gameState.getSelectedProgress().getBoardColorNumbers(bcne),
-                this.gameState.getPreferences().getHighlightColorEnum());
+                this.gameState.getPreferences().getHighlightColorEnum(),
+                this.gameState.getPreferences().getHighlightTransparency() );
     }
 
     protected JPanel getPanel() {
@@ -128,8 +130,13 @@ public class BoardController {
     /**
      * repaint board using this UI color scheme.
      */
-    protected void actionRepaintBoardUiColors(final Color[] uiColors, final GridLinesEnum gle, final BoardColorNumbersEnum bcne, final HighlightColorEnum hce) {
-        this.boardPanel.applyColorScheme(uiColors, gle, this.gameState.getSelectedProgress().getBoardColorNumbers(bcne), hce);
+    protected void actionRepaintBoardUiColors(
+            final Color[] uiColors,
+            final GridLinesEnum gle,
+            final BoardColorNumbersEnum bcne,
+            final HighlightColorEnum hce,
+            final int highlightTransparency ) {
+        this.boardPanel.applyColorScheme(uiColors, gle, this.gameState.getSelectedProgress().getBoardColorNumbers(bcne), hce, highlightTransparency);
     }
 
     /**

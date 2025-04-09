@@ -192,8 +192,14 @@ public class MainController {
     /**
      * repaint board using this UI color scheme.
      */
-    protected void actionRepaintBoardUiColors(final Color[] uiColors, final GridLinesEnum gle, final BoardColorNumbersEnum bcne, final int numColors, final HighlightColorEnum hce) {
-        this.boardController.actionRepaintBoardUiColors(uiColors, gle, bcne, hce);
+    protected void actionRepaintBoardUiColors(
+            final Color[] uiColors,
+            final GridLinesEnum gle,
+            final BoardColorNumbersEnum bcne,
+            final int numColors,
+            final HighlightColorEnum hce,
+            final int highlightTransparency ) {
+        this.boardController.actionRepaintBoardUiColors(uiColors, gle, bcne, hce, highlightTransparency);
         this.controlController.actionSetButtonColors(uiColors, numColors);
     }
 

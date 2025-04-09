@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015 Michael Henke
+    Copyright (C) 2014 - 2025 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,6 +25,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.text.NumberFormat;
 import java.util.ResourceBundle;
 
 import javax.swing.DefaultListCellRenderer;
@@ -33,17 +36,21 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
-import javax.swing.JSpinner;
+import javax.swing.JSlider;
 import javax.swing.KeyStroke;
 import javax.swing.ListCellRenderer;
-import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.text.DefaultFormatterFactory;
+import javax.swing.text.NumberFormatter;
 
 import colorfill.model.BoardColorNumbersEnum;
 import colorfill.model.GridLinesEnum;
@@ -63,10 +70,10 @@ public class PreferencesDialog extends JDialog {
     private final MainWindow mainWindow;
     private final Color[][] allUiColors;
 
-    private final JSpinner jspinWidth = new JSpinner();
-    private final JSpinner jspinHeight = new JSpinner();
-    private final JSpinner jspinNumColors = new JSpinner();
-    private final JSpinner jspinCellSize = new JSpinner();
+    private final JFormattedTextField jftextWidth = new JFormattedTextField();
+    private final JFormattedTextField jftextHeight = new JFormattedTextField();
+    private final JFormattedTextField jftextNumColors = new JFormattedTextField();
+    private final JFormattedTextField jftextCellSize = new JFormattedTextField();
     private final JComboBox<StartPosItem> jcomboStartPos = new JComboBox<>();
     private final JButton buttonOk = new JButton();
     private final JButton buttonCancel = new JButton();
@@ -75,6 +82,7 @@ public class PreferencesDialog extends JDialog {
     private final JComboBox<GridLinesItem> jcomboGridLines = new JComboBox<>();
     private final JComboBox<BoardColorNumbersItem> jcomboBoardColorNumbers = new JComboBox<>();
     private final JComboBox<HighlightColorItem> jcomboHighlightColor = new JComboBox<>();
+    private final JFormattedTextField jftextHighlightTransparency = new JFormattedTextField();
     private final JComboBox<String> jcomboLookAndFeel = new JComboBox<>();
 
     private boolean closedByOkButton = false;
@@ -100,17 +108,19 @@ public class PreferencesDialog extends JDialog {
         layout.row().left().addMulti(new JLabel(progname + " " + version));
         layout.row().left().addMulti(new JLabel(author));
         layout.row().left().fill().add(new JSeparator());
-        layout.row().grid(new JLabel(L10N.getString("pref.lbl.Width.txt"))).addMulti(this.makeJspinWidth());
-        layout.row().grid(new JLabel(L10N.getString("pref.lbl.Height.txt"))).addMulti(this.makeJspinHeight());
-        layout.row().grid(new JLabel(L10N.getString("pref.lbl.NumColors.txt"))).addMulti(this.makeJspinNumColors());
+        layout.row().grid(new JLabel(L10N.getString("pref.lbl.Width.txt"))).addMulti(this.makeTextfieldSlider(this.jftextWidth, 2, 100)); // TODO preferences min/max "width"
+        layout.row().grid(new JLabel(L10N.getString("pref.lbl.Height.txt"))).addMulti(this.makeTextfieldSlider(this.jftextHeight, 2, 100)); // TODO preferences min/max "height"
+        layout.row().grid(new JLabel(L10N.getString("pref.lbl.NumColors.txt"))).addMulti(this.makeTextfieldSlider(this.jftextNumColors, 2, 6)); // TODO preferences min/max "numColors"
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.StartPos.txt"))).addMulti(this.makeJcomboStartPos());
         layout.row().left().fill().add(new JSeparator());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.LookAndFeel.txt"))).addMulti(this.makeJcomboLookAndFeel());
+        layout.row().grid(new JLabel(L10N.getString("pref.lbl.CellSize.txt"))).addMulti(this.makeTextfieldSlider(this.jftextCellSize, 8, 100)); // TODO preferences min/max "cellSize"
+        layout.row().left().fill().add(new JSeparator());
+        layout.row().grid(new JLabel(L10N.getString("pref.lbl.ColorScheme.txt"))).addMulti(this.makeJcomboColorSchemes());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.GridLines.txt"))).addMulti(this.makeJcomboGridLines());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.BoardColorNumbers.txt"))).addMulti(this.makeJcomboBoardColorNumbers());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.HighlightColor.txt"))).addMulti(this.makeJcomboHighlightColor());
-        layout.row().grid(new JLabel(L10N.getString("pref.lbl.ColorScheme.txt"))).addMulti(this.makeJcomboColorSchemes());
-        layout.row().grid(new JLabel(L10N.getString("pref.lbl.CellSize.txt"))).addMulti(this.makeJspinCellSize());
+        layout.row().grid(new JLabel(L10N.getString("pref.lbl.HighlightTransparency.txt"))).addMulti(this.makeTextfieldSlider(this.jftextHighlightTransparency, 0, 100));
         layout.row().left().fill().add(new JSeparator());
         layout.row().left().addMulti(this.makeButtonDefaults());
         layout.row().bar().add(this.makeButtonOk(), Tag.OK).add(this.makeButtonCancel(), Tag.CANCEL);
@@ -122,35 +132,10 @@ public class PreferencesDialog extends JDialog {
             public void windowClosed(WindowEvent e) {
                 // Cancel or Close button: undo preview of color scheme
                 if (false == PreferencesDialog.this.closedByOkButton) {
-                    PreferencesDialog.this.controller.userPreviewUiColors(
-                            PreferencesDialog.this.controller.getUiColorsNumber(),
-                            PreferencesDialog.this.controller.getGridLines(),
-                            PreferencesDialog.this.controller.getBoardColorNumbers(),
-                            PreferencesDialog.this.controller.getNumColors(),
-                            PreferencesDialog.this.controller.getHighlightColor());
+                    PreferencesDialog.this.userPreviewUiColors();
                 }
             }
         });
-    }
-
-    private JSpinner makeJspinWidth() {
-        this.jspinWidth.setModel(new SpinnerNumberModel(2, 2, 100, 1)); // TODO preferences min/max "width"
-        return this.jspinWidth;
-    }
-
-    private JSpinner makeJspinHeight() {
-        this.jspinHeight.setModel(new SpinnerNumberModel(2, 2, 100, 1)); // TODO preferences min/max "height"
-        return this.jspinHeight;
-    }
-
-    private JSpinner makeJspinNumColors() {
-        this.jspinNumColors.setModel(new SpinnerNumberModel(2, 2, 6, 1)); // TODO preferences min/max "numColors"
-        return this.jspinNumColors;
-    }
-
-    private JSpinner makeJspinCellSize() {
-        this.jspinCellSize.setModel(new SpinnerNumberModel(3, 3, 300, 1)); // TODO preferences min/max "cellSize"
-        return this.jspinCellSize;
     }
 
     private JComboBox<StartPosItem> makeJcomboStartPos() {
@@ -174,12 +159,7 @@ public class PreferencesDialog extends JDialog {
         this.jcomboGridLines.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                PreferencesDialog.this.controller.userPreviewUiColors(
-                        PreferencesDialog.this.getSelectedColorSchemeNumber(),
-                        PreferencesDialog.this.getSelectedGridLinesEnum(),
-                        PreferencesDialog.this.getSelectedBoardColorNumbersEnum(),
-                        PreferencesDialog.this.getNumColors(),
-                        PreferencesDialog.this.getHighlightColorEnum());
+                PreferencesDialog.this.userPreviewUiColors();
             }
         });
         return this.jcomboGridLines;
@@ -192,12 +172,7 @@ public class PreferencesDialog extends JDialog {
         this.jcomboBoardColorNumbers.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                PreferencesDialog.this.controller.userPreviewUiColors(
-                        PreferencesDialog.this.getSelectedColorSchemeNumber(),
-                        PreferencesDialog.this.getSelectedGridLinesEnum(),
-                        PreferencesDialog.this.getSelectedBoardColorNumbersEnum(),
-                        PreferencesDialog.this.getNumColors(),
-                        PreferencesDialog.this.getHighlightColorEnum());
+                PreferencesDialog.this.userPreviewUiColors();
             }
         });
         return this.jcomboBoardColorNumbers;
@@ -210,15 +185,40 @@ public class PreferencesDialog extends JDialog {
         this.jcomboHighlightColor.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                PreferencesDialog.this.controller.userPreviewUiColors(
-                        PreferencesDialog.this.getSelectedColorSchemeNumber(),
-                        PreferencesDialog.this.getSelectedGridLinesEnum(),
-                        PreferencesDialog.this.getSelectedBoardColorNumbersEnum(),
-                        PreferencesDialog.this.getNumColors(),
-                        PreferencesDialog.this.getHighlightColorEnum());
+                PreferencesDialog.this.userPreviewUiColors();
             }
         });
         return this.jcomboHighlightColor;
+    }
+
+    private JComponent[] makeTextfieldSlider(final JFormattedTextField jft, final int min, final int max) {
+        final JSlider slider = new JSlider();
+        NumberFormatter nf = new NumberFormatter(NumberFormat.getIntegerInstance());
+        nf.setMinimum(Integer.valueOf(min));
+        nf.setMaximum(Integer.valueOf(max));
+        jft.setFormatterFactory(new DefaultFormatterFactory(nf));
+        jft.setColumns(3);
+        jft.setHorizontalAlignment(JFormattedTextField.TRAILING);
+        jft.setValue(Integer.valueOf(min));
+        jft.addPropertyChangeListener("value", new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                int value = ((Number)jft.getValue()).intValue();
+                if (value != slider.getValue()) {
+                    slider.setValue(value);
+                }
+                PreferencesDialog.this.userPreviewUiColors();
+            }
+        });
+        slider.setMinimum(min);
+        slider.setMaximum(max);
+        slider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                jft.setValue(Integer.valueOf(slider.getValue()));
+            }
+        });
+        return new JComponent[] {jft, slider};
     }
 
     private JComboBox<Integer> makeJcomboColorSchemes() {
@@ -229,12 +229,7 @@ public class PreferencesDialog extends JDialog {
         this.jcomboColorSchemes.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                PreferencesDialog.this.controller.userPreviewUiColors(
-                        PreferencesDialog.this.getSelectedColorSchemeNumber(),
-                        PreferencesDialog.this.getSelectedGridLinesEnum(),
-                        PreferencesDialog.this.getSelectedBoardColorNumbersEnum(),
-                        PreferencesDialog.this.getNumColors(),
-                        PreferencesDialog.this.getHighlightColorEnum());
+                PreferencesDialog.this.userPreviewUiColors();
             }
         });
         return this.jcomboColorSchemes;
@@ -287,16 +282,17 @@ public class PreferencesDialog extends JDialog {
         this.buttonOk.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 PreferencesDialog.this.controller.userPrefsOK(
-                        ((Number)PreferencesDialog.this.jspinWidth.getValue()).intValue(),
-                        ((Number)PreferencesDialog.this.jspinHeight.getValue()).intValue(),
+                        ((Number)PreferencesDialog.this.jftextWidth.getValue()).intValue(),
+                        ((Number)PreferencesDialog.this.jftextHeight.getValue()).intValue(),
                         PreferencesDialog.this.getNumColors(),
                         PreferencesDialog.this.jcomboStartPos.getItemAt(PreferencesDialog.this.jcomboStartPos.getSelectedIndex()).spe,
                         PreferencesDialog.this.getSelectedGridLinesEnum(),
                         PreferencesDialog.this.getSelectedBoardColorNumbersEnum(),
                         PreferencesDialog.this.getSelectedColorSchemeNumber(),
-                        ((Number)PreferencesDialog.this.jspinCellSize.getValue()).intValue(),
+                        ((Number)PreferencesDialog.this.jftextCellSize.getValue()).intValue(),
                         PreferencesDialog.this.getHighlightColorEnum(),
-                        PreferencesDialog.this.jcomboLookAndFeel.getItemAt(PreferencesDialog.this.jcomboLookAndFeel.getSelectedIndex()) );
+                        PreferencesDialog.this.jcomboLookAndFeel.getItemAt(PreferencesDialog.this.jcomboLookAndFeel.getSelectedIndex()),
+                        ((Number)PreferencesDialog.this.jftextHighlightTransparency.getValue()).intValue() );
                 PreferencesDialog.this.closedByOkButton = true;
                 PreferencesDialog.this.dispose();
             }
@@ -329,6 +325,16 @@ public class PreferencesDialog extends JDialog {
         return this.buttonDefaults;
     }
 
+    private void userPreviewUiColors() {
+        this.controller.userPreviewUiColors(
+                this.getSelectedColorSchemeNumber(),
+                this.getSelectedGridLinesEnum(),
+                this.getSelectedBoardColorNumbersEnum(),
+                this.getNumColors(),
+                this.getHighlightColorEnum(),
+                this.getHighlightTransparency() );
+    }
+
     private int getSelectedColorSchemeNumber() {
         return this.jcomboColorSchemes.getSelectedIndex();
     }
@@ -345,8 +351,12 @@ public class PreferencesDialog extends JDialog {
         return this.jcomboHighlightColor.getItemAt(this.jcomboHighlightColor.getSelectedIndex()).hce;
     }
 
+    private int getHighlightTransparency() {
+        return ((Number)this.jftextHighlightTransparency.getValue()).intValue();
+    }
+
     private int getNumColors() {
-        return ((Number)PreferencesDialog.this.jspinNumColors.getValue()).intValue();
+        return ((Number)this.jftextNumColors.getValue()).intValue();
     }
 
     /**
@@ -358,16 +368,18 @@ public class PreferencesDialog extends JDialog {
     }
     private void showDialogInternal() {
         this.closedByOkButton = false;
-        this.jspinWidth.setValue(Integer.valueOf(this.controller.getWidth()));
-        this.jspinHeight.setValue(Integer.valueOf(this.controller.getHeight()));
-        this.jspinNumColors.setValue(Integer.valueOf(this.controller.getNumColors()));
-        this.jspinCellSize.setValue(Integer.valueOf(this.controller.getCellSize()));
-        this.jcomboStartPos.setSelectedIndex(this.controller.getStartPos().ordinal());
-        this.jcomboGridLines.setSelectedIndex(this.controller.getGridLines().ordinal());
-        this.jcomboBoardColorNumbers.setSelectedIndex(this.controller.getBoardColorNumbers().ordinal());
-        this.jcomboHighlightColor.setSelectedIndex(this.controller.getHighlightColor().ordinal());
-        this.jcomboColorSchemes.setSelectedIndex(this.controller.getUiColorsNumber());
-        this.jcomboLookAndFeel.setSelectedItem(this.controller.getLafName());
+        this.setValues(
+                this.controller.getWidth(),
+                this.controller.getHeight(),
+                this.controller.getNumColors(),
+                this.controller.getStartPos(),
+                this.controller.getGridLines(),
+                this.controller.getBoardColorNumbers(),
+                this.controller.getHighlightColor(),
+                this.controller.getUiColorsNumber(),
+                this.controller.getCellSize(),
+                this.controller.getLafName(),
+                this.controller.getHighlightTransparency() );
         this.getRootPane().setDefaultButton(this.buttonOk);
         this.pack();
         this.setLocationRelativeTo(this.mainWindow);
@@ -384,17 +396,19 @@ public class PreferencesDialog extends JDialog {
             final HighlightColorEnum hce,
             final int uiColorsNumber,
             final int cellSize,
-            final String lafName ) {
-        this.jspinWidth.setValue(Integer.valueOf(width));
-        this.jspinHeight.setValue(Integer.valueOf(height));
-        this.jspinNumColors.setValue(Integer.valueOf(numColors));
-        this.jspinCellSize.setValue(Integer.valueOf(cellSize));
+            final String lafName,
+            final int highlightTransparency ) {
+        this.jftextWidth.setValue(Integer.valueOf(width));
+        this.jftextHeight.setValue(Integer.valueOf(height));
+        this.jftextNumColors.setValue(Integer.valueOf(numColors));
         this.jcomboStartPos.setSelectedIndex(spe.ordinal());
         this.jcomboGridLines.setSelectedIndex(gle.ordinal());
-        this.jcomboColorSchemes.setSelectedIndex(uiColorsNumber);
         this.jcomboBoardColorNumbers.setSelectedIndex(bcne.ordinal());
         this.jcomboHighlightColor.setSelectedIndex(hce.ordinal());
+        this.jcomboColorSchemes.setSelectedIndex(uiColorsNumber);
+        this.jftextCellSize.setValue(Integer.valueOf(cellSize));
         this.jcomboLookAndFeel.setSelectedItem(lafName);
+        this.jftextHighlightTransparency.setValue(Integer.valueOf(highlightTransparency));
     }
 
     private static abstract class EnumItem {

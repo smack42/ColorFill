@@ -36,6 +36,7 @@ public class GamePreferences {
     private static final String PREFS_LAFNAME   = "lafName";
     private static final String PREFS_BOARD_COLOR_NUMBERS = "boardColorNumbers";
     private static final String PREFS_HIGHLIGHT_COLOR = "highlightColor";
+    private static final String PREFS_HIGHLIGHT_TRANSPARENCY = "highlightTransparency";
     private static final String PREFS_CELLSIZE  = "cellSize";
     private static final String PREFS_COLSCHEME = "colorScheme";
     private static final String PREFS_RUNSOLVER = "runSolver";
@@ -55,6 +56,7 @@ public class GamePreferences {
     public static final String DEFAULT_UI_LAFNAME = "FlatLaf Light";
     public static final BoardColorNumbersEnum DEFAULT_UI_BOARD_COLOR_NUMBERS = BoardColorNumbersEnum.NONE;
     public static final HighlightColorEnum DEFAULT_UI_HIGHLIGHT_COLOR = HighlightColorEnum.WHITE;
+    public static final int DEFAULT_UI_HIGHLIGHT_TRANSPARENCY = 20;
     public static final int DEFAULT_UI_CELLSIZE = 36;
     public static final int DEFAULT_UI_COLSCHEME = 0;
     public static final int DEFAULT_UI_RUNSOLVER = 1;
@@ -134,6 +136,7 @@ public class GamePreferences {
     private int gridLines;
     private int uiBoardColorNumbers;
     private int highlightColor;
+    private int highlightTransparency;
     private int cellSize;
     private int runSolver;
     private final List<String> dontRunSolverStrategies;
@@ -149,6 +152,7 @@ public class GamePreferences {
         this.cellSize = DEFAULT_UI_CELLSIZE;
         this.uiBoardColorNumbers = DEFAULT_UI_BOARD_COLOR_NUMBERS.intValue;
         this.highlightColor = DEFAULT_UI_HIGHLIGHT_COLOR.intValue;
+        this.highlightTransparency = DEFAULT_UI_HIGHLIGHT_TRANSPARENCY;
         this.lafName = DEFAULT_UI_LAFNAME;
         this.runSolver = DEFAULT_UI_RUNSOLVER;
         this.dontRunSolverStrategies = new ArrayList<String>();
@@ -274,6 +278,15 @@ public class GamePreferences {
         this.highlightColor = hce.intValue;
     }
 
+    public int getHighlightTransparency() {
+        return this.highlightTransparency;
+    }
+    public void setHighlightTransparency(final int ht) {
+        if ((ht >= 0) && (ht <= 100)) { // validation
+            this.highlightTransparency = ht;
+        }
+    }
+
     public int getCellSize() {
         return this.cellSize;
     }
@@ -323,6 +336,7 @@ public class GamePreferences {
         this.setGridLines        (PREFS.getInt(PREFS_GRIDLINES,          DEFAULT_UI_GRIDLINES.intValue));
         this.setBoardColorNumbers(PREFS.getInt(PREFS_BOARD_COLOR_NUMBERS,DEFAULT_UI_BOARD_COLOR_NUMBERS.intValue));
         this.setHighlightColor   (PREFS.getInt(PREFS_HIGHLIGHT_COLOR,    DEFAULT_UI_HIGHLIGHT_COLOR.intValue));
+        this.setHighlightTransparency(PREFS.getInt(PREFS_HIGHLIGHT_TRANSPARENCY, DEFAULT_UI_HIGHLIGHT_TRANSPARENCY));
         this.setCellSize         (PREFS.getInt(PREFS_CELLSIZE,           DEFAULT_UI_CELLSIZE));
         this.runSolver          = PREFS.getInt(PREFS_RUNSOLVER,          DEFAULT_UI_RUNSOLVER);
         final StringTokenizer tokDontRun = new StringTokenizer(PREFS.get(PREFS_DONT_RUN_STRATEGIES, DEFAULT_UI_DONT_RUN_STRATEGIES), ",");
@@ -342,6 +356,7 @@ public class GamePreferences {
         PREFS.putInt(PREFS_GRIDLINES,          this.getGridLines());
         PREFS.putInt(PREFS_BOARD_COLOR_NUMBERS,this.getBoardColorNumbers());
         PREFS.putInt(PREFS_HIGHLIGHT_COLOR,    this.getHighlightColor());
+        PREFS.putInt(PREFS_HIGHLIGHT_TRANSPARENCY, this.getHighlightTransparency());
         PREFS.putInt(PREFS_CELLSIZE,           this.getCellSize());
         PREFS.putInt(PREFS_RUNSOLVER,          this.runSolver);
         final StringBuffer sbDontRun = new StringBuffer();

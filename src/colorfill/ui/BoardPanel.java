@@ -21,6 +21,7 @@ import static colorfill.model.GameProgress.HIGHLIGHT_TYPE_SOLID;
 import static colorfill.model.GameProgress.HIGHLIGHT_TYPE_HOLLOW;
 import static colorfill.model.GameProgress.HIGHLIGHT_TYPE_NEW;
 
+import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -57,6 +58,7 @@ public class BoardPanel extends JPanel {
     private boolean[] cellColorNumbers = new boolean[0];
     private GridLinesEnum gridLines;
     private HighlightColorEnum highlightColor;
+    private AlphaComposite highlightAlpha;
 
     /**
      * constructor
@@ -126,16 +128,9 @@ public class BoardPanel extends JPanel {
     /**
      * set the colors of all cells.
      */
-    protected void setCellColors(final int[] cellColors, final GridLinesEnum gle, final Collection<Integer> collectionColorNumbers, final HighlightColorEnum hce) {
+    protected void setCellColors(final int[] cellColors) {
         this.cellColors = cellColors;
         this.cellHighlights = new byte[this.cellColors.length];
-        this.gridLines = gle;
-        this.highlightColor = hce;
-        this.cellColorNumbers = new boolean[this.cellColors.length];
-        for (final Integer cell : collectionColorNumbers) {
-            this.cellColorNumbers[cell.intValue()] = true;
-        }
-        this.repaint();
     }
 
 
@@ -159,6 +154,7 @@ public class BoardPanel extends JPanel {
         final float strokeWidth = Math.max(1.0f, cw / 16.0f);
         final int sw = Math.round(strokeWidth);
         g2d.setStroke(new BasicStroke(strokeWidth, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL));
+        g2d.setComposite(this.highlightAlpha);
         g.setColor(this.highlightColor.color);
         for (int index = 0, y = 0, row = 0;  row < this.rows;  y += ch, ++row) {
             for (int x = 0, column = 0;  column < this.columns;  x += cw, ++column, ++index) {
@@ -215,10 +211,16 @@ public class BoardPanel extends JPanel {
         this.repaint();
     }
 
-    public void applyColorScheme(final Color[] uiColors, final GridLinesEnum gle, final Collection<Integer> collectionColorNumbers, final HighlightColorEnum hce) {
+    public void applyColorScheme(
+            final Color[] uiColors,
+            final GridLinesEnum gle,
+            final Collection<Integer> collectionColorNumbers,
+            final HighlightColorEnum hce,
+            final int highlightTransparency ) {
         this.uiColors = uiColors;
         this.gridLines = gle;
         this.highlightColor = hce;
+        this.highlightAlpha = AlphaComposite.SrcOver.derive(Math.min(Math.max((100 - highlightTransparency) / 100f, 0f), 1f)); // 0...100 -> 1...0
         this.cellColorNumbers = new boolean[this.cellColors.length];
         for (final Integer cell : collectionColorNumbers) {
             this.cellColorNumbers[cell.intValue()] = true;
