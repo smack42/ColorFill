@@ -30,6 +30,7 @@ import java.beans.PropertyChangeListener;
 import java.text.NumberFormat;
 import java.util.ResourceBundle;
 
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
 import javax.swing.JButton;
@@ -40,6 +41,7 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.KeyStroke;
@@ -74,18 +76,19 @@ public class PreferencesDialog extends JDialog {
     private final JFormattedTextField jftextHeight = new JFormattedTextField();
     private final JFormattedTextField jftextNumColors = new JFormattedTextField();
     private final JFormattedTextField jftextCellSize = new JFormattedTextField();
-    private final JComboBox<StartPosItem> jcomboStartPos = new JComboBox<>();
+    private final JComboBox<String> jcomboStartPos = new JComboBox<>();
     private final JButton buttonOk = new JButton();
     private final JButton buttonCancel = new JButton();
     private final JButton buttonDefaults = new JButton();
     private final JComboBox<Integer> jcomboColorSchemes = new JComboBox<>();
-    private final JComboBox<GridLinesItem> jcomboGridLines = new JComboBox<>();
-    private final JComboBox<BoardColorNumbersItem> jcomboBoardColorNumbers = new JComboBox<>();
-    private final JComboBox<HighlightColorItem> jcomboHighlightColor = new JComboBox<>();
+    private final JRadioButton[] jrbuttonGridLines = new JRadioButton[GridLinesEnum.values().length];
+    private final JRadioButton[] jrbuttonBoardColorNumbers = new JRadioButton[BoardColorNumbersEnum.values().length];
+    private final JRadioButton[] jrbuttonHighlightColor = new JRadioButton[HighlightColorEnum.values().length];
     private final JFormattedTextField jftextHighlightTransparency = new JFormattedTextField();
     private final JComboBox<String> jcomboLookAndFeel = new JComboBox<>();
 
     private boolean closedByOkButton = false;
+    private boolean doUiPreview = false;
 
 
     /**
@@ -114,12 +117,12 @@ public class PreferencesDialog extends JDialog {
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.StartPos.txt"))).addMulti(this.makeJcomboStartPos());
         layout.row().left().fill().add(new JSeparator());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.LookAndFeel.txt"))).addMulti(this.makeJcomboLookAndFeel());
-        layout.row().grid(new JLabel(L10N.getString("pref.lbl.CellSize.txt"))).addMulti(this.makeTextfieldSlider(this.jftextCellSize, 8, 100)); // TODO preferences min/max "cellSize"
+        layout.row().grid(new JLabel(L10N.getString("pref.lbl.CellSize.txt"))).addMulti(this.makeTextfieldSlider(this.jftextCellSize, 8, 150)); // TODO preferences min/max "cellSize"
         layout.row().left().fill().add(new JSeparator());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.ColorScheme.txt"))).addMulti(this.makeJcomboColorSchemes());
-        layout.row().grid(new JLabel(L10N.getString("pref.lbl.GridLines.txt"))).addMulti(this.makeJcomboGridLines());
-        layout.row().grid(new JLabel(L10N.getString("pref.lbl.BoardColorNumbers.txt"))).addMulti(this.makeJcomboBoardColorNumbers());
-        layout.row().grid(new JLabel(L10N.getString("pref.lbl.HighlightColor.txt"))).addMulti(this.makeJcomboHighlightColor());
+        layout.row().grid(new JLabel(L10N.getString("pref.lbl.GridLines.txt"))).add(this.makeRadiobuttonsEnum(this.jrbuttonGridLines, GridLinesEnum.class));
+        layout.row().grid(new JLabel(L10N.getString("pref.lbl.BoardColorNumbers.txt"))).add(makeRadiobuttonsEnum(this.jrbuttonBoardColorNumbers, BoardColorNumbersEnum.class));
+        layout.row().grid(new JLabel(L10N.getString("pref.lbl.HighlightColor.txt"))).add(makeRadiobuttonsEnum(this.jrbuttonHighlightColor, HighlightColorEnum.class));
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.HighlightTransparency.txt"))).addMulti(this.makeTextfieldSlider(this.jftextHighlightTransparency, 0, 100));
         layout.row().left().fill().add(new JSeparator());
         layout.row().left().addMulti(this.makeButtonDefaults());
@@ -132,15 +135,21 @@ public class PreferencesDialog extends JDialog {
             public void windowClosed(WindowEvent e) {
                 // Cancel or Close button: undo preview of color scheme
                 if (false == PreferencesDialog.this.closedByOkButton) {
-                    PreferencesDialog.this.userPreviewUiColors();
+                    PreferencesDialog.this.controller.userPreviewUiColors(
+                            PreferencesDialog.this.controller.getUiColorsNumber(),
+                            PreferencesDialog.this.controller.getGridLines(),
+                            PreferencesDialog.this.controller.getBoardColorNumbers(),
+                            PreferencesDialog.this.controller.getNumColors(),
+                            PreferencesDialog.this.controller.getHighlightColor(),
+                            PreferencesDialog.this.controller.getHighlightTransparency());
                 }
             }
         });
     }
 
-    private JComboBox<StartPosItem> makeJcomboStartPos() {
+    private JComboBox<String> makeJcomboStartPos() {
         for (final StartPositionEnum spe : StartPositionEnum.values()) {
-            this.jcomboStartPos.addItem(new StartPosItem(spe));
+            this.jcomboStartPos.addItem(L10N.getString(spe.getL10nKey()));
         }
         return this.jcomboStartPos;
     }
@@ -152,43 +161,20 @@ public class PreferencesDialog extends JDialog {
         return this.jcomboLookAndFeel;
     }
 
-    private JComboBox<GridLinesItem> makeJcomboGridLines() {
-        for (final GridLinesEnum gle : GridLinesEnum.values()) {
-            this.jcomboGridLines.addItem(new GridLinesItem(gle));
+    private <E extends Enum<E>> JRadioButton[] makeRadiobuttonsEnum(JRadioButton[] jrButtons, Class<E> enumClass) {
+        final ButtonGroup bgroup = new ButtonGroup();
+        for (Enum<E> e : enumClass.getEnumConstants()) {
+            final JRadioButton jrb = new JRadioButton(L10N.getString("pref." + enumClass.getSimpleName() + "." + e.name() + ".txt"));
+            bgroup.add(jrb);
+            jrButtons[e.ordinal()] = jrb;
+            jrb.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    PreferencesDialog.this.userPreviewUiColors();
+                }
+            });
         }
-        this.jcomboGridLines.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                PreferencesDialog.this.userPreviewUiColors();
-            }
-        });
-        return this.jcomboGridLines;
-    }
-
-    private JComboBox<BoardColorNumbersItem> makeJcomboBoardColorNumbers() {
-        for (final BoardColorNumbersEnum bcne : BoardColorNumbersEnum.values()) {
-            this.jcomboBoardColorNumbers.addItem(new BoardColorNumbersItem(bcne));
-        }
-        this.jcomboBoardColorNumbers.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                PreferencesDialog.this.userPreviewUiColors();
-            }
-        });
-        return this.jcomboBoardColorNumbers;
-    }
-
-    private JComboBox<HighlightColorItem> makeJcomboHighlightColor() {
-        for (final HighlightColorEnum hce : HighlightColorEnum.values()) {
-            this.jcomboHighlightColor.addItem(new HighlightColorItem(hce));
-        }
-        this.jcomboHighlightColor.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                PreferencesDialog.this.userPreviewUiColors();
-            }
-        });
-        return this.jcomboHighlightColor;
+        return jrButtons;
     }
 
     private JComponent[] makeTextfieldSlider(final JFormattedTextField jft, final int min, final int max) {
@@ -285,7 +271,7 @@ public class PreferencesDialog extends JDialog {
                         ((Number)PreferencesDialog.this.jftextWidth.getValue()).intValue(),
                         ((Number)PreferencesDialog.this.jftextHeight.getValue()).intValue(),
                         PreferencesDialog.this.getNumColors(),
-                        PreferencesDialog.this.jcomboStartPos.getItemAt(PreferencesDialog.this.jcomboStartPos.getSelectedIndex()).spe,
+                        StartPositionEnum.values()[PreferencesDialog.this.jcomboStartPos.getSelectedIndex()],
                         PreferencesDialog.this.getSelectedGridLinesEnum(),
                         PreferencesDialog.this.getSelectedBoardColorNumbersEnum(),
                         PreferencesDialog.this.getSelectedColorSchemeNumber(),
@@ -326,7 +312,7 @@ public class PreferencesDialog extends JDialog {
     }
 
     private void userPreviewUiColors() {
-        this.controller.userPreviewUiColors(
+        if (this.doUiPreview) this.controller.userPreviewUiColors(
                 this.getSelectedColorSchemeNumber(),
                 this.getSelectedGridLinesEnum(),
                 this.getSelectedBoardColorNumbersEnum(),
@@ -340,15 +326,24 @@ public class PreferencesDialog extends JDialog {
     }
 
     private GridLinesEnum getSelectedGridLinesEnum() {
-        return this.jcomboGridLines.getItemAt(this.jcomboGridLines.getSelectedIndex()).gle;
+        for (GridLinesEnum e : GridLinesEnum.values()) {
+            if (this.jrbuttonGridLines[e.ordinal()].isSelected()) return e;
+        }
+        return null; // shouldn't happen
     }
 
     private BoardColorNumbersEnum getSelectedBoardColorNumbersEnum() {
-        return this.jcomboBoardColorNumbers.getItemAt(this.jcomboBoardColorNumbers.getSelectedIndex()).bcne;
+        for (BoardColorNumbersEnum e : BoardColorNumbersEnum.values()) {
+            if (this.jrbuttonBoardColorNumbers[e.ordinal()].isSelected()) return e;
+        }
+        return null; // shouldn't happen
     }
 
     private HighlightColorEnum getHighlightColorEnum() {
-        return this.jcomboHighlightColor.getItemAt(this.jcomboHighlightColor.getSelectedIndex()).hce;
+        for (HighlightColorEnum e : HighlightColorEnum.values()) {
+            if (this.jrbuttonHighlightColor[e.ordinal()].isSelected()) return e;
+        }
+        return null; // shouldn't happen
     }
 
     private int getHighlightTransparency() {
@@ -398,62 +393,19 @@ public class PreferencesDialog extends JDialog {
             final int cellSize,
             final String lafName,
             final int highlightTransparency ) {
+        this.doUiPreview = false;
         this.jftextWidth.setValue(Integer.valueOf(width));
         this.jftextHeight.setValue(Integer.valueOf(height));
         this.jftextNumColors.setValue(Integer.valueOf(numColors));
         this.jcomboStartPos.setSelectedIndex(spe.ordinal());
-        this.jcomboGridLines.setSelectedIndex(gle.ordinal());
-        this.jcomboBoardColorNumbers.setSelectedIndex(bcne.ordinal());
-        this.jcomboHighlightColor.setSelectedIndex(hce.ordinal());
+        this.jrbuttonGridLines[gle.ordinal()].setSelected(true);
+        this.jrbuttonBoardColorNumbers[bcne.ordinal()].setSelected(true);
+        this.jrbuttonHighlightColor[hce.ordinal()].setSelected(true);
         this.jcomboColorSchemes.setSelectedIndex(uiColorsNumber);
         this.jftextCellSize.setValue(Integer.valueOf(cellSize));
         this.jcomboLookAndFeel.setSelectedItem(lafName);
         this.jftextHighlightTransparency.setValue(Integer.valueOf(highlightTransparency));
-    }
-
-    private static abstract class EnumItem {
-        private final String l10nString;
-        private EnumItem(final String l10nKey) {
-            this.l10nString = PreferencesDialog.L10N.getString(l10nKey);
-        }
-        /* (non-Javadoc)
-         * @see java.lang.Object#toString()
-         */
-        @Override
-        public String toString() {
-            return this.l10nString;
-        }
-    }
-
-    private static class StartPosItem extends EnumItem {
-        private final StartPositionEnum spe;
-        private StartPosItem(StartPositionEnum spe) {
-            super(spe.l10nKey);
-            this.spe = spe;
-        }
-    }
-
-    private static class GridLinesItem extends EnumItem {
-        private final GridLinesEnum gle;
-        private GridLinesItem(GridLinesEnum gle) {
-            super(gle.l10nKey);
-            this.gle = gle;
-        }
-    }
-
-    private static class BoardColorNumbersItem extends EnumItem {
-        private final BoardColorNumbersEnum bcne;
-        private BoardColorNumbersItem(BoardColorNumbersEnum bcne) {
-            super(bcne.l10nKey);
-            this.bcne = bcne;
-        }
-    }
-
-    private static class HighlightColorItem extends EnumItem {
-        private final HighlightColorEnum hce;
-        private HighlightColorItem(HighlightColorEnum hce) {
-            super(hce.l10nKey);
-            this.hce = hce;
-        }
+        this.doUiPreview = true;
+        this.userPreviewUiColors();
     }
 }

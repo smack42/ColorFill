@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015 Michael Henke
+    Copyright (C) 2014 - 2025 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -148,10 +148,10 @@ public class GamePreferences {
         this.numColors = DEFAULT_BOARD_NUM_COLORS;
         this.startPos = DEFAULT_BOARD_STARTPOS.intValue;
         this.uiColors = DEFAULT_UI_COLSCHEME;
-        this.gridLines = DEFAULT_UI_GRIDLINES.intValue;
+        this.gridLines = DEFAULT_UI_GRIDLINES.ordinal();
         this.cellSize = DEFAULT_UI_CELLSIZE;
-        this.uiBoardColorNumbers = DEFAULT_UI_BOARD_COLOR_NUMBERS.intValue;
-        this.highlightColor = DEFAULT_UI_HIGHLIGHT_COLOR.intValue;
+        this.uiBoardColorNumbers = DEFAULT_UI_BOARD_COLOR_NUMBERS.ordinal();
+        this.highlightColor = DEFAULT_UI_HIGHLIGHT_COLOR.ordinal();
         this.highlightTransparency = DEFAULT_UI_HIGHLIGHT_TRANSPARENCY;
         this.lafName = DEFAULT_UI_LAFNAME;
         this.runSolver = DEFAULT_UI_RUNSOLVER;
@@ -245,7 +245,7 @@ public class GamePreferences {
         }
     }
     public void setGridLines(final GridLinesEnum gle) {
-        this.gridLines = gle.intValue;
+        this.gridLines = gle.ordinal();
     }
 
     public int getBoardColorNumbers() {
@@ -260,7 +260,7 @@ public class GamePreferences {
         }
     }
     public void setBoardColorNumbers(final BoardColorNumbersEnum bcne) {
-        this.uiBoardColorNumbers = bcne.intValue;
+        this.uiBoardColorNumbers = bcne.ordinal();
     }
 
     public int getHighlightColor() {
@@ -275,7 +275,7 @@ public class GamePreferences {
         }
     }
     public void setHighlightColor(final HighlightColorEnum hce) {
-        this.highlightColor = hce.intValue;
+        this.highlightColor = hce.ordinal();
     }
 
     public int getHighlightTransparency() {
@@ -333,9 +333,9 @@ public class GamePreferences {
         this.setNumColors        (PREFS.getInt(PREFS_NUMCOLORS,          DEFAULT_BOARD_NUM_COLORS));
         this.setStartPos         (PREFS.getInt(PREFS_STARTPOS,           DEFAULT_BOARD_STARTPOS.intValue));
         this.setUiColorsNumber   (PREFS.getInt(PREFS_COLSCHEME,          DEFAULT_UI_COLSCHEME));
-        this.setGridLines        (PREFS.getInt(PREFS_GRIDLINES,          DEFAULT_UI_GRIDLINES.intValue));
-        this.setBoardColorNumbers(PREFS.getInt(PREFS_BOARD_COLOR_NUMBERS,DEFAULT_UI_BOARD_COLOR_NUMBERS.intValue));
-        this.setHighlightColor   (PREFS.getInt(PREFS_HIGHLIGHT_COLOR,    DEFAULT_UI_HIGHLIGHT_COLOR.intValue));
+        this.setGridLines        (PREFS.getInt(PREFS_GRIDLINES,          DEFAULT_UI_GRIDLINES.ordinal()));
+        this.setBoardColorNumbers(PREFS.getInt(PREFS_BOARD_COLOR_NUMBERS,DEFAULT_UI_BOARD_COLOR_NUMBERS.ordinal()));
+        this.setHighlightColor   (PREFS.getInt(PREFS_HIGHLIGHT_COLOR,    DEFAULT_UI_HIGHLIGHT_COLOR.ordinal()));
         this.setHighlightTransparency(PREFS.getInt(PREFS_HIGHLIGHT_TRANSPARENCY, DEFAULT_UI_HIGHLIGHT_TRANSPARENCY));
         this.setCellSize         (PREFS.getInt(PREFS_CELLSIZE,           DEFAULT_UI_CELLSIZE));
         this.runSolver          = PREFS.getInt(PREFS_RUNSOLVER,          DEFAULT_UI_RUNSOLVER);

@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015 Michael Henke
+    Copyright (C) 2014 - 2025 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,18 +19,16 @@ package colorfill.model;
 
 public enum StartPositionEnum {
 
-    TOP_LEFT    (-1, "pref.startPos.topLeft.txt"),
-    TOP_RIGHT   (-2, "pref.startPos.topRight.txt"),
-    BOTTOM_LEFT (-3, "pref.startPos.bottomLeft.txt"),
-    BOTTOM_RIGHT(-4, "pref.startPos.bottomRight.txt"),
-    CENTRAL     (-5, "pref.startPos.central.txt");
+    TOP_LEFT    (-1),
+    TOP_RIGHT   (-2),
+    BOTTOM_LEFT (-3),
+    BOTTOM_RIGHT(-4),
+    CENTRAL     (-5);
 
     public final int intValue;
-    public final String l10nKey;
 
-    private StartPositionEnum(final int intValue, final String l10nKey) {
+    private StartPositionEnum(final int intValue) {
         this.intValue = intValue;
-        this.l10nKey = l10nKey; //L10N = Localization
     }
 
     /**
@@ -48,6 +46,14 @@ public enum StartPositionEnum {
             }
         }
         return result;
+    }
+
+    /**
+     * get the key for L10N = Localization
+     * @return
+     */
+    public String getL10nKey() {
+        return "pref." + this.getClass().getSimpleName() + "." + this.name() + ".txt";
     }
 
     /**

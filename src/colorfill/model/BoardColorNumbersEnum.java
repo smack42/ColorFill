@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015 Michael Henke
+    Copyright (C) 2014 - 2025 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,17 +19,9 @@ package colorfill.model;
 
 public enum BoardColorNumbersEnum {
 
-    NONE (0, "pref.boardColorNumbers.none.txt"),
-    ALL  (1, "pref.boardColorNumbers.all.txt"),
-    NEXT (2, "pref.boardColorNumbers.next.txt");
-
-    public final int intValue;
-    public final String l10nKey;
-
-    private BoardColorNumbersEnum(final int intValue, final String l10nKey) {
-        this.intValue = intValue;
-        this.l10nKey = l10nKey; //L10N = Localization
-    }
+    NONE,   // 0
+    ALL,    // 1
+    NEXT;   // 2
 
     /**
      * get the BoardColorNumbersEnum for the specified intValue,
@@ -40,7 +32,7 @@ public enum BoardColorNumbersEnum {
     public static BoardColorNumbersEnum valueOf(final int intValue) {
         BoardColorNumbersEnum result = null;
         for (final BoardColorNumbersEnum bcne : values()) {
-            if (bcne.intValue == intValue) {
+            if (bcne.ordinal() == intValue) {
                 result = bcne;
                 break;
             }

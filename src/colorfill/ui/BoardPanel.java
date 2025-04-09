@@ -57,7 +57,7 @@ public class BoardPanel extends JPanel {
     private boolean cellHighlightO, cellHighlightX;
     private boolean[] cellColorNumbers = new boolean[0];
     private GridLinesEnum gridLines;
-    private HighlightColorEnum highlightColor;
+    private Color highlightColor;
     private AlphaComposite highlightAlpha;
 
     /**
@@ -155,7 +155,7 @@ public class BoardPanel extends JPanel {
         final int sw = Math.round(strokeWidth);
         g2d.setStroke(new BasicStroke(strokeWidth, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL));
         g2d.setComposite(this.highlightAlpha);
-        g.setColor(this.highlightColor.color);
+        g.setColor(this.highlightColor);
         for (int index = 0, y = 0, row = 0;  row < this.rows;  y += ch, ++row) {
             for (int x = 0, column = 0;  column < this.columns;  x += cw, ++column, ++index) {
                 if (index == this.startPos) {
@@ -219,7 +219,7 @@ public class BoardPanel extends JPanel {
             final int highlightTransparency ) {
         this.uiColors = uiColors;
         this.gridLines = gle;
-        this.highlightColor = hce;
+        this.highlightColor = hce.color;
         this.highlightAlpha = AlphaComposite.SrcOver.derive(Math.min(Math.max((100 - highlightTransparency) / 100f, 0f), 1f)); // 0...100 -> 1...0
         this.cellColorNumbers = new boolean[this.cellColors.length];
         for (final Integer cell : collectionColorNumbers) {

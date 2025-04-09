@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015 Michael Henke
+    Copyright (C) 2014 - 2025 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,17 +21,13 @@ import java.awt.Color;
 
 public enum HighlightColorEnum {
 
-    WHITE (0, "pref.highlightColor.white.txt", Color.WHITE),
-    BLACK (1, "pref.highlightColor.black.txt", Color.BLACK),
-    BLUE  (2, "pref.highlightColor.blue.txt",  new Color(0x4B6EAF));
+    WHITE (Color.WHITE),
+    BLACK (Color.BLACK),
+    BLUE  (new Color(0x4B6EAF));
 
-    public final int intValue;
-    public final String l10nKey;
     public final Color color;
 
-    private HighlightColorEnum(final int intValue, final String l10nKey, final Color color) {
-        this.intValue = intValue;
-        this.l10nKey = l10nKey; //L10N = Localization
+    private HighlightColorEnum(final Color color) {
         this.color = color;
     }
 
@@ -44,7 +40,7 @@ public enum HighlightColorEnum {
     public static HighlightColorEnum valueOf(final int intValue) {
         HighlightColorEnum result = null;
         for (final HighlightColorEnum hce : values()) {
-            if (hce.intValue == intValue) {
+            if (hce.ordinal() == intValue) {
                 result = hce;
                 break;
             }

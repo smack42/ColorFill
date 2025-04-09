@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015, 2016 Michael Henke
+    Copyright (C) 2014 - 2025 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ public class GameIdController {
         try {
             final GameState gs = GameState.tryInfoGameId(gameId);
             final StartPositionEnum spe = StartPositionEnum.valueOf(StartPositionEnum.intValueFromPosition(gs.getBoard().getStartPos(), gs.getBoard().getWidth(), gs.getBoard().getHeight()));
-            final String startPos = (null != spe ? L10N.getString(spe.l10nKey) : Integer.toString(gs.getBoard().getStartPos()));
+            final String startPos = (null != spe ? L10N.getString(spe.getL10nKey()) : Integer.toString(gs.getBoard().getStartPos()));
             final StringBuilder sb = new StringBuilder();
             sb  .append(L10N.getString("gameId.txt.Size.txt")).append(" ")
                 .append(gs.getBoard().getWidth())
