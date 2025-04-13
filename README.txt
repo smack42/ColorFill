@@ -1,6 +1,6 @@
 ColorFill - yet another Flood-It clone (game and solver algorithm)
 
-Version   1.4.0 (2025-03-16)
+Version   1.4.1 (2025-04-13)
 Homepage  https://github.com/smack42/ColorFill/wiki
 
 

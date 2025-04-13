@@ -2,6 +2,20 @@ ColorFill  CHANGES
 
 
 
+1.4.1 (2025-04-07)
+- GUI: enhanced highlighting of mouse-over cells
+  * empty circles (outline) for areas that don't uncover new areas
+  * filled circles for those areas that uncover new areas and thus advance the game progress
+  * small filled dots for newly uncovered areas
+- GUI: added highlight transparency (adjustable in Settings dialog)
+- GUI: enhanced Settings dialog
+  * use Textfield and Slider instead of Spinner components
+  * use Radiobutton groups instead of Combobox components
+- updated FlatLaf - Flat Look and Feel to current version 3.6
+  * https://github.com/JFormDesigner/FlatLaf/releases
+
+
+
 1.4.0 (2025-03-16)
 - GUI: added special highlight "X" for deferrable colors
   * they have no neighboring areas outside of the already explored region
