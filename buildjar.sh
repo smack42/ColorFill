@@ -5,8 +5,8 @@ TMPLIBZIP=lib/_tmplib.zip
 if [ ! -f $TMPLIBZIP ]; then
     rm -rf $TMPDIR
     mkdir $TMPDIR
-    unzip -q lib/designgridlayout-1.11.jar -x "META-INF/*" -d $TMPDIR
-    unzip -q lib/flatlaf-3.5.4.jar         -x "META-INF/*" -d $TMPDIR
+    unzip -q lib/designgridlayout-1.11.jar  -x "META-INF/*" -d $TMPDIR
+    unzip -q lib/flatlaf-3.6-no-natives.jar -x "META-INF/*" -d $TMPDIR
     cd $TMPDIR
     advzip -a -4 -i 1000 ../$TMPLIBZIP *
     cd ..
