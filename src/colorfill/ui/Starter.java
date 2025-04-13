@@ -49,7 +49,7 @@ public class Starter {
     
     public static void main(String[] args) throws Exception {
         final String progname = "ColorFill";
-        final String version  = "1.4.1 (2025-04-13)";
+        final String version  = "1.4.2 (2025-04-13)";
         final String author   = "Copyright (C) 2025 Michael Henke <smack42@gmail.com>";
         System.out.println(progname + " " + version);
         System.out.println(author);

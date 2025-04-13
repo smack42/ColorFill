@@ -2,7 +2,13 @@ ColorFill  CHANGES
 
 
 
-1.4.1 (2025-04-07)
+1.4.2 (2025-04-13)
+- GUI: support Windows dark mode (Linux works as well)
+  * go to Settings and select Look & Feel: FlatLaf Dark or FlatLaf Darcula
+
+
+
+1.4.1 (2025-04-13)
 - GUI: enhanced highlighting of mouse-over cells
   * empty circles (outline) for areas that don't uncover new areas
   * filled circles for those areas that uncover new areas and thus advance the game progress
