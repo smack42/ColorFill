@@ -1,1 +1,2 @@
 Main-Class: colorfill.ui.Starter
+Class-Path: lib/ lib/designgridlayout-1.11.jar lib/flatlaf-3.6-no-natives.jar
