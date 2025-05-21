@@ -20,6 +20,7 @@ package colorfill.ui;
 import static colorfill.model.GameProgress.HIGHLIGHT_TYPE_SOLID;
 import static colorfill.model.GameProgress.HIGHLIGHT_TYPE_HOLLOW;
 import static colorfill.model.GameProgress.HIGHLIGHT_TYPE_NEW;
+import static colorfill.model.GameProgress.HIGHLIGHT_TYPE_NEW_COMPLETABLE;
 
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
@@ -177,15 +178,18 @@ public class BoardPanel extends JPanel {
                 }
                 final byte highlight = this.cellHighlights[index];
                 if (highlight != 0) {
-                    if (highlight == HIGHLIGHT_TYPE_NEW.byteValue()) {  // is a new neighbor -> "small dot"
+                    if (highlight == HIGHLIGHT_TYPE_HOLLOW.byteValue() || highlight == HIGHLIGHT_TYPE_NEW_COMPLETABLE.byteValue()) {
+                        // no new neighbors -> "hollow"
+                        // or is a new neighbor of a (then) completable color -> "small target"
+                        g.drawOval(x + cw/4, y + ch/4, cw/2, ch/2);
+                    }
+                    if (highlight == HIGHLIGHT_TYPE_NEW.byteValue() || highlight == HIGHLIGHT_TYPE_NEW_COMPLETABLE.byteValue()) {
+                        // is a new neighbor -> "small dot"
                         g.fillOval(x + cw * 3/8, y + ch * 3/8, cw/4, ch/4);
                     }
                     else {
                         if (highlight == HIGHLIGHT_TYPE_SOLID.byteValue()) {  // has new neighbors -> "solid"
                             g.fillOval(x + cw/4, y + ch/4, cw/2, ch/2);
-                        }
-                        else if (highlight == HIGHLIGHT_TYPE_HOLLOW.byteValue()) {  // no new neighbors -> "hollow"
-                            g.drawOval(x + cw/4, y + ch/4, cw/2, ch/2);
                         }
                         if (this.cellHighlightO) {  // completable color -> "target, do it"
                             g.drawOval(x + sw/2, y + sw/2, cw - sw - 1, ch - sw - 1);

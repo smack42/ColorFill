@@ -250,20 +250,24 @@ public class GameProgress {
     public static final Byte HIGHLIGHT_TYPE_HOLLOW = Byte.valueOf((byte) 2);
     /** is a new neighbor that will be uncovered if this color is selected **/
     public static final Byte HIGHLIGHT_TYPE_NEW    = Byte.valueOf((byte) 3);
+    /** is a new neighbor that will be uncovered if this color is selected and that new neighbor color will be completable in the next move **/
+    public static final Byte HIGHLIGHT_TYPE_NEW_COMPLETABLE = Byte.valueOf((byte) 4);
     /**
      * return a map of all cells that have the specified color
      * and that belong to a neighbor area of the flooded area,
      * as well as some related cells (new neighbors) of different colors,
      * with the map values being the type of highlight to be displayed:
-     * HIGHLIGHT_TYPE_SOLID  = has some new neighbor(s);
-     * HIGHLIGHT_TYPE_HOLLOW = has no new neighbors, i.e. will not expand the explored area
-     * HIGHLIGHT_TYPE_NEW    = is a new neighbor that will be uncovered if this color is selected
+     * HIGHLIGHT_TYPE_SOLID  = has some new neighbor(s)<br>
+     * HIGHLIGHT_TYPE_HOLLOW = has no new neighbors, i.e. will not expand the explored area<br>
+     * HIGHLIGHT_TYPE_NEW    = is a new neighbor that will be uncovered if this color is selected<br>
+     * HIGHLIGHT_TYPE_NEW_COMPLETABLE = is a new neighbor that will be uncovered if this color is selected and that new neighbor color will be completable in the next move<br>
      * @param color the color
      * @return map of board cells and highlight type
      */
     public Map<Integer, Byte> getFloodNeighborCellsHighlight(final int color) {
         final HashSet<ColorArea> nextFlooded = new HashSet<>(this.stepFlooded.get(this.numSteps));
         nextFlooded.addAll(this.stepFloodNext.get(this.numSteps));
+        final HashSet<ColorArea> nextNewNeighbors = new HashSet<>();
         final Map<Integer, Byte> result = new HashMap<>();
         for (final ColorArea ca : this.stepFloodNext.get(this.numSteps)) {
             if (ca.getColor() == color) {
@@ -272,14 +276,18 @@ public class GameProgress {
                     result.put(cell, type);
                 }
                 if (type.equals(HIGHLIGHT_TYPE_SOLID)) {
-                    for (final ColorArea caNeighbor : ca.getNeighbors()) {
-                        if (!nextFlooded.contains(caNeighbor)) {
-                            for (final Integer cell : caNeighbor.getMembers()) {
-                                result.put(cell, HIGHLIGHT_TYPE_NEW);
-                            }
-                        }
-                    }
+                    nextNewNeighbors.addAll(ca.getNeighbors());
                 }
+            }
+        }
+        nextNewNeighbors.removeAll(nextFlooded);
+        nextFlooded.addAll(nextNewNeighbors);
+        final long[] casNextFlooded = ColorAreaSet.constructor(this.board, nextFlooded);
+        for (final ColorArea caNeighbor : nextNewNeighbors) {
+            final long[] casColor = this.board.getCasByColorBitsArray()[1 << caNeighbor.getColor()];
+            final Byte type = (ColorAreaSet.containsAll(casNextFlooded, casColor)  ?  HIGHLIGHT_TYPE_NEW_COMPLETABLE  :  HIGHLIGHT_TYPE_NEW);
+            for (final Integer cell : caNeighbor.getMembers()) {
+                result.put(cell, type);
             }
         }
         return result;
