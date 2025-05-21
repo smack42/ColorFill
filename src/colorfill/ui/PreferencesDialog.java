@@ -86,6 +86,7 @@ public class PreferencesDialog extends JDialog {
     private final JRadioButton[] jrbuttonHighlightColor = new JRadioButton[HighlightColorEnum.values().length];
     private final JFormattedTextField jftextHighlightTransparency = new JFormattedTextField();
     private final JComboBox<String> jcomboLookAndFeel = new JComboBox<>();
+    private final JRadioButton[] jrbuttonControlPanelEast = new JRadioButton[2];
 
     private boolean closedByOkButton = false;
     private boolean doUiPreview = false;
@@ -117,6 +118,7 @@ public class PreferencesDialog extends JDialog {
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.StartPos.txt"))).addMulti(this.makeJcomboStartPos());
         layout.row().left().fill().add(new JSeparator());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.LookAndFeel.txt"))).addMulti(this.makeJcomboLookAndFeel());
+        layout.row().grid(new JLabel(L10N.getString("pref.lbl.ControlPanelEast.txt"))).add(this.makeRadiobuttonsControlPanelEast()).empty();
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.CellSize.txt"))).addMulti(this.makeTextfieldSlider(this.jftextCellSize, 8, 150)); // TODO preferences min/max "cellSize"
         layout.row().left().fill().add(new JSeparator());
         layout.row().grid(new JLabel(L10N.getString("pref.lbl.ColorScheme.txt"))).addMulti(this.makeJcomboColorSchemes());
@@ -159,6 +161,17 @@ public class PreferencesDialog extends JDialog {
             this.jcomboLookAndFeel.addItem(info.getName());
         }
         return this.jcomboLookAndFeel;
+    }
+
+    private JRadioButton[] makeRadiobuttonsControlPanelEast() {
+        final ButtonGroup bgroup = new ButtonGroup();
+        JRadioButton jrb = new JRadioButton(L10N.getString("pref.ControlPanelEast.left.txt"));
+        this.jrbuttonControlPanelEast[0] = jrb;
+        bgroup.add(jrb);
+        jrb = new JRadioButton(L10N.getString("pref.ControlPanelEast.right.txt"));
+        this.jrbuttonControlPanelEast[1] = jrb;
+        bgroup.add(jrb);
+        return this.jrbuttonControlPanelEast;
     }
 
     private <E extends Enum<E>> JRadioButton[] makeRadiobuttonsEnum(JRadioButton[] jrButtons, Class<E> enumClass) {
@@ -278,7 +291,8 @@ public class PreferencesDialog extends JDialog {
                         ((Number)PreferencesDialog.this.jftextCellSize.getValue()).intValue(),
                         PreferencesDialog.this.getHighlightColorEnum(),
                         PreferencesDialog.this.jcomboLookAndFeel.getItemAt(PreferencesDialog.this.jcomboLookAndFeel.getSelectedIndex()),
-                        ((Number)PreferencesDialog.this.jftextHighlightTransparency.getValue()).intValue() );
+                        ((Number)PreferencesDialog.this.jftextHighlightTransparency.getValue()).intValue(),
+                        PreferencesDialog.this.jrbuttonControlPanelEast[1].isSelected() );
                 PreferencesDialog.this.closedByOkButton = true;
                 PreferencesDialog.this.dispose();
             }
@@ -374,7 +388,8 @@ public class PreferencesDialog extends JDialog {
                 this.controller.getUiColorsNumber(),
                 this.controller.getCellSize(),
                 this.controller.getLafName(),
-                this.controller.getHighlightTransparency() );
+                this.controller.getHighlightTransparency(),
+                this.controller.isControlPanelEast() );
         this.getRootPane().setDefaultButton(this.buttonOk);
         this.pack();
         this.setLocationRelativeTo(this.mainWindow);
@@ -392,7 +407,8 @@ public class PreferencesDialog extends JDialog {
             final int uiColorsNumber,
             final int cellSize,
             final String lafName,
-            final int highlightTransparency ) {
+            final int highlightTransparency,
+            final boolean isControlPanelEast ) {
         this.doUiPreview = false;
         this.jftextWidth.setValue(Integer.valueOf(width));
         this.jftextHeight.setValue(Integer.valueOf(height));
@@ -405,6 +421,7 @@ public class PreferencesDialog extends JDialog {
         this.jftextCellSize.setValue(Integer.valueOf(cellSize));
         this.jcomboLookAndFeel.setSelectedItem(lafName);
         this.jftextHighlightTransparency.setValue(Integer.valueOf(highlightTransparency));
+        this.jrbuttonControlPanelEast[isControlPanelEast ? 1 : 0].setSelected(true);
         this.doUiPreview = true;
         this.userPreviewUiColors();
     }

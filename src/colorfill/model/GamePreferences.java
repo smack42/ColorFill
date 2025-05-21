@@ -34,6 +34,7 @@ public class GamePreferences {
     private static final String PREFS_STARTPOS  = "startPos";
     private static final String PREFS_GRIDLINES = "gridLines";
     private static final String PREFS_LAFNAME   = "lafName";
+    private static final String PREFS_CONTROLPANEL_EAST = "controlPanelEast";
     private static final String PREFS_BOARD_COLOR_NUMBERS = "boardColorNumbers";
     private static final String PREFS_HIGHLIGHT_COLOR = "highlightColor";
     private static final String PREFS_HIGHLIGHT_TRANSPARENCY = "highlightTransparency";
@@ -54,6 +55,7 @@ public class GamePreferences {
     public static final StartPositionEnum DEFAULT_BOARD_STARTPOS = StartPositionEnum.TOP_LEFT;
     public static final GridLinesEnum DEFAULT_UI_GRIDLINES = GridLinesEnum.NONE;
     public static final String DEFAULT_UI_LAFNAME = "FlatLaf Light";
+    public static final int DEFAULT_UI_CONTROLPANEL_EAST = 1;
     public static final BoardColorNumbersEnum DEFAULT_UI_BOARD_COLOR_NUMBERS = BoardColorNumbersEnum.NONE;
     public static final HighlightColorEnum DEFAULT_UI_HIGHLIGHT_COLOR = HighlightColorEnum.WHITE;
     public static final int DEFAULT_UI_HIGHLIGHT_TRANSPARENCY = 20;
@@ -141,6 +143,7 @@ public class GamePreferences {
     private int runSolver;
     private final List<String> dontRunSolverStrategies;
     private String lafName;
+    private int controlPanelEast;
 
     public GamePreferences() {
         this.width = DEFAULT_BOARD_WIDTH;
@@ -154,6 +157,7 @@ public class GamePreferences {
         this.highlightColor = DEFAULT_UI_HIGHLIGHT_COLOR.ordinal();
         this.highlightTransparency = DEFAULT_UI_HIGHLIGHT_TRANSPARENCY;
         this.lafName = DEFAULT_UI_LAFNAME;
+        this.controlPanelEast = DEFAULT_UI_CONTROLPANEL_EAST;
         this.runSolver = DEFAULT_UI_RUNSOLVER;
         this.dontRunSolverStrategies = new ArrayList<String>();
         this.dontRunSolverStrategies.add(DEFAULT_UI_DONT_RUN_STRATEGIES);
@@ -327,6 +331,16 @@ public class GamePreferences {
         return this.lafName;
     }
 
+    public boolean setControlPanelEast(final boolean isControlPanelEast) {
+        final boolean oldValue = isControlPanelEast();
+        this.controlPanelEast = (isControlPanelEast ? 1 : 0);
+        return oldValue != isControlPanelEast;
+    }
+    public boolean isControlPanelEast() {
+        return 0 != this.controlPanelEast;
+    }
+
+
     private void loadPrefs() {
         this.setWidth            (PREFS.getInt(PREFS_WIDTH,              DEFAULT_BOARD_WIDTH));
         this.setHeight           (PREFS.getInt(PREFS_HEIGHT,             DEFAULT_BOARD_HEIGHT));
@@ -345,6 +359,7 @@ public class GamePreferences {
             this.dontRunSolverStrategies.add(tokDontRun.nextToken());
         }
         this.lafName            = PREFS.get(PREFS_LAFNAME, DEFAULT_UI_LAFNAME);
+        this.controlPanelEast   = PREFS.getInt(PREFS_CONTROLPANEL_EAST,  DEFAULT_UI_CONTROLPANEL_EAST);
     }
 
     public void savePrefs() {
@@ -365,6 +380,7 @@ public class GamePreferences {
         }
         PREFS.put(PREFS_DONT_RUN_STRATEGIES, sbDontRun.substring(Math.min(sbDontRun.length(), 1)));
         PREFS.put(PREFS_LAFNAME, this.lafName);
+        PREFS.putInt(PREFS_CONTROLPANEL_EAST,  this.controlPanelEast);
     }
 
     public static void saveBoard(final Board board) {

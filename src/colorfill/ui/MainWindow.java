@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015 Michael Henke
+    Copyright (C) 2014 - 2025 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,6 +34,9 @@ public class MainWindow extends JFrame {
 
     private static final long serialVersionUID = -708157957994420526L;
 
+    private final JPanel controlPanel;
+    private boolean isControlPanelEast;
+
     /**
      * constructor
      * @param windowTitle
@@ -44,6 +47,8 @@ public class MainWindow extends JFrame {
         super(windowTitle);
         this.getContentPane().add(boardPanel, BorderLayout.CENTER);
         this.getContentPane().add(controlPanel, BorderLayout.EAST);
+        this.controlPanel = controlPanel;
+        this.isControlPanelEast = true;
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         final List<Image> icons = new ArrayList<Image>();
@@ -57,11 +62,16 @@ public class MainWindow extends JFrame {
     /**
      * resize (pack) the main window
      */
-    protected void update() {
-        if (SwingUtilities.isEventDispatchThread()) {                          updateInternal(); }
-        else { SwingUtilities.invokeLater(new Runnable() { public void run() { updateInternal(); } }); }
+    protected void update(final boolean isControlPanelEast) {
+        if (SwingUtilities.isEventDispatchThread()) {                          updateInternal(isControlPanelEast); }
+        else { SwingUtilities.invokeLater(new Runnable() { public void run() { updateInternal(isControlPanelEast); } }); }
     }
-    private void updateInternal() {
+    private void updateInternal(final boolean isControlPanelEast) {
+        if (this.isControlPanelEast != isControlPanelEast) {
+            this.getContentPane().remove(this.controlPanel);
+            this.getContentPane().add(this.controlPanel, (isControlPanelEast ? BorderLayout.EAST : BorderLayout.WEST));
+            this.isControlPanelEast = isControlPanelEast;
+        }
         this.pack();
         this.setVisible(true);
     }

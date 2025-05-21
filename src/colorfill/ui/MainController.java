@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015 Michael Henke
+    Copyright (C) 2014 - 2025 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -90,7 +90,7 @@ public class MainController {
                     if (lafName.contentEquals(info.getName())) {
                         UIManager.setLookAndFeel(info.getClassName());
                         FlatLaf.updateUI();
-                        this.mainView.update();
+                        this.mainView.update(this.gameState.getPreferences().isControlPanelEast());
                         break;
                     }
                 }
@@ -184,7 +184,7 @@ public class MainController {
         if (isNewLaf) {
             this.setNewLookAndFeel();
         } else if (isNewSize) {
-            this.mainView.update();
+            this.mainView.update(this.gameState.getPreferences().isControlPanelEast());
         }
         this.internalUpdateBoardColors();
     }

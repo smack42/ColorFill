@@ -1,5 +1,5 @@
 /*  ColorFill game and solver
-    Copyright (C) 2014, 2015 Michael Henke
+    Copyright (C) 2014 - 2025 Michael Henke
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -57,13 +57,15 @@ public class PreferencesController {
             final int cellSize,
             final HighlightColorEnum hce,
             final String lafName,
-            final int highlightTransparency ) {
+            final int highlightTransparency,
+            final boolean isControlPanelEast ) {
         boolean isNewBoard = this.gameState.getPreferences().setWidth(width);
         isNewBoard |= this.gameState.getPreferences().setHeight(height);
         boolean isNewSize = isNewBoard;
         isNewBoard |= this.gameState.getPreferences().setNumColors(numColors);
         isNewBoard |= this.gameState.getPreferences().setStartPos(spe);
         isNewSize |= this.gameState.getPreferences().setCellSize(cellSize);
+        isNewSize |= this.gameState.getPreferences().setControlPanelEast(isControlPanelEast);
         this.gameState.getPreferences().setGridLines(gle);
         this.gameState.getPreferences().setBoardColorNumbers(bcne);
         this.gameState.getPreferences().setUiColorsNumber(uiColorsNumber);
@@ -89,7 +91,8 @@ public class PreferencesController {
                 GamePreferences.DEFAULT_UI_COLSCHEME,
                 GamePreferences.DEFAULT_UI_CELLSIZE,
                 GamePreferences.DEFAULT_UI_LAFNAME,
-                GamePreferences.DEFAULT_UI_HIGHLIGHT_TRANSPARENCY );
+                GamePreferences.DEFAULT_UI_HIGHLIGHT_TRANSPARENCY,
+                GamePreferences.DEFAULT_UI_CONTROLPANEL_EAST != 0 );
     }
 
     /**
@@ -140,5 +143,8 @@ public class PreferencesController {
     }
     protected int getHighlightTransparency() {
         return this.gameState.getPreferences().getHighlightTransparency();
+    }
+    protected boolean isControlPanelEast() {
+        return this.gameState.getPreferences().isControlPanelEast();
     }
 }
