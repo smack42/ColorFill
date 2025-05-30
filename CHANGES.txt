@@ -2,6 +2,14 @@ ColorFill  CHANGES
 
 
 
+1.4.3 (2025-05-30)
+- GUI: enhanced highlighting of mouse-over cells
+  + each small dot of newly uncovered areas will get an additional circle around it
+    if that color becomes completable, which hints at an upcoming optimal move
+- GUI: add Settings option to display the control panel on the left or right side of the game board
+
+
+
 1.4.2 (2025-04-13)
 - GUI: support Windows dark mode (Linux works as well)
   * go to Settings and select Look & Feel: FlatLaf Dark or FlatLaf Darcula
