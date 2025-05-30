@@ -144,6 +144,7 @@ public class BoardPanel extends JPanel {
         final Dimension size = this.getSize();
         final int cw = size.width / this.columns;
         final int ch = size.height / this.rows;
+        final int cw2=cw/2, cw4=cw/4, cw8=cw/8, ch2=ch/2, ch4=ch/4, ch8=ch/8;
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
         for (int index = 0, y = 0, row = 0;  row < this.rows;  y += ch, ++row) {
             for (int x = 0, column = 0;  column < this.columns;  x += cw, ++column, ++index) {
@@ -160,7 +161,7 @@ public class BoardPanel extends JPanel {
         for (int index = 0, y = 0, row = 0;  row < this.rows;  y += ch, ++row) {
             for (int x = 0, column = 0;  column < this.columns;  x += cw, ++column, ++index) {
                 if (index == this.startPos) {
-                    g.fillRect(x + cw * 3/8, y + ch * 3/8, cw/4, ch/4);
+                    g.fillRect(x + cw2 - cw8, y + ch2 - ch8, cw8 + cw8, ch8 + ch8);
                 }
                 final int color = this.cellColors[index];
                 if (GridLinesEnum.NONE != this.gridLines) {
@@ -181,15 +182,15 @@ public class BoardPanel extends JPanel {
                     if (highlight == HIGHLIGHT_TYPE_HOLLOW.byteValue() || highlight == HIGHLIGHT_TYPE_NEW_COMPLETABLE.byteValue()) {
                         // no new neighbors -> "hollow"
                         // or is a new neighbor of a (then) completable color -> "small target"
-                        g.drawOval(x + cw/4, y + ch/4, cw/2, ch/2);
+                        g.drawOval(x + cw2 - cw4, y + ch2 - ch4, cw4 + cw4 - 1, ch4 + ch4 - 1);
                     }
                     if (highlight == HIGHLIGHT_TYPE_NEW.byteValue() || highlight == HIGHLIGHT_TYPE_NEW_COMPLETABLE.byteValue()) {
                         // is a new neighbor -> "small dot"
-                        g.fillOval(x + cw * 3/8, y + ch * 3/8, cw/4, ch/4);
+                        g.fillOval(x + cw2 - cw8, y + ch2 - ch8, cw8 + cw8, ch8 + ch8);
                     }
                     else {
                         if (highlight == HIGHLIGHT_TYPE_SOLID.byteValue()) {  // has new neighbors -> "solid"
-                            g.fillOval(x + cw/4, y + ch/4, cw/2, ch/2);
+                            g.fillOval(x + cw2 - cw4, y + ch2 - ch4, cw4 + cw4, ch4 + ch4);
                         }
                         if (this.cellHighlightO) {  // completable color -> "target, do it"
                             g.drawOval(x + sw/2, y + sw/2, cw - sw - 1, ch - sw - 1);
