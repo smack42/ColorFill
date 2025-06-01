@@ -90,7 +90,7 @@ public class PreferencesController {
                 GamePreferences.DEFAULT_UI_HIGHLIGHT_COLOR,
                 GamePreferences.DEFAULT_UI_COLSCHEME,
                 GamePreferences.DEFAULT_UI_CELLSIZE,
-                GamePreferences.DEFAULT_UI_LAFNAME,
+                GamePreferences.getDefaultLafName(),
                 GamePreferences.DEFAULT_UI_HIGHLIGHT_TRANSPARENCY,
                 GamePreferences.DEFAULT_UI_CONTROLPANEL_EAST != 0 );
     }

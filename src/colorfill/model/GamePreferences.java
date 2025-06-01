@@ -24,6 +24,11 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.prefs.Preferences;
 
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLightLaf;
+
+import colorfill.ui.DarkModeDetector;
+
 public class GamePreferences {
 
     // keys in the persistent preferences store
@@ -54,7 +59,6 @@ public class GamePreferences {
     public static final int DEFAULT_BOARD_NUM_COLORS = 6;
     public static final StartPositionEnum DEFAULT_BOARD_STARTPOS = StartPositionEnum.TOP_LEFT;
     public static final GridLinesEnum DEFAULT_UI_GRIDLINES = GridLinesEnum.NONE;
-    public static final String DEFAULT_UI_LAFNAME = "FlatLaf Light";
     public static final int DEFAULT_UI_CONTROLPANEL_EAST = 1;
     public static final BoardColorNumbersEnum DEFAULT_UI_BOARD_COLOR_NUMBERS = BoardColorNumbersEnum.NONE;
     public static final HighlightColorEnum DEFAULT_UI_HIGHLIGHT_COLOR = HighlightColorEnum.WHITE;
@@ -156,7 +160,7 @@ public class GamePreferences {
         this.uiBoardColorNumbers = DEFAULT_UI_BOARD_COLOR_NUMBERS.ordinal();
         this.highlightColor = DEFAULT_UI_HIGHLIGHT_COLOR.ordinal();
         this.highlightTransparency = DEFAULT_UI_HIGHLIGHT_TRANSPARENCY;
-        this.lafName = DEFAULT_UI_LAFNAME;
+        this.lafName = getDefaultLafName();
         this.controlPanelEast = DEFAULT_UI_CONTROLPANEL_EAST;
         this.runSolver = DEFAULT_UI_RUNSOLVER;
         this.dontRunSolverStrategies = new ArrayList<String>();
@@ -330,6 +334,9 @@ public class GamePreferences {
     public String getLafName() {
         return this.lafName;
     }
+    public static String getDefaultLafName() {
+        return (DarkModeDetector.isDark() ? FlatDarkLaf.NAME : FlatLightLaf.NAME);
+    }
 
     public boolean setControlPanelEast(final boolean isControlPanelEast) {
         final boolean oldValue = isControlPanelEast();
@@ -358,7 +365,7 @@ public class GamePreferences {
         while (tokDontRun.hasMoreTokens()) {
             this.dontRunSolverStrategies.add(tokDontRun.nextToken());
         }
-        this.lafName            = PREFS.get(PREFS_LAFNAME, DEFAULT_UI_LAFNAME);
+        this.lafName            = PREFS.get(PREFS_LAFNAME, getDefaultLafName());
         this.controlPanelEast   = PREFS.getInt(PREFS_CONTROLPANEL_EAST,  DEFAULT_UI_CONTROLPANEL_EAST);
     }
 
