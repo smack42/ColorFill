@@ -2,6 +2,14 @@ ColorFill  CHANGES
 
 
 
+1.4.4 (2025-06-01)
+- GUI: auto-detect the "dark mode" setting of the operating system
+  * automatically use either "FlatLaf Dark" or "FlatLaf Light" depending on the detected system setting
+  * applies to the very first launch of this program and to the "Restore Defaults" button in the Settings dialog
+  * user can override it using the "Look & Feel" choice in the Settings dialog
+
+
+
 1.4.3 (2025-05-30)
 - GUI: enhanced highlighting of mouse-over cells
   + each small dot of newly uncovered areas will get an additional circle around it
