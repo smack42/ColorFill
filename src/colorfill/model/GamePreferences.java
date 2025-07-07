@@ -132,6 +132,14 @@ public class GamePreferences {
             new Color(0x585858),
             new Color(0xC8C8C8),
             new Color(0x383838)
+        },
+        { // Flood from Simon Tatham's Portable Puzzle Collection
+            new Color(0xFF0000), // red
+            new Color(0xFFFF00), // yellow
+            new Color(0x00FF00), // green
+            new Color(0x334CFF), // blue
+            new Color(0xFF7F00), // orange
+            new Color(0x7F00B2)  // purple
         }
     };
 
