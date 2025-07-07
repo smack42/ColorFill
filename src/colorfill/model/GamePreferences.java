@@ -18,6 +18,7 @@
 package colorfill.model;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -304,6 +305,10 @@ public class GamePreferences {
             return true; // new value has been set
         }
         return false; // value not changed
+    }
+    /** calculate cellSize from new BoardPanel size **/
+    public boolean setCellSize(final Dimension newPreferredSize) {
+        return this.setCellSize(newPreferredSize.width / this.getWidth());
     }
 
     public void setRunSolver(final boolean runSolver) {

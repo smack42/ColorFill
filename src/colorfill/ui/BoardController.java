@@ -18,7 +18,6 @@
 package colorfill.ui;
 
 import java.awt.Color;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagLayout;
 import java.util.Collections;
@@ -43,34 +42,7 @@ public class BoardController {
     protected BoardController(final MainController mainController, final GameState gameState) {
         this.mainController = mainController;
         this.gameState = gameState;
-        this.boardPanel = new BoardPanel(this) {
-            private static final long serialVersionUID = 1844903047710667159L;
-            private double aspectRatio = 1.0d;
-            /**
-             * adjust the dimensions of BoardPanel when resizing so that it keeps its natural aspect ratio
-             */
-            @Override
-            public Dimension getPreferredSize() {
-                final Dimension result;
-                if (this.isPreferredSizeSet()) {
-                    // this is the "natural" size of BoardPanel, based on the user-configured cell size
-                    result = super.getPreferredSize();
-                    this.aspectRatio = (double)result.width / (double)result.height;
-                    // forget the "natural" size, so next time this method will return the adapted container size
-                    this.setPreferredSize(null);
-                } else {
-                    // adjust to container size while keeping aspect ratio
-                    final Container container = this.getParent();
-                    final double containerAspectRatio = (double)container.getWidth() / (double)container.getHeight();
-                    if (this.aspectRatio >= containerAspectRatio) {
-                        result = new Dimension(container.getWidth(), (int)Math.round(container.getWidth() / this.aspectRatio));
-                    } else {
-                        result = new Dimension((int)Math.round(container.getHeight() * this.aspectRatio), container.getHeight());
-                    }
-                }
-                return result;
-            }
-        };
+        this.boardPanel = new BoardPanel(this);
         this.initBoardPanel();
     }
 
@@ -167,5 +139,12 @@ public class BoardController {
             isDeferrable = !neighborCells.isEmpty() && !isCompleted && this.gameState.getSelectedProgress().isFloodNeighborCellsDeferrable(color);
         }
         this.boardPanel.highlightCells(neighborCells, isCompleted, isDeferrable);
+    }
+
+    /** store new cellSize in game Preferences **/
+    protected void userResizedWindow(final Dimension newPreferredSize) {
+        if (this.gameState.getPreferences().setCellSize(newPreferredSize)) {
+            this.gameState.getPreferences().savePrefs();
+        }
     }
 }
