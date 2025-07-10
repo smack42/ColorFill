@@ -2,6 +2,12 @@ ColorFill  CHANGES
 
 
 
+1.4.5 (2025-07-10)
+- GUI: automatically calculate and store the new cell size (see Settings dialog) when window is resized
+- GUI: added color scheme (#9, high-intensity colors, from Simon Tatham's "Flood")
+
+
+
 1.4.4 (2025-06-01)
 - GUI: auto-detect the "dark mode" setting of the operating system
   * automatically use either "FlatLaf Dark" or "FlatLaf Light" depending on the detected system setting
