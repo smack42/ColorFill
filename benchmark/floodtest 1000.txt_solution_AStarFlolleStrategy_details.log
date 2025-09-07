@@ -1,0 +1,20 @@
+2025-09-07T15:41:19+02:00
+Java(TM) SE Runtime Environment Oracle GraalVM 24.0.2+11.1 (build 24.0.2+11-jvmci-b01)
+ColorFill 1.4.5 (2025-07-10)
+milliSeconds_min/median/average/max=2/13/25/1280  total=24791
+
+2025-09-07T15:45:58+02:00
+OpenJDK Runtime Environment (build 1.8.0_462-8u462-ga~us1-0ubuntu2~24.04.2-b08)
+ColorFill 1.4.5 (2025-07-10)
+milliSeconds_min/median/average/max=2/14/27/1453  total=27008
+
+2025-09-07T15:49:00+02:00
+OpenJDK Runtime Environment (build 21.0.8+9-Ubuntu-0ubuntu124.04.1)
+ColorFill 1.4.5 (2025-07-10)
+milliSeconds_min/median/average/max=2/16/32/1738  total=32486
+
+2025-09-07T15:57:02+02:00
+Java(TM) SE Runtime Environment Oracle GraalVM 24.0.2+11.1 (build 24.0.2+11-jvmci-b01)
+ColorFill 1.4.5 (2025-07-10)
+milliSeconds_min/median/average/max=2/13/25/1296  total=24574
+
