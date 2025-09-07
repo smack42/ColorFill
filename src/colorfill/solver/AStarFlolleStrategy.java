@@ -26,15 +26,24 @@ import colorfill.model.ColorAreaSet;
  * the idea is taken from the program "terminal-flood" by Flolle (Florian Fischer),
  * which can be found at <a>https://github.com/Flolle/terminal-flood</a>
  */
-public class AStarFlolleStrategy extends AStarPuchertStrategy {
+public class AStarFlolleStrategy implements AStarStrategy {
 
+    protected final long[] casVisited, casCurrent, casNext;
+    protected final long[][] casByColorBits;
+    protected final long[][] idsNeighborColorAreaSets;
+    private final AStarPuchertStrategy aps;
     private final ColorAreaSet.Iterator iter;
     private final long[] casNextOne, casNextTwo;
     private final int caLimit;
     private final int[] idsMemberSize;
 
     public AStarFlolleStrategy(final Board board) {
-        super(board);
+        this.casVisited = ColorAreaSet.constructor(board);
+        this.casCurrent = ColorAreaSet.constructor(board);
+        this.casNext = ColorAreaSet.constructor(board);
+        this.casByColorBits = board.getCasByColorBitsArray();
+        this.idsNeighborColorAreaSets = board.getNeighborColorAreaSet4IdArray();
+        this.aps = AStarPuchertStrategy.getInstance(board); // optimized instance
         this.iter = new ColorAreaSet.Iterator();
         this.caLimit = board.getColorAreasArray().length / 3; // TODO: find a good value for caLimit
         this.casNextOne = ColorAreaSet.constructor(board);
@@ -55,7 +64,7 @@ public class AStarFlolleStrategy extends AStarPuchertStrategy {
         // already more than <caLimit> of the color areas are flooded, so call the admissible strategy.
         // note: we're counting color areas here, unlike Flolle's "terminal-flood" which counted the individual fields (slower)
         if (ColorAreaSet.size(casFlooded) > this.caLimit) {
-            return super.estimateCost(casFlooded, casNeighbors, nonCompletedColorBits); // AStarPuchertStrategy
+            return this.aps.estimateCost(casFlooded, casNeighbors, nonCompletedColorBits); // AStarPuchertStrategy
         }
 
         int distance = 0;
