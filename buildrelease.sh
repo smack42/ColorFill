@@ -1,10 +1,13 @@
 DESTDIR=ColorFill_release
+DESTJAR=colorfill.jar
+
+rm -f $DESTJAR
 
 rm -rf $DESTDIR
 mkdir $DESTDIR
 
-jar --create --file $DESTDIR/colorfill.jar --no-compress --manifest src/META-INF/MANIFEST.MF -C bin/ colorfill
-chmod u+x $DESTDIR/colorfill.jar
+jar --create --file $DESTDIR/$DESTJAR --no-compress --manifest src/META-INF/MANIFEST.MF -C bin/ colorfill
+chmod u+x $DESTDIR/$DESTJAR
 
 mkdir $DESTDIR/lib
 cp -p  src/*.properties               $DESTDIR/lib
@@ -20,3 +23,5 @@ cp -p  LICENSE.txt                    $DESTDIR
 cp -p  README.txt                     $DESTDIR
 
 cp -rp src                            $DESTDIR
+
+ln -s -v $DESTDIR/$DESTJAR $DESTJAR
