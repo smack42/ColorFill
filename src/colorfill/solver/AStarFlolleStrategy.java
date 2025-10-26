@@ -45,7 +45,7 @@ public class AStarFlolleStrategy implements AStarStrategy {
         this.idsNeighborColorAreaSets = board.getNeighborColorAreaSet4IdArray();
         this.aps = AStarPuchertStrategy.getInstance(board); // optimized instance
         this.iter = new ColorAreaSet.Iterator();
-        this.caLimit = board.getColorAreasArray().length / 3; // TODO: find a good value for caLimit
+        this.caLimit = board.getColorAreasArray().length / 3; // determined experimentally, see benchmark/AStarFlolleStrategy_caLimit.ods
         this.casNextOne = ColorAreaSet.constructor(board);
         this.casNextTwo = ColorAreaSet.constructor(board);
         this.idsMemberSize = board.getMemberSize4IdArray();

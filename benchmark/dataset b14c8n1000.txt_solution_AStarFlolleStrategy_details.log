@@ -23,3 +23,75 @@ Java(TM) SE Runtime Environment Oracle GraalVM 24.0.2+11.1 (build 24.0.2+11-jvmc
 ColorFill 1.4.6__DEV__ (2025-09-07)
 milliSeconds_min/median/average/max=1/8/13/448  total=12724
 
+2025-10-26T11:15:34+01:00
+Java(TM) SE Runtime Environment Oracle GraalVM 24.0.2+11.1 (build 24.0.2+11-jvmci-b01)
+ColorFill 1.4.6__DEV__AStarFlolleStrategy=0.0 (2025-10-26)
+milliSeconds_min/median/average/max=2/50/112/5737  total=112006
+AStarFlolleStrategy  1000 solutions with  24582 steps
+
+2025-10-26T11:25:41+01:00
+Java(TM) SE Runtime Environment Oracle GraalVM 24.0.2+11.1 (build 24.0.2+11-jvmci-b01)
+ColorFill 1.4.6__DEV__AStarFlolleStrategy=0.1 (2025-10-26)
+milliSeconds_min/median/average/max=1/24/69/4410  total=69335
+AStarFlolleStrategy  1000 solutions with  24609 steps
+
+2025-10-26T11:32:10+01:00
+Java(TM) SE Runtime Environment Oracle GraalVM 24.0.2+11.1 (build 24.0.2+11-jvmci-b01)
+ColorFill 1.4.6__DEV__AStarFlolleStrategy=0.2 (2025-10-26)
+milliSeconds_min/median/average/max=1/10/23/1475  total=22826
+AStarFlolleStrategy  1000 solutions with  24642 steps
+
+2025-10-26T11:36:33+01:00
+Java(TM) SE Runtime Environment Oracle GraalVM 24.0.2+11.1 (build 24.0.2+11-jvmci-b01)
+ColorFill 1.4.6__DEV__AStarFlolleStrategy=0.3 (2025-10-26)
+milliSeconds_min/median/average/max=1/8/13/416  total=13036
+AStarFlolleStrategy  1000 solutions with  24679 steps
+
+2025-10-26T11:39:17+01:00
+Java(TM) SE Runtime Environment Oracle GraalVM 24.0.2+11.1 (build 24.0.2+11-jvmci-b01)
+ColorFill 1.4.6__DEV__AStarFlolleStrategy=0.4 (2025-10-26)
+milliSeconds_min/median/average/max=1/8/13/370  total=12554
+AStarFlolleStrategy  1000 solutions with  24715 steps
+
+2025-10-26T11:41:41+01:00
+Java(TM) SE Runtime Environment Oracle GraalVM 24.0.2+11.1 (build 24.0.2+11-jvmci-b01)
+ColorFill 1.4.6__DEV__AStarFlolleStrategy=0.5 (2025-10-26)
+milliSeconds_min/median/average/max=1/8/14/354  total=13645
+AStarFlolleStrategy  1000 solutions with  24740 steps
+
+2025-10-26T11:44:52+01:00
+Java(TM) SE Runtime Environment Oracle GraalVM 24.0.2+11.1 (build 24.0.2+11-jvmci-b01)
+ColorFill 1.4.6__DEV__AStarFlolleStrategy=0.6 (2025-10-26)
+milliSeconds_min/median/average/max=1/9/14/361  total=14223
+AStarFlolleStrategy  1000 solutions with  24748 steps
+
+2025-10-26T11:47:25+01:00
+Java(TM) SE Runtime Environment Oracle GraalVM 24.0.2+11.1 (build 24.0.2+11-jvmci-b01)
+ColorFill 1.4.6__DEV__AStarFlolleStrategy=0.7 (2025-10-26)
+milliSeconds_min/median/average/max=1/9/14/357  total=14219
+AStarFlolleStrategy  1000 solutions with  24748 steps
+
+2025-10-26T11:50:08+01:00
+Java(TM) SE Runtime Environment Oracle GraalVM 24.0.2+11.1 (build 24.0.2+11-jvmci-b01)
+ColorFill 1.4.6__DEV__AStarFlolleStrategy=0.8 (2025-10-26)
+milliSeconds_min/median/average/max=1/9/14/356  total=14258
+AStarFlolleStrategy  1000 solutions with  24748 steps
+
+2025-10-26T11:52:54+01:00
+Java(TM) SE Runtime Environment Oracle GraalVM 24.0.2+11.1 (build 24.0.2+11-jvmci-b01)
+ColorFill 1.4.6__DEV__AStarFlolleStrategy=0.9 (2025-10-26)
+milliSeconds_min/median/average/max=1/9/14/355  total=14167
+AStarFlolleStrategy  1000 solutions with  24748 steps
+
+2025-10-26T11:56:26+01:00
+Java(TM) SE Runtime Environment Oracle GraalVM 24.0.2+11.1 (build 24.0.2+11-jvmci-b01)
+ColorFill 1.4.6__DEV__AStarFlolleStrategy=1.0 (2025-10-26)
+milliSeconds_min/median/average/max=1/9/14/361  total=14335
+AStarFlolleStrategy  1000 solutions with  24748 steps
+
+2025-10-26T15:17:18+01:00
+Java(TM) SE Runtime Environment Oracle GraalVM 25.0.1+8.1 (build 25.0.1+8-LTS-jvmci-b01)
+ColorFill 1.4.6__DEV__ (2025-10-26)
+milliSeconds_min/median/average/max=1/8/14/481  total=13644
+AStarFlolleStrategy  1000 solutions with  24688 steps
+

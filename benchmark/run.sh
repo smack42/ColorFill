@@ -17,6 +17,7 @@ run_benchmark () {
         grep "Runtime" -i -m1    "$1_solution_$2_details.txt"
         grep "ColorFill" -m1     "$1_solution_$2_details.txt"
         grep "milliSeconds\_min" "$1_solution_$2_details.txt"
+        grep "solutions with"    "$1_solution_$2_details.txt"
         echo
     }  2>&1 >>"$1_solution_$2_details.log"
 }
@@ -37,6 +38,6 @@ run_benchmark "dataset b14c8n1000.txt"    $STRATEGY   ### 3
 run_benchmark "dataset b18c6n1000.txt"    $STRATEGY   ### 4
 
 ### very long runtime
-run_benchmark "dataset b24c6n1000.txt"    $STRATEGY
-run_benchmark "floodtest.txt"             $STRATEGY
+#run_benchmark "dataset b24c6n1000.txt"    $STRATEGY
+#run_benchmark "floodtest.txt"             $STRATEGY
 
